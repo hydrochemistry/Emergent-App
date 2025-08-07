@@ -200,8 +200,8 @@ frontend:
         comment: "✅ ProfileEditForm implemented with comprehensive editable fields matching UserUpdate model: full_name, contact_number, student_id, program_type, study_status, field_of_study, department, faculty, institute, enrollment_date, expected_graduation_date, nationality, citizenship, research_area, lab_name, scopus_id, orcid_id. Form includes proper validation and state management."
 
   - task: "Dashboard Announcements Display"
-    implemented: false
-    working: false
+    implemented: true
+    working: true
     file: "/app/frontend/src/App.js"
     stuck_count: 0
     priority: "high"
@@ -210,6 +210,9 @@ frontend:
       - working: false
         agent: "main"
         comment: "Need to implement announcements as highlights on dashboard"
+      - working: true
+        agent: "main"
+        comment: "✅ Enhanced dashboard announcements with highlighting features: Added priority visual indicators with star icons, yellow background for highlights, priority badges, enhanced card styling with borders and hover effects, better content display with show more/less functionality"
 
   - task: "Grants Registration Functionality"
     implemented: false
