@@ -605,9 +605,9 @@ const Dashboard = ({ user, logout, setUser }) => {
               </Avatar>
               <div className="hidden sm:block">
                 <p className="text-sm font-medium text-gray-900">{user.full_name}</p>
-                <span className="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-blue-100 text-blue-800">
+                <p className="text-xs text-gray-500">
                   {user.role.replace('_', ' ').toUpperCase()}
-                </span>
+                </p>
               </div>
               <Button variant="outline" size="sm" onClick={logout} className="text-xs">
                 <LogOut className="h-4 w-4" />
