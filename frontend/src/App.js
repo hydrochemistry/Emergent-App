@@ -1102,24 +1102,6 @@ const ComprehensiveStudentProfile = ({ user, setUser, meetings, reminders, notes
     }
   };
 
-  const uploadProfilePicture = async (event) => {
-    const file = event.target.files[0];
-    if (!file) return;
-
-    const formData = new FormData();
-    formData.append('file', file);
-
-    try {
-      const response = await axios.post(`${API}/users/profile-picture`, formData);
-      setUserProfile({ ...userProfile, profile_picture: response.data.file_path });
-      setUser({ ...user, profile_picture: response.data.file_path });
-      alert('Profile picture updated successfully!');
-    } catch (error) {
-      console.error('Error uploading picture:', error);
-      alert('Error uploading picture');
-    }
-  };
-
   if (!userProfile) {
     return <div className="flex items-center justify-center p-8">
       <div className="animate-pulse">Loading profile...</div>
