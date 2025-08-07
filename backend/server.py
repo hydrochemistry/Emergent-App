@@ -741,6 +741,40 @@ async def change_password(password_data: PasswordChange, current_user: User = De
     
     return {"message": "Password updated successfully"}
 
+@api_router.put("/users/{student_id}/promote")
+async def promote_user(student_id: str, promotion_data: dict, current_user: User = Depends(get_current_user)):
+    """Promote a user to a new role"""
+    if current_user.role not in [UserRole.SUPERVISOR, UserRole.LAB_MANAGER, UserRole.ADMIN]:
+        raise HTTPException(status_code=403, detail="Only supervisors and above can promote users")
+    
+    # Validate the new role
+    valid_roles = ["student", "lab_manager", "supervisor", "admin"]
+    new_role = promotion_data.get("new_role")
+    if new_role not in valid_roles:
+        raise HTTPException(status_code=400, detail="Invalid role specified")
+    
+    # Find the user
+    user_to_promote = await db.users.find_one({"id": student_id})
+    if not user_to_promote:
+        raise HTTPException(status_code=404, detail="User not found")
+    
+    # Check permissions - supervisors can only promote their students
+    if current_user.role == UserRole.SUPERVISOR:
+        if user_to_promote.get("supervisor_id") != current_user.id:
+            raise HTTPException(status_code=403, detail="You can only promote your own students")
+        
+        # Supervisors cannot promote to admin
+        if new_role == "admin":
+            raise HTTPException(status_code=403, detail="Supervisors cannot promote users to admin")
+    
+    # Update the user's role
+    await db.users.update_one(
+        {"id": student_id}, 
+        {"$set": {"role": new_role, "updated_at": datetime.utcnow()}}
+    )
+    
+    return {"message": f"User promoted to {new_role.replace('_', ' ')} successfully"}
+
 @api_router.post("/users/{student_id}/promote-lab-manager")
 async def promote_to_lab_manager(student_id: str, current_user: User = Depends(get_current_user)):
     if current_user.role != UserRole.SUPERVISOR:
