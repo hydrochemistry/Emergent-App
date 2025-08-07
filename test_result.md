@@ -215,8 +215,8 @@ frontend:
         comment: "✅ Enhanced dashboard announcements with highlighting features: Added priority visual indicators with star icons, yellow background for highlights, priority badges, enhanced card styling with borders and hover effects, better content display with show more/less functionality"
 
   - task: "Grants Registration Functionality"
-    implemented: false
-    working: false
+    implemented: true
+    working: true
     file: "/app/frontend/src/App.js"
     stuck_count: 0
     priority: "medium"
@@ -225,6 +225,9 @@ frontend:
       - working: false
         agent: "main"
         comment: "Need to complete grants registration functionality"
+      - working: true
+        agent: "main"
+        comment: "✅ Enhanced GrantCard component with comprehensive registration functionality: Students can now register for active grants with loading states, detailed grant information display including budget/duration/type, supervisor grant management features, improved visual design with proper status indicators"
 
   - task: "Administrator Page"
     implemented: false
