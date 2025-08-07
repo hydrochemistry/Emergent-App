@@ -2785,7 +2785,7 @@ const CreateGrantDialog = ({ students, onGrantCreated }) => {
       onGrantCreated();
     } catch (error) {
       console.error('Error creating grant:', error);
-      alert('Error creating grant: ' + (error.response?.data?.detail || 'Unknown error'));
+      alert('Error creating grant: ' + (error.response?.data?.detail || error.message || 'Unknown error occurred'));
     } finally {
       setLoading(false);
     }
