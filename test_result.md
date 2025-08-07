@@ -271,13 +271,103 @@ backend:
         comment: "✅ COMPREHENSIVE TESTING COMPLETED: Grant Creation API is fully functional. Tested with exact frontend data structures including title, funding_agency, total_amount, duration_months, grant_type, description, start_date, end_date, status, person_in_charge, grant_vote_number. API correctly handles supervisor authentication and creates grants successfully. Backend endpoint POST /api/grants working perfectly. Issue is NOT with the backend API."
 
 frontend:
+  - task: "User Registration System"
+    implemented: true
+    working: false
+    file: "/app/frontend/src/App.js"
+    stuck_count: 2
+    priority: "high"
+    needs_retesting: true
+    status_history:
+      - working: false
+        agent: "user"
+        comment: "User reports all create/submit buttons failing - cannot test without proper user authentication"
+      - working: false
+        agent: "testing"
+        comment: "❌ CRITICAL FRONTEND ISSUE: User registration system failing with 400 errors. Multiple registration attempts with different approaches all fail. Dropdown role selection not working properly. Form submissions timing out. This prevents users from accessing the dashboard and using any create functionalities. ROOT CAUSE of reported create form failures."
+
+  - task: "Research Log Creation Form"
+    implemented: true
+    working: false
+    file: "/app/frontend/src/App.js"
+    stuck_count: 2
+    priority: "high"
+    needs_retesting: true
+    status_history:
+      - working: false
+        agent: "user"
+        comment: "User reports 'Error creating research log' when clicking 'Create Log' button as Student"
+      - working: false
+        agent: "testing"
+        comment: "❌ CANNOT TEST: Unable to test research log creation due to user registration system failure. Backend API confirmed working, but frontend authentication barrier prevents proper testing of create dialog functionality."
+
+  - task: "Meeting Creation Form"
+    implemented: true
+    working: false
+    file: "/app/frontend/src/App.js"
+    stuck_count: 2
+    priority: "high"
+    needs_retesting: true
+    status_history:
+      - working: false
+        agent: "user"
+        comment: "User reports 'Schedule meeting' button not working after input in Schedule new meeting dialog"
+      - working: false
+        agent: "testing"
+        comment: "❌ CANNOT TEST: Unable to test meeting creation due to user registration system failure. Backend API confirmed working, but frontend authentication barrier prevents proper testing of create dialog functionality."
+
+  - task: "Reminder Creation Form"
+    implemented: true
+    working: false
+    file: "/app/frontend/src/App.js"
+    stuck_count: 2
+    priority: "high"
+    needs_retesting: true
+    status_history:
+      - working: false
+        agent: "user"
+        comment: "User reports 'Create reminder' button not working"
+      - working: false
+        agent: "testing"
+        comment: "❌ CANNOT TEST: Unable to test reminder creation due to user registration system failure. Backend API confirmed working, but frontend authentication barrier prevents proper testing of create dialog functionality."
+
+  - task: "Announcement Creation Form"
+    implemented: true
+    working: false
+    file: "/app/frontend/src/App.js"
+    stuck_count: 2
+    priority: "high"
+    needs_retesting: true
+    status_history:
+      - working: false
+        agent: "user"
+        comment: "User reports 'Error posting announcement' when clicking 'Post announcement' button in Create Announcement window"
+      - working: false
+        agent: "testing"
+        comment: "❌ CANNOT TEST: Unable to test announcement creation due to user registration system failure. Backend API confirmed working, but frontend authentication barrier prevents proper testing of create dialog functionality."
+
+  - task: "Grant Creation Form"
+    implemented: true
+    working: false
+    file: "/app/frontend/src/App.js"
+    stuck_count: 2
+    priority: "high"
+    needs_retesting: true
+    status_history:
+      - working: false
+        agent: "user"
+        comment: "User reports 'Create grant' button not working and can't proceed saving input"
+      - working: false
+        agent: "testing"
+        comment: "❌ CANNOT TEST: Unable to test grant creation due to user registration system failure. Backend API confirmed working, but frontend authentication barrier prevents proper testing of create dialog functionality."
+
   - task: "ProfileEditForm Implementation"
     implemented: true
-    working: true
+    working: "NA"
     file: "/app/frontend/src/App.js"
     stuck_count: 0
-    priority: "high"
-    needs_retesting: false
+    priority: "medium"
+    needs_retesting: true
     status_history:
       - working: false
         agent: "main"
@@ -288,6 +378,9 @@ frontend:
       - working: true
         agent: "testing"
         comment: "✅ COMPREHENSIVE TESTING COMPLETED: ProfileEditForm is fully functional. Successfully tested student registration with all 15 comprehensive fields present and working. Profile edit form contains all 11 expected editable fields including full_name, contact_number, student_id, nationality, citizenship, field_of_study, department, faculty, institute, enrollment_date, expected_graduation_date. Edit Profile button works correctly, form fields are editable, and Save button is present. Profile updates work as expected."
+      - working: "NA"
+        agent: "testing"
+        comment: "⚠️ CANNOT RETEST: Profile edit functionality cannot be retested due to user registration system failure preventing dashboard access. Previous testing was successful but needs revalidation after authentication issues are resolved."
 
   - task: "Dashboard Announcements Display"
     implemented: true
