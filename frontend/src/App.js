@@ -1726,12 +1726,136 @@ const ResearchLogCard = ({ log, user, onLogUpdated }) => (
 );
 
 // Placeholder components for dialogs and other functionality
-const CreateTaskDialog = ({ students, onTaskCreated }) => (
-  <Button>
-    <PlusCircle className="h-4 w-4 mr-2" />
-    Create Task
-  </Button>
-);
+const CreateTaskDialog = ({ students, onTaskCreated }) => {
+  const [isOpen, setIsOpen] = useState(false);
+  const [formData, setFormData] = useState({
+    title: '',
+    description: '',
+    assigned_to: '',
+    priority: 'medium',
+    due_date: '',
+    status: 'pending'
+  });
+  const [loading, setLoading] = useState(false);
+
+  const handleSubmit = async (e) => {
+    e.preventDefault();
+    setLoading(true);
+    
+    try {
+      await axios.post(`${API}/tasks`, {
+        ...formData,
+        due_date: formData.due_date ? new Date(formData.due_date).toISOString() : null
+      });
+      
+      alert('Task created successfully!');
+      setFormData({
+        title: '',
+        description: '',
+        assigned_to: '',
+        priority: 'medium',
+        due_date: '',
+        status: 'pending'
+      });
+      setIsOpen(false);
+      onTaskCreated();
+    } catch (error) {
+      console.error('Error creating task:', error);
+      alert('Error creating task');
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  return (
+    <Dialog open={isOpen} onOpenChange={setIsOpen}>
+      <DialogTrigger asChild>
+        <Button>
+          <PlusCircle className="h-4 w-4 mr-2" />
+          Create Task
+        </Button>
+      </DialogTrigger>
+      <DialogContent className="max-w-md">
+        <DialogHeader>
+          <DialogTitle>Create New Task</DialogTitle>
+        </DialogHeader>
+        <form onSubmit={handleSubmit} className="space-y-4">
+          <div>
+            <Label htmlFor="title">Task Title *</Label>
+            <Input
+              id="title"
+              value={formData.title}
+              onChange={(e) => setFormData({...formData, title: e.target.value})}
+              placeholder="Enter task title"
+              required
+            />
+          </div>
+          
+          <div>
+            <Label htmlFor="description">Description</Label>
+            <Textarea
+              id="description"
+              value={formData.description}
+              onChange={(e) => setFormData({...formData, description: e.target.value})}
+              placeholder="Task description"
+              rows={3}
+            />
+          </div>
+          
+          <div>
+            <Label htmlFor="assigned_to">Assign To</Label>
+            <Select value={formData.assigned_to} onValueChange={(value) => setFormData({...formData, assigned_to: value})}>
+              <SelectTrigger>
+                <SelectValue placeholder="Select student" />
+              </SelectTrigger>
+              <SelectContent>
+                {students.map((student) => (
+                  <SelectItem key={student.id} value={student.id}>
+                    {student.full_name}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          </div>
+          
+          <div>
+            <Label htmlFor="priority">Priority</Label>
+            <Select value={formData.priority} onValueChange={(value) => setFormData({...formData, priority: value})}>
+              <SelectTrigger>
+                <SelectValue />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="low">Low</SelectItem>
+                <SelectItem value="medium">Medium</SelectItem>
+                <SelectItem value="high">High</SelectItem>
+                <SelectItem value="urgent">Urgent</SelectItem>
+              </SelectContent>
+            </Select>
+          </div>
+          
+          <div>
+            <Label htmlFor="due_date">Due Date</Label>
+            <Input
+              id="due_date"
+              type="date"
+              value={formData.due_date}
+              onChange={(e) => setFormData({...formData, due_date: e.target.value})}
+            />
+          </div>
+          
+          <div className="flex justify-end gap-2">
+            <Button type="button" variant="outline" onClick={() => setIsOpen(false)}>
+              Cancel
+            </Button>
+            <Button type="submit" disabled={loading || !formData.title}>
+              {loading ? 'Creating...' : 'Create Task'}
+            </Button>
+          </div>
+        </form>
+      </DialogContent>
+    </Dialog>
+  );
+};
 
 const CreateResearchLogDialog = ({ onLogCreated }) => (
   <Button>
