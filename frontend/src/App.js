@@ -878,7 +878,7 @@ const Dashboard = ({ user, logout, setUser }) => {
           <TabsContent value="meetings" className="mt-6">
             <div className="flex justify-between items-center mb-6">
               <h2 className="text-2xl font-bold">Meetings & Schedule</h2>
-              <CreateMeetingDialog students={students} onMeetingCreated={fetchDashboardData} />
+              <CreateMeetingDialog students={students} onMeetingCreated={fetchDashboardData} user={user} />
             </div>
 
             <div className="grid gap-6">
