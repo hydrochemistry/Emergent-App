@@ -1423,6 +1423,13 @@ const ComprehensiveStudentProfile = ({ user, setUser, meetings, reminders, notes
           </div>
         </CardContent>
       </Card>
+      
+      {/* Copyright Footer */}
+      <div className="mt-8 pt-4">
+        <p className="text-center text-sm text-gray-500">
+          © 2025 Research Lab Management System. All rights reserved. | Professor Dr Ahmad Zaharin Aris
+        </p>
+      </div>
     </div>
   );
 };
