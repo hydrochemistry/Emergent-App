@@ -757,10 +757,126 @@ const Dashboard = ({ user, logout, setUser }) => {
             </TabsContent>
           )}
 
-          {/* Profile/Settings Tab */}
-          <TabsContent value="profile" className="mt-6">
-            <ProfileSettings user={user} setUser={setUser} labSettings={labSettings} onSettingsUpdated={fetchDashboardData} />
-          </TabsContent>
+            {/* Meetings Tab */}
+            <TabsContent value="meetings" className="mt-6">
+              <div className="flex justify-between items-center mb-6">
+                <h2 className="text-2xl font-bold">Supervisor Meetings</h2>
+                {(user.role === 'supervisor' || user.role === 'lab_manager') && (
+                  <CreateMeetingDialog students={students} onMeetingCreated={fetchDashboardData} />
+                )}
+              </div>
+
+              <div className="grid gap-6">
+                {meetings.map((meeting) => (
+                  <MeetingCard key={meeting.id} meeting={meeting} user={user} onMeetingUpdated={fetchDashboardData} />
+                ))}
+                {meetings.length === 0 && (
+                  <Card>
+                    <CardContent className="text-center py-12">
+                      <Calendar className="h-12 w-12 text-gray-400 mx-auto mb-4" />
+                      <p className="text-gray-600">No meetings scheduled yet.</p>
+                    </CardContent>
+                  </Card>
+                )}
+              </div>
+            </TabsContent>
+
+            {/* Reminders Tab */}
+            <TabsContent value="reminders" className="mt-6">
+              <div className="flex justify-between items-center mb-6">
+                <h2 className="text-2xl font-bold">Reminders & Alerts</h2>
+                <CreateReminderDialog students={students} onReminderCreated={fetchDashboardData} />
+              </div>
+
+              <div className="grid gap-6">
+                {reminders.filter(r => !r.is_completed).map((reminder) => (
+                  <ReminderCard key={reminder.id} reminder={reminder} user={user} onReminderUpdated={fetchDashboardData} />
+                ))}
+                {reminders.filter(r => !r.is_completed).length === 0 && (
+                  <Card>
+                    <CardContent className="text-center py-12">
+                      <Bell className="h-12 w-12 text-gray-400 mx-auto mb-4" />
+                      <p className="text-gray-600">No active reminders.</p>
+                    </CardContent>
+                  </Card>
+                )}
+              </div>
+
+              {/* Completed Reminders */}
+              <div className="mt-8">
+                <h3 className="text-lg font-medium mb-4">Completed Reminders</h3>
+                <div className="grid gap-4">
+                  {reminders.filter(r => r.is_completed).slice(0, 5).map((reminder) => (
+                    <Card key={reminder.id} className="opacity-60">
+                      <CardContent className="p-4">
+                        <div className="flex items-center justify-between">
+                          <div>
+                            <h4 className="font-medium line-through">{reminder.title}</h4>
+                            <p className="text-sm text-gray-600">{reminder.description}</p>
+                          </div>
+                          <Badge variant="outline">Completed</Badge>
+                        </div>
+                      </CardContent>
+                    </Card>
+                  ))}
+                </div>
+              </div>
+            </TabsContent>
+
+            {/* Enhanced Publications Tab */}
+            <TabsContent value="publications" className="mt-6">
+              <div className="flex justify-between items-center mb-6">
+                <h2 className="text-2xl font-bold">Lab Publications</h2>
+                <div className="flex gap-2">
+                  {user.role === 'supervisor' && user.scopus_id && (
+                    <Button onClick={syncScopusPublications} variant="outline">
+                      <TrendingUp className="h-4 w-4 mr-2" />
+                      Sync Scopus
+                    </Button>
+                  )}
+                  <Button onClick={() => generateReport('publications')} variant="outline">
+                    <Download className="h-4 w-4 mr-2" />
+                    Export PDF
+                  </Button>
+                  <Button onClick={() => setActiveTab('publications-all')} variant="outline">
+                    <Eye className="h-4 w-4 mr-2" />
+                    View All
+                  </Button>
+                </div>
+              </div>
+
+              <div className="grid gap-6">
+                {publications.slice(0, 10).map((pub) => (
+                  <PublicationCard key={pub.id} publication={pub} user={user} students={students} />
+                ))}
+                {publications.length === 0 && (
+                  <Card>
+                    <CardContent className="text-center py-12">
+                      <Award className="h-12 w-12 text-gray-400 mx-auto mb-4" />
+                      <p className="text-gray-600">No publications found. Sync with Scopus to import publications.</p>
+                    </CardContent>
+                  </Card>
+                )}
+              </div>
+            </TabsContent>
+
+            {/* All Publications Page */}
+            <TabsContent value="publications-all" className="mt-6">
+              <AllPublicationsPage user={user} students={students} />
+            </TabsContent>
+
+            {/* Enhanced Profile Tab */}
+            <TabsContent value="profile" className="mt-6">
+              <ComprehensiveProfilePage 
+                user={user} 
+                setUser={setUser} 
+                labSettings={labSettings} 
+                meetings={meetings}
+                reminders={reminders}
+                notes={notes}
+                onSettingsUpdated={fetchDashboardData} 
+              />
+            </TabsContent>
         </Tabs>
       </div>
     </div>
