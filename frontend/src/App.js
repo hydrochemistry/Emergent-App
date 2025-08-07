@@ -1111,6 +1111,84 @@ const StatCard = ({ icon: Icon, title, value, color }) => (
   </Card>
 );
 
+// Password Change Form Component
+const PasswordChangeForm = () => {
+  const [passwordData, setPasswordData] = useState({
+    current_password: '',
+    new_password: '',
+    confirm_password: ''
+  });
+  const [loading, setLoading] = useState(false);
+
+  const handlePasswordChange = async (e) => {
+    e.preventDefault();
+    if (passwordData.new_password !== passwordData.confirm_password) {
+      alert('New password and confirmation do not match');
+      return;
+    }
+    
+    setLoading(true);
+    try {
+      await axios.post(`${API}/auth/change-password`, {
+        current_password: passwordData.current_password,
+        new_password: passwordData.new_password
+      });
+      alert('Password changed successfully!');
+      setPasswordData({ current_password: '', new_password: '', confirm_password: '' });
+    } catch (error) {
+      console.error('Error changing password:', error);
+      alert(error.response?.data?.detail || 'Error changing password');
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  return (
+    <form onSubmit={handlePasswordChange} className="space-y-4 max-w-md">
+      <div>
+        <Label htmlFor="current_password">Current Password *</Label>
+        <Input
+          id="current_password"
+          type="password"
+          value={passwordData.current_password}
+          onChange={(e) => setPasswordData({...passwordData, current_password: e.target.value})}
+          placeholder="Enter current password"
+          required
+        />
+      </div>
+      <div>
+        <Label htmlFor="new_password">New Password *</Label>
+        <Input
+          id="new_password"
+          type="password"
+          value={passwordData.new_password}
+          onChange={(e) => setPasswordData({...passwordData, new_password: e.target.value})}
+          placeholder="Enter new password"
+          required
+        />
+      </div>
+      <div>
+        <Label htmlFor="confirm_password">Confirm New Password *</Label>
+        <Input
+          id="confirm_password"
+          type="password"
+          value={passwordData.confirm_password}
+          onChange={(e) => setPasswordData({...passwordData, confirm_password: e.target.value})}
+          placeholder="Confirm new password"
+          required
+        />
+      </div>
+      <Button 
+        type="submit" 
+        disabled={loading || !passwordData.current_password || !passwordData.new_password}
+        className="w-full"
+      >
+        {loading ? 'Changing...' : 'Change Password'}
+      </Button>
+    </form>
+  );
+};
+
 // Comprehensive Student Profile Component
 const ComprehensiveStudentProfile = ({ user, setUser, meetings, reminders, notes, labSettings, onDataUpdated }) => {
   const [isEditing, setIsEditing] = useState(false);
