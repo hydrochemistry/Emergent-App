@@ -579,7 +579,7 @@ const Dashboard = ({ user, logout, setUser }) => {
               )}
               <div>
                 <h1 className="text-xl font-bold text-gray-900">
-                  {labSettings.lab_name || user.lab_name || 'Research Lab'}
+                  {labSettings.lab_name || user.lab_name || 'Hydrochemistry Laboratory'}
                 </h1>
                 <p className="text-xs text-gray-500">Advanced Research Management System</p>
               </div>
