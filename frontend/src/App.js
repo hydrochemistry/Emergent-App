@@ -175,9 +175,13 @@ const Auth = ({ login }) => {
     <div className="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-100 flex items-center justify-center p-4">
       <Card className="w-full max-w-2xl max-h-[90vh] overflow-y-auto">
         <CardHeader className="text-center">
-          <CardTitle className="text-2xl font-bold text-gray-900 flex items-center justify-center gap-2">
-            <Building2 className="h-6 w-6 text-blue-600" />
-            Research Lab Manager
+          <CardTitle className="text-2xl font-bold text-gray-900 flex items-center justify-center gap-3">
+            <img 
+              src="https://customer-assets.emergentagent.com/job_gradtrack/artifacts/hsqx7kb3_H2O%20BLUE%20TRANS%202%202.png" 
+              alt="H2O Hydrochemistry Lab" 
+              className="h-8 w-auto" 
+            />
+            Hydrochemistry Laboratory Management
           </CardTitle>
           <p className="text-gray-600 mt-2">
             {isLogin ? 'Sign in to your lab account' : 'Create your comprehensive lab profile'}
