@@ -2514,7 +2514,7 @@ const CreateReminderDialog = ({ students, onReminderCreated }) => {
       onReminderCreated();
     } catch (error) {
       console.error('Error creating reminder:', error);
-      alert('Error creating reminder');
+      alert('Error creating reminder: ' + (error.response?.data?.detail || error.message || 'Unknown error occurred'));
     } finally {
       setLoading(false);
     }
