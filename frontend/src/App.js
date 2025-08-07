@@ -2646,6 +2646,35 @@ const CreateGrantDialog = ({ students, onGrantCreated }) => {
             </Select>
           </div>
           
+          {/* Management Information */}
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div>
+              <Label htmlFor="person_in_charge">Person in Charge (PIC)</Label>
+              <Select value={formData.person_in_charge} onValueChange={(value) => setFormData({...formData, person_in_charge: value})}>
+                <SelectTrigger>
+                  <SelectValue placeholder="Select a student as PIC" />
+                </SelectTrigger>
+                <SelectContent>
+                  {students.map((student) => (
+                    <SelectItem key={student.id} value={student.id}>
+                      {student.full_name} - {student.email}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+            
+            <div>
+              <Label htmlFor="grant_vote_number">Grant Vote Number</Label>
+              <Input
+                id="grant_vote_number"
+                value={formData.grant_vote_number}
+                onChange={(e) => setFormData({...formData, grant_vote_number: e.target.value})}
+                placeholder="e.g., GV-2024-001"
+              />
+            </div>
+          </div>
+          
           {/* Action Buttons */}
           <div className="flex justify-end gap-2 pt-4 border-t">
             <Button type="button" variant="outline" onClick={() => setIsOpen(false)} disabled={loading}>
