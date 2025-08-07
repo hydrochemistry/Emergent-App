@@ -981,9 +981,30 @@ const Dashboard = ({ user, logout, setUser }) => {
           <TabsContent value="grants" className="mt-6">
             <div className="flex justify-between items-center mb-6">
               <h2 className="text-2xl font-bold">Grant Management</h2>
-              {(user.role === 'supervisor' || user.role === 'lab_manager') && (
-                <CreateGrantDialog students={students} onGrantCreated={fetchDashboardData} />
-              )}
+              <div className="flex gap-2">
+                {/* Grants Dashboard Summary */}
+                <div className="flex gap-4 mr-6">
+                  <div className="text-center">
+                    <p className="text-2xl font-bold text-green-600">{grants.filter(g => g.status === 'active').length}</p>
+                    <p className="text-xs text-gray-500">Active</p>
+                  </div>
+                  <div className="text-center">
+                    <p className="text-2xl font-bold text-blue-600">
+                      ${grants.reduce((sum, g) => sum + (g.total_amount || 0), 0).toLocaleString()}
+                    </p>
+                    <p className="text-xs text-gray-500">Total Value</p>
+                  </div>
+                  <div className="text-center">
+                    <p className="text-2xl font-bold text-orange-600">
+                      ${grants.reduce((sum, g) => sum + (g.remaining_balance || 0), 0).toLocaleString()}
+                    </p>
+                    <p className="text-xs text-gray-500">Remaining</p>
+                  </div>
+                </div>
+                {(user.role === 'supervisor' || user.role === 'lab_manager') && (
+                  <CreateGrantDialog students={students} onGrantCreated={fetchDashboardData} />
+                )}
+              </div>
             </div>
 
             <div className="grid gap-6">
