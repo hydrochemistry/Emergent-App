@@ -3312,14 +3312,15 @@ const AdminPanel = ({ user, labSettings, onSettingsUpdated }) => {
 
         {/* Lab Settings Tab */}
         <TabsContent value="lab-settings" className="mt-6">
-          <Card>
-            <CardHeader>
-              <CardTitle className="flex items-center gap-2">
-                <Building2 className="h-5 w-5" />
-                Laboratory Information
-              </CardTitle>
-              <p className="text-sm text-gray-600">Configure your lab's basic information and branding</p>
-            </CardHeader>
+          {user.role === 'supervisor' ? (
+            <Card>
+              <CardHeader>
+                <CardTitle className="flex items-center gap-2">
+                  <Building2 className="h-5 w-5" />
+                  Laboratory Information
+                </CardTitle>
+                <p className="text-sm text-gray-600">Configure your lab's basic information and branding</p>
+              </CardHeader>
             <CardContent className="space-y-6">
               <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                 <div className="space-y-4">
