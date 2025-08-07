@@ -3048,6 +3048,7 @@ const GrantCard = ({ grant, user, onGrantUpdated }) => {
 const StudentManagementCard = ({ student, user, onStudentUpdated }) => {
   const [isMessageOpen, setIsMessageOpen] = useState(false);
   const [isPromoteOpen, setIsPromoteOpen] = useState(false);
+  const [isDemoteOpen, setIsDemoteOpen] = useState(false);
   const [messageData, setMessageData] = useState({ subject: '', content: '' });
   const [promoteData, setPromoteData] = useState({ new_role: 'lab_manager' });
   const [loading, setLoading] = useState(false);
