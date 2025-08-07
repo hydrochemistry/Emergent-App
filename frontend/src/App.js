@@ -3415,26 +3415,45 @@ const AdminPanel = ({ user, labSettings, onSettingsUpdated }) => {
               </div>
             </CardContent>
           </Card>
+          ) : (
+            <Card>
+              <CardContent className="text-center py-12">
+                <Settings className="h-12 w-12 text-gray-400 mx-auto mb-4" />
+                <h3 className="text-lg font-medium text-gray-900 mb-2">Access Restricted</h3>
+                <p className="text-gray-500">Only supervisors can access lab settings.</p>
+              </CardContent>
+            </Card>
+          )}
         </TabsContent>
 
         {/* User Management Tab */}
         <TabsContent value="user-management" className="mt-6">
-          <Card>
-            <CardHeader>
-              <CardTitle className="flex items-center gap-2">
-                <Users className="h-5 w-5" />
-                User Management
-              </CardTitle>
-              <p className="text-sm text-gray-600">Manage user roles and permissions</p>
-            </CardHeader>
-            <CardContent>
-              <div className="text-center py-8">
-                <Users className="h-12 w-12 text-gray-300 mx-auto mb-4" />
-                <p className="text-gray-500">User management features coming soon</p>
-                <p className="text-sm text-gray-400 mt-1">This will include role management, user promotion, and access control</p>
-              </div>
-            </CardContent>
-          </Card>
+          {user.role === 'supervisor' ? (
+            <Card>
+              <CardHeader>
+                <CardTitle className="flex items-center gap-2">
+                  <Users className="h-5 w-5" />
+                  User Management
+                </CardTitle>
+                <p className="text-sm text-gray-600">Manage user roles and permissions</p>
+              </CardHeader>
+              <CardContent>
+                <div className="text-center py-8">
+                  <Users className="h-12 w-12 text-gray-300 mx-auto mb-4" />
+                  <p className="text-gray-500">User management features coming soon</p>
+                  <p className="text-sm text-gray-400 mt-1">This will include role management, user promotion, and access control</p>
+                </div>
+              </CardContent>
+            </Card>
+          ) : (
+            <Card>
+              <CardContent className="text-center py-12">
+                <Users className="h-12 w-12 text-gray-400 mx-auto mb-4" />
+                <h3 className="text-lg font-medium text-gray-900 mb-2">Access Restricted</h3>
+                <p className="text-gray-500">Only supervisors can access user management.</p>
+              </CardContent>
+            </Card>
+          )}
         </TabsContent>
 
         {/* Security Tab */}
