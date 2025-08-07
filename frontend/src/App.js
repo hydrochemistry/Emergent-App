@@ -2029,12 +2029,147 @@ const CreateResearchLogDialog = ({ onLogCreated }) => {
   );
 };
 
-const CreateMeetingDialog = ({ students, onMeetingCreated }) => (
-  <Button>
-    <PlusCircle className="h-4 w-4 mr-2" />
-    Schedule Meeting
-  </Button>
-);
+const CreateMeetingDialog = ({ students, onMeetingCreated }) => {
+  const [isOpen, setIsOpen] = useState(false);
+  const [formData, setFormData] = useState({
+    agenda: '',
+    meeting_date: '',
+    meeting_time: '',
+    meeting_type: 'supervision',
+    attendees: [],
+    location: '',
+    notes: ''
+  });
+  const [loading, setLoading] = useState(false);
+
+  const handleSubmit = async (e) => {
+    e.preventDefault();
+    setLoading(true);
+    
+    try {
+      const meetingDateTime = new Date(`${formData.meeting_date}T${formData.meeting_time}`).toISOString();
+      
+      await axios.post(`${API}/meetings`, {
+        ...formData,
+        meeting_date: meetingDateTime
+      });
+      
+      alert('Meeting scheduled successfully!');
+      setFormData({
+        agenda: '',
+        meeting_date: '',
+        meeting_time: '',
+        meeting_type: 'supervision',
+        attendees: [],
+        location: '',
+        notes: ''
+      });
+      setIsOpen(false);
+      onMeetingCreated();
+    } catch (error) {
+      console.error('Error scheduling meeting:', error);
+      alert('Error scheduling meeting');
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  return (
+    <Dialog open={isOpen} onOpenChange={setIsOpen}>
+      <DialogTrigger asChild>
+        <Button>
+          <PlusCircle className="h-4 w-4 mr-2" />
+          Schedule Meeting
+        </Button>
+      </DialogTrigger>
+      <DialogContent className="max-w-md">
+        <DialogHeader>
+          <DialogTitle>Schedule New Meeting</DialogTitle>
+        </DialogHeader>
+        <form onSubmit={handleSubmit} className="space-y-4">
+          <div>
+            <Label htmlFor="agenda">Meeting Agenda *</Label>
+            <Input
+              id="agenda"
+              value={formData.agenda}
+              onChange={(e) => setFormData({...formData, agenda: e.target.value})}
+              placeholder="Enter meeting agenda"
+              required
+            />
+          </div>
+          
+          <div className="grid grid-cols-2 gap-4">
+            <div>
+              <Label htmlFor="meeting_date">Date *</Label>
+              <Input
+                id="meeting_date"
+                type="date"
+                value={formData.meeting_date}
+                onChange={(e) => setFormData({...formData, meeting_date: e.target.value})}
+                required
+              />
+            </div>
+            <div>
+              <Label htmlFor="meeting_time">Time *</Label>
+              <Input
+                id="meeting_time"
+                type="time"
+                value={formData.meeting_time}
+                onChange={(e) => setFormData({...formData, meeting_time: e.target.value})}
+                required
+              />
+            </div>
+          </div>
+          
+          <div>
+            <Label htmlFor="meeting_type">Meeting Type</Label>
+            <Select value={formData.meeting_type} onValueChange={(value) => setFormData({...formData, meeting_type: value})}>
+              <SelectTrigger>
+                <SelectValue />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="supervision">Supervision</SelectItem>
+                <SelectItem value="progress_review">Progress Review</SelectItem>
+                <SelectItem value="thesis_discussion">Thesis Discussion</SelectItem>
+                <SelectItem value="general">General</SelectItem>
+              </SelectContent>
+            </Select>
+          </div>
+          
+          <div>
+            <Label htmlFor="location">Location</Label>
+            <Input
+              id="location"
+              value={formData.location}
+              onChange={(e) => setFormData({...formData, location: e.target.value})}
+              placeholder="Meeting location or online link"
+            />
+          </div>
+          
+          <div>
+            <Label htmlFor="notes">Additional Notes</Label>
+            <Textarea
+              id="notes"
+              value={formData.notes}
+              onChange={(e) => setFormData({...formData, notes: e.target.value})}
+              placeholder="Any additional information"
+              rows={2}
+            />
+          </div>
+          
+          <div className="flex justify-end gap-2">
+            <Button type="button" variant="outline" onClick={() => setIsOpen(false)}>
+              Cancel
+            </Button>
+            <Button type="submit" disabled={loading || !formData.agenda || !formData.meeting_date || !formData.meeting_time}>
+              {loading ? 'Scheduling...' : 'Schedule Meeting'}
+            </Button>
+          </div>
+        </form>
+      </DialogContent>
+    </Dialog>
+  );
+};
 
 const CreateReminderDialog = ({ students, onReminderCreated }) => (
   <Button>
