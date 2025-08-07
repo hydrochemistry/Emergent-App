@@ -2651,7 +2651,7 @@ const CreateBulletinDialog = ({ onBulletinCreated }) => {
       onBulletinCreated();
     } catch (error) {
       console.error('Error creating bulletin:', error);
-      alert('Error posting announcement');
+      alert('Error posting announcement: ' + (error.response?.data?.detail || error.message || 'Unknown error occurred'));
     } finally {
       setLoading(false);
     }
