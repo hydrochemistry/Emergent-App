@@ -2612,33 +2612,166 @@ const GrantCard = ({ grant, user, onGrantUpdated }) => {
   );
 };
 
-const StudentManagementCard = ({ student, user, onStudentUpdated }) => (
-  <Card>
-    <CardContent className="p-6">
-      <div className="flex items-center justify-between">
-        <div className="flex items-center space-x-4">
-          <Avatar>
-            <AvatarFallback>{student.full_name.split(' ').map(n => n[0]).join('')}</AvatarFallback>
-          </Avatar>
-          <div>
-            <h3 className="font-semibold">{student.full_name}</h3>
-            <p className="text-sm text-gray-600">{student.email}</p>
+const StudentManagementCard = ({ student, user, onStudentUpdated }) => {
+  const [isMessageOpen, setIsMessageOpen] = useState(false);
+  const [isPromoteOpen, setIsPromoteOpen] = useState(false);
+  const [messageData, setMessageData] = useState({ subject: '', content: '' });
+  const [promoteData, setPromoteData] = useState({ new_role: 'lab_manager' });
+  const [loading, setLoading] = useState(false);
+
+  const handleSendMessage = async (e) => {
+    e.preventDefault();
+    setLoading(true);
+    
+    try {
+      await axios.post(`${API}/messages`, {
+        recipient_id: student.id,
+        subject: messageData.subject,
+        content: messageData.content
+      });
+      
+      alert('Message sent successfully!');
+      setMessageData({ subject: '', content: '' });
+      setIsMessageOpen(false);
+    } catch (error) {
+      console.error('Error sending message:', error);
+      alert('Error sending message');
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handlePromoteUser = async (e) => {
+    e.preventDefault();
+    setLoading(true);
+    
+    try {
+      await axios.put(`${API}/users/${student.id}/promote`, {
+        new_role: promoteData.new_role
+      });
+      
+      alert(`User promoted to ${promoteData.new_role.replace('_', ' ')} successfully!`);
+      setIsPromoteOpen(false);
+      onStudentUpdated();
+    } catch (error) {
+      console.error('Error promoting user:', error);
+      alert('Error promoting user');
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  return (
+    <Card>
+      <CardContent className="p-6">
+        <div className="flex items-center justify-between">
+          <div className="flex items-center space-x-4">
+            <Avatar>
+              <AvatarFallback>{student.full_name.split(' ').map(n => n[0]).join('')}</AvatarFallback>
+            </Avatar>
+            <div>
+              <h3 className="font-semibold">{student.full_name}</h3>
+              <p className="text-sm text-gray-600">{student.email}</p>
+              <p className="text-xs text-gray-500">{student.role.replace('_', ' ')}</p>
+            </div>
+          </div>
+          <div className="flex gap-2">
+            {/* Message Dialog */}
+            <Dialog open={isMessageOpen} onOpenChange={setIsMessageOpen}>
+              <DialogTrigger asChild>
+                <Button variant="outline" size="sm">
+                  <MessageSquare className="h-4 w-4 mr-2" />
+                  Message
+                </Button>
+              </DialogTrigger>
+              <DialogContent className="max-w-md">
+                <DialogHeader>
+                  <DialogTitle>Send Message to {student.full_name}</DialogTitle>
+                </DialogHeader>
+                <form onSubmit={handleSendMessage} className="space-y-4">
+                  <div>
+                    <Label htmlFor="subject">Subject *</Label>
+                    <Input
+                      id="subject"
+                      value={messageData.subject}
+                      onChange={(e) => setMessageData({...messageData, subject: e.target.value})}
+                      placeholder="Message subject"
+                      required
+                    />
+                  </div>
+                  <div>
+                    <Label htmlFor="content">Message *</Label>
+                    <Textarea
+                      id="content"
+                      value={messageData.content}
+                      onChange={(e) => setMessageData({...messageData, content: e.target.value})}
+                      placeholder="Type your message here..."
+                      rows={4}
+                      required
+                    />
+                  </div>
+                  <div className="flex justify-end gap-2">
+                    <Button type="button" variant="outline" onClick={() => setIsMessageOpen(false)}>
+                      Cancel
+                    </Button>
+                    <Button type="submit" disabled={loading || !messageData.subject || !messageData.content}>
+                      {loading ? 'Sending...' : 'Send Message'}
+                    </Button>
+                  </div>
+                </form>
+              </DialogContent>
+            </Dialog>
+
+            {/* Promote Dialog */}
+            <Dialog open={isPromoteOpen} onOpenChange={setIsPromoteOpen}>
+              <DialogTrigger asChild>
+                <Button variant="outline" size="sm">
+                  <UserCheck className="h-4 w-4 mr-2" />
+                  Promote
+                </Button>
+              </DialogTrigger>
+              <DialogContent className="max-w-md">
+                <DialogHeader>
+                  <DialogTitle>Promote {student.full_name}</DialogTitle>
+                </DialogHeader>
+                <form onSubmit={handlePromoteUser} className="space-y-4">
+                  <div>
+                    <Label>Current Role</Label>
+                    <p className="text-sm text-gray-600 capitalize">{student.role.replace('_', ' ')}</p>
+                  </div>
+                  <div>
+                    <Label htmlFor="new_role">Promote to *</Label>
+                    <Select value={promoteData.new_role} onValueChange={(value) => setPromoteData({new_role: value})}>
+                      <SelectTrigger>
+                        <SelectValue />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="lab_manager">Lab Manager</SelectItem>
+                        <SelectItem value="supervisor">Supervisor</SelectItem>
+                        <SelectItem value="admin">Administrator</SelectItem>
+                      </SelectContent>
+                    </Select>
+                  </div>
+                  <div className="text-sm text-gray-500">
+                    <p>⚠️ This action will change the user's role and permissions permanently.</p>
+                  </div>
+                  <div className="flex justify-end gap-2">
+                    <Button type="button" variant="outline" onClick={() => setIsPromoteOpen(false)}>
+                      Cancel
+                    </Button>
+                    <Button type="submit" disabled={loading}>
+                      {loading ? 'Promoting...' : 'Promote User'}
+                    </Button>
+                  </div>
+                </form>
+              </DialogContent>
+            </Dialog>
           </div>
         </div>
-        <div className="flex gap-2">
-          <Button variant="outline" size="sm">
-            <MessageSquare className="h-4 w-4 mr-2" />
-            Message
-          </Button>
-          <Button variant="outline" size="sm">
-            <UserCheck className="h-4 w-4 mr-2" />
-            Promote
-          </Button>
-        </div>
-      </div>
-    </CardContent>
-  </Card>
-);
+      </CardContent>
+    </Card>
+  );
+};
 
 // Admin Panel Component
 const AdminPanel = ({ user, labSettings, onSettingsUpdated }) => {
