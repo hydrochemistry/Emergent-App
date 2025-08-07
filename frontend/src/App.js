@@ -2356,8 +2356,12 @@ const CreateMeetingDialog = ({ students, onMeetingCreated }) => {
       const meetingDateTime = new Date(`${formData.meeting_date}T${formData.meeting_time}`).toISOString();
       
       await axios.post(`${API}/meetings`, {
-        ...formData,
-        meeting_date: meetingDateTime
+        student_id: user.id, // Add required student_id field
+        meeting_type: formData.meeting_type,
+        meeting_date: meetingDateTime,
+        agenda: formData.agenda,
+        meeting_notes: formData.notes || undefined,
+        duration_minutes: 60 // Default duration
       });
       
       alert('Meeting scheduled successfully!');
