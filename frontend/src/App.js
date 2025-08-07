@@ -994,6 +994,13 @@ const Dashboard = ({ user, logout, setUser }) => {
           )}
         </Tabs>
       </div>
+      
+      {/* Copyright Footer */}
+      <div className="mt-12 pt-6 border-t border-gray-200">
+        <p className="text-center text-sm text-gray-500">
+          © 2024 Research Lab Management System. All rights reserved. | Professor Dr Ahmad Zaharin Aris
+        </p>
+      </div>
     </div>
   );
 };
