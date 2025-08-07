@@ -82,6 +82,8 @@ class UserCreate(BaseModel):
     department: Optional[str] = None
     research_area: Optional[str] = None
     supervisor_email: Optional[str] = None  # For students to connect with supervisor
+    lab_name: Optional[str] = None
+    lab_logo: Optional[str] = None  # URL or base64 string
 
 class UserLogin(BaseModel):
     email: str
