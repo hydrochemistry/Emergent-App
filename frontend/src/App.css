@@ -250,3 +250,19 @@
 [data-state="open"]:not([data-aria-hidden="true"]) {
   pointer-events: auto !important;
 }
+
+/* Ensure form buttons in dialogs are always clickable */
+form button[type="submit"] {
+  pointer-events: auto !important;
+  z-index: 70 !important;
+  position: relative !important;
+}
+
+/* Fix for Radix UI Dialog overlay issue */
+[data-radix-portal] {
+  pointer-events: none !important;
+}
+
+[data-radix-portal] * {
+  pointer-events: auto !important;
+}
