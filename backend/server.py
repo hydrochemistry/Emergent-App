@@ -868,6 +868,8 @@ async def get_all_publications(current_user: User = Depends(get_current_user)):
     # Enhance publications with student contributor names
     enhanced_publications = []
     for pub in publications:
+        # Remove MongoDB ObjectId
+        pub.pop("_id", None)
         if pub.get("student_contributors"):
             student_names = []
             for student_id in pub["student_contributors"]:
