@@ -402,7 +402,7 @@ class Grant(BaseModel):
 class GrantCreate(BaseModel):
     title: str
     funding_agency: str
-    funding_type: Optional[FundingType] = FundingType.GOVERNMENT
+    funding_type: Optional[FundingType] = FundingType.NATIONAL
     total_amount: float
     status: GrantStatus
     start_date: datetime
