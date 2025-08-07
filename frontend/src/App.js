@@ -587,7 +587,7 @@ const Dashboard = ({ user, logout, setUser }) => {
               <Avatar className="cursor-pointer" onClick={() => setActiveTab('profile')}>
                 <AvatarFallback>
                   {user.profile_picture ? (
-                    <img src={user.profile_picture} alt="Profile" className="w-full h-full rounded-full object-cover" />
+                    <img src={user.profile_picture.startsWith('http') ? user.profile_picture : `${BACKEND_URL}${user.profile_picture}`} alt="Profile" className="w-full h-full rounded-full object-cover" />
                   ) : (
                     user.full_name.split(' ').map(n => n[0]).join('')
                   )}
