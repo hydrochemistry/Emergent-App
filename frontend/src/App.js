@@ -1957,7 +1957,7 @@ const CreateResearchLogDialog = ({ onLogCreated }) => {
           Add Research Log
         </Button>
       </DialogTrigger>
-      <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
+      <DialogContent className="w-[95vw] max-w-2xl mx-4 max-h-[90vh] overflow-y-auto">
         <DialogHeader>
           <DialogTitle>Create Research Log</DialogTitle>
         </DialogHeader>
