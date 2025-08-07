@@ -1915,18 +1915,59 @@ const CreateResearchLogDialog = ({ onLogCreated }) => {
     duration_hours: '',
     tags: ''
   });
+  const [attachments, setAttachments] = useState([]);
   const [loading, setLoading] = useState(false);
+
+  const handleFileUpload = (e) => {
+    const files = Array.from(e.target.files);
+    const maxSize = 10 * 1024 * 1024; // 10MB
+    const allowedTypes = ['image/jpeg', 'image/png', 'image/gif', 'application/pdf', 'text/plain', 'application/msword', 'application/vnd.openxmlformats-officedocument.wordprocessingml.document'];
+    
+    const validFiles = files.filter(file => {
+      if (file.size > maxSize) {
+        alert(`File ${file.name} is too large. Maximum size is 10MB.`);
+        return false;
+      }
+      if (!allowedTypes.includes(file.type)) {
+        alert(`File ${file.name} type not allowed. Allowed: images, PDF, text, Word documents.`);
+        return false;
+      }
+      return true;
+    });
+
+    setAttachments(prev => [...prev, ...validFiles]);
+  };
+
+  const removeAttachment = (index) => {
+    setAttachments(prev => prev.filter((_, i) => i !== index));
+  };
 
   const handleSubmit = async (e) => {
     e.preventDefault();
     setLoading(true);
     
     try {
-      await axios.post(`${API}/research-logs`, {
+      // First create the research log
+      const logResponse = await axios.post(`${API}/research-logs`, {
         ...formData,
         duration_hours: formData.duration_hours ? parseFloat(formData.duration_hours) : null,
         tags: formData.tags ? formData.tags.split(',').map(tag => tag.trim()) : []
       });
+
+      // Then upload attachments if any
+      if (attachments.length > 0) {
+        const uploadPromises = attachments.map(async (file) => {
+          const fileFormData = new FormData();
+          fileFormData.append('file', file);
+          fileFormData.append('research_log_id', logResponse.data.id);
+          
+          return axios.post(`${API}/research-logs/attachments`, fileFormData, {
+            headers: { 'Content-Type': 'multipart/form-data' }
+          });
+        });
+
+        await Promise.all(uploadPromises);
+      }
       
       alert('Research log created successfully!');
       setFormData({
@@ -1939,6 +1980,7 @@ const CreateResearchLogDialog = ({ onLogCreated }) => {
         duration_hours: '',
         tags: ''
       });
+      setAttachments([]);
       setIsOpen(false);
       onLogCreated();
     } catch (error) {
