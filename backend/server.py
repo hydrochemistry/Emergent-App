@@ -402,13 +402,19 @@ class Grant(BaseModel):
 class GrantCreate(BaseModel):
     title: str
     funding_agency: str
-    funding_type: FundingType
+    funding_type: Optional[FundingType] = FundingType.GOVERNMENT
     total_amount: float
     status: GrantStatus
     start_date: datetime
     end_date: datetime
     description: Optional[str] = None
     student_manager_id: Optional[str] = None
+    
+    # New fields
+    person_in_charge: Optional[str] = None
+    grant_vote_number: Optional[str] = None
+    duration_months: Optional[int] = None
+    grant_type: Optional[str] = None
 
 # New Grant Registration Model
 class GrantRegistration(BaseModel):
