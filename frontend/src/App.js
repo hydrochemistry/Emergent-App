@@ -2374,7 +2374,7 @@ const CreateMeetingDialog = ({ students, onMeetingCreated }) => {
       onMeetingCreated();
     } catch (error) {
       console.error('Error scheduling meeting:', error);
-      alert('Error scheduling meeting');
+      alert('Error scheduling meeting: ' + (error.response?.data?.detail || error.message || 'Unknown error occurred'));
     } finally {
       setLoading(false);
     }
