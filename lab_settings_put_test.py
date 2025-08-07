@@ -4,7 +4,7 @@ from datetime import datetime
 
 def test_lab_settings_put_endpoint():
     """Test the PUT /api/lab/settings endpoint specifically"""
-    base_url = "https://40ebfe74-f9a3-4e83-a234-23d15bdaa185.preview.emergentagent.com"
+    base_url = "https://4eb13147-e91e-42cc-a844-96b5f230bc59.preview.emergentagent.com"
     api_url = f"{base_url}/api"
     
     print("🔧 Testing PUT /api/lab/settings endpoint specifically...")
