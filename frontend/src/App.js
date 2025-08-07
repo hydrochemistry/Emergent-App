@@ -3242,7 +3242,7 @@ const StudentManagementCard = ({ student, user, onStudentUpdated }) => {
       onStudentUpdated();
     } catch (error) {
       console.error('Error demoting user:', error);
-      alert('Error demoting user');
+      alert('Error demoting user: ' + (error.response?.data?.detail || error.message || 'Unknown error occurred'));
     } finally {
       setLoading(false);
     }
