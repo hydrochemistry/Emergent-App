@@ -424,6 +424,9 @@ const Dashboard = ({ user, logout, setUser }) => {
   const [grants, setGrants] = useState([]);
   const [publications, setPublications] = useState([]);
   const [labSettings, setLabSettings] = useState({});
+  const [meetings, setMeetings] = useState([]);
+  const [reminders, setReminders] = useState([]);
+  const [notes, setNotes] = useState([]);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
@@ -432,14 +435,20 @@ const Dashboard = ({ user, logout, setUser }) => {
 
   const fetchDashboardData = async () => {
     try {
-      const [tasksRes, logsRes, statsRes, bulletinsRes, grantsRes, pubsRes, labRes] = await Promise.all([
+      const [
+        tasksRes, logsRes, statsRes, bulletinsRes, grantsRes, 
+        pubsRes, labRes, meetingsRes, remindersRes, notesRes
+      ] = await Promise.all([
         axios.get(`${API}/tasks`).catch(() => ({data: []})),
         axios.get(`${API}/research-logs`).catch(() => ({data: []})),
         axios.get(`${API}/dashboard/stats`).catch(() => ({data: {}})),
         axios.get(`${API}/bulletins`).catch(() => ({data: []})),
         axios.get(`${API}/grants`).catch(() => ({data: []})),
         axios.get(`${API}/publications`).catch(() => ({data: []})),
-        axios.get(`${API}/lab/settings`).catch(() => ({data: {}}))
+        axios.get(`${API}/lab/settings`).catch(() => ({data: {}})),
+        axios.get(`${API}/meetings`).catch(() => ({data: []})),
+        axios.get(`${API}/reminders`).catch(() => ({data: []})),
+        axios.get(`${API}/notes`).catch(() => ({data: []}))
       ]);
 
       setTasks(tasksRes.data || []);
@@ -449,6 +458,9 @@ const Dashboard = ({ user, logout, setUser }) => {
       setGrants(grantsRes.data || []);
       setPublications(pubsRes.data || []);
       setLabSettings(labRes.data || {});
+      setMeetings(meetingsRes.data || []);
+      setReminders(remindersRes.data || []);
+      setNotes(notesRes.data || []);
 
       if (user.role === 'supervisor' || user.role === 'lab_manager') {
         const studentsRes = await axios.get(`${API}/students`);
