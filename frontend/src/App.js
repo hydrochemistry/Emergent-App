@@ -627,7 +627,7 @@ const Dashboard = ({ user, logout, setUser }) => {
               <span className="hidden sm:inline">Dashboard</span>
             </TabsTrigger>
             <TabsTrigger value="tasks" className="inline-flex items-center justify-center whitespace-nowrap rounded-lg px-3 py-2 text-sm ring-offset-white transition-all focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-slate-950 focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50 data-[state=active]:bg-blue-600 data-[state=active]:text-white data-[state=active]:shadow-sm min-w-fit">
-              <CheckCircle className="h-4 w-4 sm:mr-2" />
+              <CheckSquare className="h-4 w-4 sm:mr-2" />
               <span className="hidden sm:inline">Tasks</span>
             </TabsTrigger>
             <TabsTrigger value="research" className="inline-flex items-center justify-center whitespace-nowrap rounded-lg px-3 py-2 text-sm ring-offset-white transition-all focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-slate-950 focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50 data-[state=active]:bg-blue-600 data-[state=active]:text-white data-[state=active]:shadow-sm min-w-fit">
