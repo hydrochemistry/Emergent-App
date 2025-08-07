@@ -767,7 +767,7 @@ const Dashboard = ({ user, logout, setUser }) => {
                       {bulletin.is_highlight ? (
                         <Star className="h-4 w-4 text-yellow-500 mt-0.5 fill-current" />
                       ) : (
-                        <Bell className="h-4 w-4 text-blue-600 mt-0.5" />
+                        <Bell className="h-4 w-4 text-gray-600 mt-0.5" />
                       )}
                       <div className="flex-1">
                         <div className="flex items-start justify-between">
