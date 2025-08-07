@@ -2335,7 +2335,7 @@ const CreateResearchLogDialog = ({ onLogCreated }) => {
   );
 };
 
-const CreateMeetingDialog = ({ students, onMeetingCreated }) => {
+const CreateMeetingDialog = ({ students, onMeetingCreated, user }) => {
   const [isOpen, setIsOpen] = useState(false);
   const [formData, setFormData] = useState({
     agenda: '',
