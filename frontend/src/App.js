@@ -2144,12 +2144,14 @@ const CreateResearchLogDialog = ({ onLogCreated }) => {
                   className="hidden"
                   id="file-upload"
                 />
-                <label htmlFor="file-upload">
-                  <Button type="button" variant="outline" size="sm">
-                    <Upload className="h-4 w-4 mr-2" />
-                    Add Files
-                  </Button>
-                </label>
+                <button
+                  type="button"
+                  onClick={() => document.getElementById('file-upload').click()}
+                  className="inline-flex items-center px-3 py-2 border border-gray-300 shadow-sm text-sm leading-4 font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500"
+                >
+                  <Upload className="h-4 w-4 mr-2" />
+                  Add Files
+                </button>
                 <span className="text-xs text-gray-500">
                   Images, PDF, Word documents
                 </span>
