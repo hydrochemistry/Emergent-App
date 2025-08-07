@@ -168,6 +168,10 @@ class UserCreate(BaseModel):
     scopus_id: Optional[str] = None
     orcid_id: Optional[str] = None
 
+class UserLogin(BaseModel):
+    email: str
+    password: str
+
 class UserUpdate(BaseModel):
     full_name: Optional[str] = None
     student_id: Optional[str] = None
@@ -186,6 +190,34 @@ class UserUpdate(BaseModel):
     lab_name: Optional[str] = None
     scopus_id: Optional[str] = None
     orcid_id: Optional[str] = None
+
+class PasswordChange(BaseModel):
+    current_password: str
+    new_password: str
+
+class Token(BaseModel):
+    access_token: str
+    token_type: str
+    user_data: Dict[str, Any]
+
+class LabSettings(BaseModel):
+    id: str = Field(default_factory=lambda: str(uuid.uuid4()))
+    lab_name: str
+    lab_logo: Optional[str] = None
+    description: Optional[str] = None
+    address: Optional[str] = None
+    website: Optional[str] = None
+    contact_email: Optional[str] = None
+    supervisor_id: str
+    created_at: datetime = Field(default_factory=datetime.utcnow)
+    updated_at: datetime = Field(default_factory=datetime.utcnow)
+
+class LabSettingsUpdate(BaseModel):
+    lab_name: Optional[str] = None
+    description: Optional[str] = None
+    address: Optional[str] = None
+    website: Optional[str] = None
+    contact_email: Optional[str] = None
 
 class SupervisorMeeting(BaseModel):
     id: str = Field(default_factory=lambda: str(uuid.uuid4()))
@@ -250,43 +282,6 @@ class NoteCreate(BaseModel):
     title: str
     content: str
     is_private: bool = False
-
-class UserLogin(BaseModel):
-    email: str
-    password: str
-
-class UserUpdate(BaseModel):
-    full_name: Optional[str] = None
-    student_id: Optional[str] = None
-    contact_number: Optional[str] = None
-    nationality: Optional[str] = None
-    citizenship: Optional[str] = None
-    program_type: Optional[ProgramType] = None
-    field_of_study: Optional[str] = None
-    department: Optional[str] = None
-    faculty: Optional[str] = None
-    institute: Optional[str] = None
-    enrollment_date: Optional[str] = None
-    expected_graduation_date: Optional[str] = None
-    study_status: Optional[StudyStatus] = None
-    research_area: Optional[str] = None
-    lab_name: Optional[str] = None
-    scopus_id: Optional[str] = None
-    orcid_id: Optional[str] = None
-
-class Token(BaseModel):
-    access_token: str
-    token_type: str
-    user_data: Dict[str, Any]
-
-class LabSettings(BaseModel):
-    id: str = Field(default_factory=lambda: str(uuid.uuid4()))
-    lab_name: str
-    lab_logo: Optional[str] = None
-    description: Optional[str] = None
-    supervisor_id: str
-    created_at: datetime = Field(default_factory=datetime.utcnow)
-    updated_at: datetime = Field(default_factory=datetime.utcnow)
 
 class Task(BaseModel):
     id: str = Field(default_factory=lambda: str(uuid.uuid4()))
@@ -364,6 +359,7 @@ class Bulletin(BaseModel):
     status: BulletinStatus = BulletinStatus.PENDING
     category: str
     attachments: List[str] = []
+    is_highlight: bool = False  # New field for dashboard highlights
     created_at: datetime = Field(default_factory=datetime.utcnow)
     approved_at: Optional[datetime] = None
     approved_by: Optional[str] = None
@@ -372,6 +368,7 @@ class BulletinCreate(BaseModel):
     title: str
     content: str
     category: str
+    is_highlight: bool = False
 
 class BulletinApproval(BaseModel):
     bulletin_id: str
@@ -405,6 +402,26 @@ class GrantCreate(BaseModel):
     end_date: datetime
     description: Optional[str] = None
     student_manager_id: Optional[str] = None
+
+# New Grant Registration Model
+class GrantRegistration(BaseModel):
+    id: str = Field(default_factory=lambda: str(uuid.uuid4()))
+    grant_id: str
+    applicant_id: str  # student_id who is registering
+    application_date: datetime = Field(default_factory=datetime.utcnow)
+    application_status: str = "pending"  # pending, approved, rejected
+    justification: str
+    expected_amount: float
+    purpose: str
+    supervisor_approval: Optional[bool] = None
+    supervisor_comments: Optional[str] = None
+    created_at: datetime = Field(default_factory=datetime.utcnow)
+
+class GrantRegistrationCreate(BaseModel):
+    grant_id: str
+    justification: str
+    expected_amount: float
+    purpose: str
 
 class Publication(BaseModel):
     id: str = Field(default_factory=lambda: str(uuid.uuid4()))
@@ -591,7 +608,9 @@ async def login(login_data: UserLogin):
             "department": user.get("department"),
             "research_area": user.get("research_area"),
             "lab_name": user.get("lab_name"),
-            "profile_picture": user.get("profile_picture")
+            "profile_picture": user.get("profile_picture"),
+            "program_type": user.get("program_type"),
+            "study_status": user.get("study_status")
         }
     )
 
@@ -656,6 +675,23 @@ async def upload_profile_picture(file: UploadFile = File(...), current_user: Use
     
     return {"message": "Profile picture updated", "file_path": file_path}
 
+@api_router.post("/users/change-password")
+async def change_password(password_data: PasswordChange, current_user: User = Depends(get_current_user)):
+    # Verify current password
+    if not verify_password(password_data.current_password, current_user.password_hash):
+        raise HTTPException(status_code=400, detail="Current password is incorrect")
+    
+    # Hash new password
+    new_password_hash = hash_password(password_data.new_password)
+    
+    # Update password
+    await db.users.update_one(
+        {"id": current_user.id},
+        {"$set": {"password_hash": new_password_hash, "updated_at": datetime.utcnow()}}
+    )
+    
+    return {"message": "Password updated successfully"}
+
 @api_router.post("/users/{student_id}/promote-lab-manager")
 async def promote_to_lab_manager(student_id: str, current_user: User = Depends(get_current_user)):
     if current_user.role != UserRole.SUPERVISOR:
@@ -685,6 +721,66 @@ async def revoke_lab_manager(student_id: str, current_user: User = Depends(get_c
         {"$set": {"role": UserRole.STUDENT, "updated_at": datetime.utcnow()}}
     )
     return {"message": "Lab manager status revoked"}
+
+# Lab Settings Routes
+@api_router.post("/lab/settings")
+async def create_lab_settings(lab_data: LabSettingsUpdate, current_user: User = Depends(get_current_user)):
+    if current_user.role not in [UserRole.SUPERVISOR, UserRole.LAB_MANAGER]:
+        raise HTTPException(status_code=403, detail="Not authorized to manage lab settings")
+    
+    # Check if lab settings already exist
+    existing_settings = await db.lab_settings.find_one({"supervisor_id": current_user.id})
+    
+    if existing_settings:
+        # Update existing settings
+        update_data = {k: v for k, v in lab_data.dict().items() if v is not None}
+        update_data['updated_at'] = datetime.utcnow()
+        await db.lab_settings.update_one(
+            {"supervisor_id": current_user.id},
+            {"$set": update_data}
+        )
+        updated_settings = await db.lab_settings.find_one({"supervisor_id": current_user.id})
+        return LabSettings(**updated_settings)
+    else:
+        # Create new settings
+        lab_settings = LabSettings(
+            lab_name=lab_data.lab_name or current_user.lab_name or "Research Lab",
+            description=lab_data.description,
+            address=lab_data.address,
+            website=lab_data.website,
+            contact_email=lab_data.contact_email,
+            supervisor_id=current_user.id
+        )
+        
+        await db.lab_settings.insert_one(lab_settings.dict())
+        return lab_settings
+
+@api_router.post("/lab/logo")
+async def upload_lab_logo(file: UploadFile = File(...), current_user: User = Depends(get_current_user)):
+    if current_user.role not in [UserRole.SUPERVISOR, UserRole.LAB_MANAGER]:
+        raise HTTPException(status_code=403, detail="Not authorized")
+    
+    if not file.content_type.startswith("image/"):
+        raise HTTPException(status_code=400, detail="File must be an image")
+    
+    file_path = await save_uploaded_file(file, "lab_logos")
+    
+    # Update lab settings
+    await db.lab_settings.update_one(
+        {"supervisor_id": current_user.supervisor_id or current_user.id},
+        {"$set": {"lab_logo": file_path, "updated_at": datetime.utcnow()}},
+        upsert=True
+    )
+    
+    return {"message": "Lab logo uploaded", "file_path": file_path}
+
+@api_router.get("/lab/settings")
+async def get_lab_settings(current_user: User = Depends(get_current_user)):
+    supervisor_id = current_user.supervisor_id or current_user.id
+    lab_settings = await db.lab_settings.find_one({"supervisor_id": supervisor_id})
+    if lab_settings:
+        lab_settings.pop("_id", None)
+    return lab_settings or {}
 
 # Supervisor Meeting Routes
 @api_router.post("/meetings", response_model=SupervisorMeeting)
@@ -848,80 +944,6 @@ async def get_notes(student_id: Optional[str] = None, current_user: User = Depen
     
     return [SupervisorNote(**note) for note in notes]
 
-# Publications Page Route
-@api_router.get("/publications/all")
-async def get_all_publications(current_user: User = Depends(get_current_user)):
-    """Get all publications for the lab/supervisor with comprehensive details"""
-    if current_user.role == UserRole.STUDENT:
-        # Students see publications they're tagged in plus their supervisor's publications
-        supervisor_id = current_user.supervisor_id
-        publications = await db.publications.find({
-            "$or": [
-                {"student_contributors": current_user.id},
-                {"supervisor_id": supervisor_id}
-            ]
-        }).sort("year", -1).to_list(1000)
-    else:
-        # Supervisors see all their publications
-        publications = await db.publications.find({"supervisor_id": current_user.id}).sort("year", -1).to_list(1000)
-    
-    # Enhance publications with student contributor names
-    enhanced_publications = []
-    for pub in publications:
-        # Remove MongoDB ObjectId
-        pub.pop("_id", None)
-        if pub.get("student_contributors"):
-            student_names = []
-            for student_id in pub["student_contributors"]:
-                student = await db.users.find_one({"id": student_id})
-                if student:
-                    student_names.append(student["full_name"])
-            pub["student_contributor_names"] = student_names
-        enhanced_publications.append(pub)
-    
-    return enhanced_publications
-
-# Lab Settings Routes
-@api_router.post("/lab/settings")
-async def create_lab_settings(lab_data: dict, current_user: User = Depends(get_current_user)):
-    if current_user.role not in [UserRole.SUPERVISOR, UserRole.LAB_MANAGER]:
-        raise HTTPException(status_code=403, detail="Not authorized to manage lab settings")
-    
-    lab_settings = LabSettings(
-        lab_name=lab_data["lab_name"],
-        lab_logo=lab_data.get("lab_logo"),
-        description=lab_data.get("description"),
-        supervisor_id=current_user.id
-    )
-    
-    await db.lab_settings.insert_one(lab_settings.dict())
-    return lab_settings
-
-@api_router.post("/lab/logo")
-async def upload_lab_logo(file: UploadFile = File(...), current_user: User = Depends(get_current_user)):
-    if current_user.role not in [UserRole.SUPERVISOR, UserRole.LAB_MANAGER]:
-        raise HTTPException(status_code=403, detail="Not authorized")
-    
-    if not file.content_type.startswith("image/"):
-        raise HTTPException(status_code=400, detail="File must be an image")
-    
-    file_path = await save_uploaded_file(file, "lab_logos")
-    
-    # Update lab settings
-    await db.lab_settings.update_one(
-        {"supervisor_id": current_user.supervisor_id or current_user.id},
-        {"$set": {"lab_logo": file_path, "updated_at": datetime.utcnow()}},
-        upsert=True
-    )
-    
-    return {"message": "Lab logo uploaded", "file_path": file_path}
-
-@api_router.get("/lab/settings")
-async def get_lab_settings(current_user: User = Depends(get_current_user)):
-    supervisor_id = current_user.supervisor_id or current_user.id
-    lab_settings = await db.lab_settings.find_one({"supervisor_id": supervisor_id})
-    return lab_settings or {}
-
 # Enhanced Task Routes with Endorsement
 @api_router.post("/tasks", response_model=Task)
 async def create_task(task_data: TaskCreate, current_user: User = Depends(get_current_user)):
@@ -1067,7 +1089,7 @@ async def get_research_logs(current_user: User = Depends(get_current_user)):
     
     return [ResearchLog(**log) for log in logs]
 
-# Bulletin/News Routes
+# Enhanced Bulletin/News Routes with Highlight Feature
 @api_router.post("/bulletins", response_model=Bulletin)
 async def create_bulletin(bulletin_data: BulletinCreate, current_user: User = Depends(get_current_user)):
     bulletin = Bulletin(
@@ -1075,6 +1097,7 @@ async def create_bulletin(bulletin_data: BulletinCreate, current_user: User = De
         content=bulletin_data.content,
         author_id=current_user.id,
         category=bulletin_data.category,
+        is_highlight=bulletin_data.is_highlight,
         status=BulletinStatus.PENDING
     )
     
@@ -1108,6 +1131,17 @@ async def get_bulletins(status: Optional[BulletinStatus] = None, current_user: U
         query["status"] = BulletinStatus.APPROVED
     
     bulletins = await db.bulletins.find(query).sort("created_at", -1).to_list(1000)
+    return [Bulletin(**bulletin) for bulletin in bulletins]
+
+@api_router.get("/bulletins/highlights")
+async def get_highlight_bulletins(current_user: User = Depends(get_current_user)):
+    """Get highlighted bulletins for dashboard display"""
+    query = {
+        "status": BulletinStatus.APPROVED,
+        "is_highlight": True
+    }
+    
+    bulletins = await db.bulletins.find(query).sort("created_at", -1).to_list(5)
     return [Bulletin(**bulletin) for bulletin in bulletins]
 
 # Grant Management Routes
@@ -1162,6 +1196,76 @@ async def record_grant_spending(grant_id: str, amount: float, current_user: User
     )
     
     return {"message": "Grant spending recorded", "new_balance": new_balance}
+
+# New Grant Registration Routes
+@api_router.post("/grants/{grant_id}/register", response_model=GrantRegistration)
+async def register_for_grant(grant_id: str, registration_data: GrantRegistrationCreate, current_user: User = Depends(get_current_user)):
+    """Allow students to register/apply for grants"""
+    if current_user.role != UserRole.STUDENT:
+        raise HTTPException(status_code=403, detail="Only students can register for grants")
+    
+    # Verify grant exists
+    grant = await db.grants.find_one({"id": grant_id})
+    if not grant:
+        raise HTTPException(status_code=404, detail="Grant not found")
+    
+    # Check if student already registered
+    existing_registration = await db.grant_registrations.find_one({
+        "grant_id": grant_id,
+        "applicant_id": current_user.id
+    })
+    if existing_registration:
+        raise HTTPException(status_code=400, detail="Already registered for this grant")
+    
+    registration = GrantRegistration(
+        grant_id=grant_id,
+        applicant_id=current_user.id,
+        justification=registration_data.justification,
+        expected_amount=registration_data.expected_amount,
+        purpose=registration_data.purpose
+    )
+    
+    await db.grant_registrations.insert_one(registration.dict())
+    return registration
+
+@api_router.get("/grants/registrations")
+async def get_grant_registrations(current_user: User = Depends(get_current_user)):
+    """Get grant registrations - students see their own, supervisors see all"""
+    if current_user.role == UserRole.STUDENT:
+        registrations = await db.grant_registrations.find({"applicant_id": current_user.id}).to_list(1000)
+    else:
+        # Supervisors see registrations for their grants
+        grants = await db.grants.find({"principal_investigator": current_user.id}).to_list(1000)
+        grant_ids = [grant["id"] for grant in grants]
+        registrations = await db.grant_registrations.find({"grant_id": {"$in": grant_ids}}).to_list(1000)
+    
+    return [GrantRegistration(**reg) for reg in registrations]
+
+@api_router.post("/grants/registrations/{registration_id}/approve")
+async def approve_grant_registration(registration_id: str, approved: bool, comments: Optional[str] = None, current_user: User = Depends(get_current_user)):
+    """Supervisors approve or reject grant registrations"""
+    if current_user.role not in [UserRole.SUPERVISOR, UserRole.LAB_MANAGER]:
+        raise HTTPException(status_code=403, detail="Not authorized to approve grant registrations")
+    
+    registration = await db.grant_registrations.find_one({"id": registration_id})
+    if not registration:
+        raise HTTPException(status_code=404, detail="Registration not found")
+    
+    # Verify supervisor owns the grant
+    grant = await db.grants.find_one({"id": registration["grant_id"], "principal_investigator": current_user.id})
+    if not grant:
+        raise HTTPException(status_code=403, detail="Not authorized to manage this grant")
+    
+    await db.grant_registrations.update_one(
+        {"id": registration_id},
+        {"$set": {
+            "supervisor_approval": approved,
+            "supervisor_comments": comments,
+            "application_status": "approved" if approved else "rejected"
+        }}
+    )
+    
+    return {"message": f"Grant registration {'approved' if approved else 'rejected'}"}
 
 # Publication Routes with Scopus Integration
 @api_router.post("/publications/sync-scopus")
@@ -1222,6 +1326,39 @@ async def tag_student_in_publication(pub_id: str, student_id: str, current_user:
     )
     
     return {"message": "Student tagged in publication"}
+
+# Publications Page Route
+@api_router.get("/publications/all")
+async def get_all_publications(current_user: User = Depends(get_current_user)):
+    """Get all publications for the lab/supervisor with comprehensive details"""
+    if current_user.role == UserRole.STUDENT:
+        # Students see publications they're tagged in plus their supervisor's publications
+        supervisor_id = current_user.supervisor_id
+        publications = await db.publications.find({
+            "$or": [
+                {"student_contributors": current_user.id},
+                {"supervisor_id": supervisor_id}
+            ]
+        }).sort("year", -1).to_list(1000)
+    else:
+        # Supervisors see all their publications
+        publications = await db.publications.find({"supervisor_id": current_user.id}).sort("year", -1).to_list(1000)
+    
+    # Enhance publications with student contributor names
+    enhanced_publications = []
+    for pub in publications:
+        # Remove MongoDB ObjectId
+        pub.pop("_id", None)
+        if pub.get("student_contributors"):
+            student_names = []
+            for student_id in pub["student_contributors"]:
+                student = await db.users.find_one({"id": student_id})
+                if student:
+                    student_names.append(student["full_name"])
+            pub["student_contributor_names"] = student_names
+        enhanced_publications.append(pub)
+    
+    return enhanced_publications
 
 # PDF Report Generation Route
 @api_router.get("/reports/generate/{report_type}")
@@ -1320,376 +1457,11 @@ async def get_students(current_user: User = Depends(get_current_user)):
         "email": student["email"],
         "department": student.get("department"),
         "research_area": student.get("research_area"),
-        "profile_picture": student.get("profile_picture")
-    } for student in students]
-
-# Include the router in the main app
-app.include_router(api_router)
-
-app.add_middleware(
-    CORSMiddleware,
-    allow_credentials=True,
-    allow_origins=["*"],
-    allow_methods=["*"],
-    allow_headers=["*"],
-)
-
-# Configure logging
-logging.basicConfig(
-    level=logging.INFO,
-    format='%(asctime)s - %(name)s - %(levelname)s - %(message)s'
-)
-logger = logging.getLogger(__name__)
-
-@app.on_event("shutdown")
-async def shutdown_db_client():
-    client.close()
-
-class UserCreate(BaseModel):
-    email: str
-    password: str
-    full_name: str
-    role: UserRole
-    department: Optional[str] = None
-    research_area: Optional[str] = None
-    supervisor_email: Optional[str] = None  # For students to connect with supervisor
-    lab_name: Optional[str] = None
-    lab_logo: Optional[str] = None  # URL or base64 string
-
-class UserLogin(BaseModel):
-    email: str
-    password: str
-
-class Token(BaseModel):
-    access_token: str
-    token_type: str
-    user_data: Dict[str, Any]
-
-class Task(BaseModel):
-    id: str = Field(default_factory=lambda: str(uuid.uuid4()))
-    title: str
-    description: str
-    assigned_by: str  # supervisor_id
-    assigned_to: str  # student_id
-    status: TaskStatus = TaskStatus.PENDING
-    priority: TaskPriority = TaskPriority.MEDIUM
-    due_date: datetime
-    created_at: datetime = Field(default_factory=datetime.utcnow)
-    completed_at: Optional[datetime] = None
-    progress_percentage: int = 0
-    comments: List[str] = []
-    tags: List[str] = []
-
-class TaskCreate(BaseModel):
-    title: str
-    description: str
-    assigned_to: str
-    priority: TaskPriority = TaskPriority.MEDIUM
-    due_date: datetime
-    tags: Optional[List[str]] = []
-
-class TaskUpdate(BaseModel):
-    status: Optional[TaskStatus] = None
-    progress_percentage: Optional[int] = None
-    comment: Optional[str] = None
-
-class ResearchLog(BaseModel):
-    id: str = Field(default_factory=lambda: str(uuid.uuid4()))
-    user_id: str
-    activity_type: ActivityType
-    title: str
-    description: str
-    date: datetime = Field(default_factory=datetime.utcnow)
-    duration_hours: Optional[float] = None
-    findings: Optional[str] = None
-    challenges: Optional[str] = None
-    next_steps: Optional[str] = None
-    files: List[str] = []  # file URLs or references
-    tags: List[str] = []
-
-class ResearchLogCreate(BaseModel):
-    activity_type: ActivityType
-    title: str
-    description: str
-    duration_hours: Optional[float] = None
-    findings: Optional[str] = None
-    challenges: Optional[str] = None
-    next_steps: Optional[str] = None
-    tags: Optional[List[str]] = []
-
-class Message(BaseModel):
-    id: str = Field(default_factory=lambda: str(uuid.uuid4()))
-    sender_id: str
-    receiver_id: str
-    content: str
-    timestamp: datetime = Field(default_factory=datetime.utcnow)
-    is_read: bool = False
-
-class MessageCreate(BaseModel):
-    receiver_id: str
-    content: str
-
-# Helper Functions
-def hash_password(password: str) -> str:
-    return bcrypt.hashpw(password.encode('utf-8'), bcrypt.gensalt()).decode('utf-8')
-
-def verify_password(password: str, hashed: str) -> bool:
-    return bcrypt.checkpw(password.encode('utf-8'), hashed.encode('utf-8'))
-
-def create_access_token(data: dict):
-    to_encode = data.copy()
-    expire = datetime.utcnow() + timedelta(hours=ACCESS_TOKEN_EXPIRE_HOURS)
-    to_encode.update({"exp": expire})
-    encoded_jwt = jwt.encode(to_encode, SECRET_KEY, algorithm=ALGORITHM)
-    return encoded_jwt
-
-async def get_current_user(credentials: HTTPAuthorizationCredentials = Depends(security)):
-    try:
-        payload = jwt.decode(credentials.credentials, SECRET_KEY, algorithms=[ALGORITHM])
-        user_id: str = payload.get("sub")
-        if user_id is None:
-            raise HTTPException(status_code=401, detail="Invalid authentication credentials")
-    except jwt.PyJWTError:
-        raise HTTPException(status_code=401, detail="Invalid authentication credentials")
-    
-    user = await db.users.find_one({"id": user_id})
-    if user is None:
-        raise HTTPException(status_code=401, detail="User not found")
-    return User(**user)
-
-# Auth Routes
-@api_router.post("/auth/register", response_model=Token)
-async def register(user_data: UserCreate):
-    # Check if user exists
-    existing_user = await db.users.find_one({"email": user_data.email})
-    if existing_user:
-        raise HTTPException(status_code=400, detail="Email already registered")
-    
-    # Hash password
-    hashed_password = hash_password(user_data.password)
-    
-    # Create user
-    user = User(
-        email=user_data.email,
-        password_hash=hashed_password,
-        full_name=user_data.full_name,
-        role=user_data.role,
-        department=user_data.department,
-        research_area=user_data.research_area,
-        lab_name=user_data.lab_name,
-        lab_logo=user_data.lab_logo
-    )
-    
-    # If student, try to connect with supervisor
-    if user_data.role == UserRole.STUDENT and user_data.supervisor_email:
-        supervisor = await db.users.find_one({"email": user_data.supervisor_email, "role": "supervisor"})
-        if supervisor:
-            user.supervisor_id = supervisor["id"]
-    
-    # Save user
-    await db.users.insert_one(user.dict())
-    
-    # Create token
-    access_token = create_access_token(data={"sub": user.id})
-    
-    return Token(
-        access_token=access_token,
-        token_type="bearer",
-        user_data={
-            "id": user.id,
-            "email": user.email,
-            "full_name": user.full_name,
-            "role": user.role,
-            "department": user.department,
-            "research_area": user.research_area,
-            "lab_name": user.lab_name,
-            "lab_logo": user.lab_logo
-        }
-    )
-
-@api_router.post("/auth/login", response_model=Token)
-async def login(login_data: UserLogin):
-    user = await db.users.find_one({"email": login_data.email})
-    if not user or not verify_password(login_data.password, user["password_hash"]):
-        raise HTTPException(status_code=401, detail="Incorrect email or password")
-    
-    access_token = create_access_token(data={"sub": user["id"]})
-    
-    return Token(
-        access_token=access_token,
-        token_type="bearer",
-        user_data={
-            "id": user["id"],
-            "email": user["email"],
-            "full_name": user["full_name"],
-            "role": user["role"],
-            "department": user.get("department"),
-            "research_area": user.get("research_area")
-        }
-    )
-
-# Task Routes
-@api_router.post("/tasks", response_model=Task)
-async def create_task(task_data: TaskCreate, current_user: User = Depends(get_current_user)):
-    if current_user.role != UserRole.SUPERVISOR:
-        raise HTTPException(status_code=403, detail="Only supervisors can create tasks")
-    
-    task = Task(
-        title=task_data.title,
-        description=task_data.description,
-        assigned_by=current_user.id,
-        assigned_to=task_data.assigned_to,
-        priority=task_data.priority,
-        due_date=task_data.due_date,
-        tags=task_data.tags or []
-    )
-    
-    await db.tasks.insert_one(task.dict())
-    return task
-
-@api_router.get("/tasks", response_model=List[Task])
-async def get_tasks(current_user: User = Depends(get_current_user)):
-    if current_user.role == UserRole.STUDENT:
-        tasks = await db.tasks.find({"assigned_to": current_user.id}).to_list(1000)
-    else:  # Supervisor
-        tasks = await db.tasks.find({"assigned_by": current_user.id}).to_list(1000)
-    
-    return [Task(**task) for task in tasks]
-
-@api_router.put("/tasks/{task_id}")
-async def update_task(task_id: str, update_data: TaskUpdate, current_user: User = Depends(get_current_user)):
-    task = await db.tasks.find_one({"id": task_id})
-    if not task:
-        raise HTTPException(status_code=404, detail="Task not found")
-    
-    # Check permissions
-    if current_user.role == UserRole.STUDENT and task["assigned_to"] != current_user.id:
-        raise HTTPException(status_code=403, detail="Not authorized to update this task")
-    elif current_user.role == UserRole.SUPERVISOR and task["assigned_by"] != current_user.id:
-        raise HTTPException(status_code=403, detail="Not authorized to update this task")
-    
-    update_dict = {}
-    if update_data.status is not None:
-        update_dict["status"] = update_data.status
-        if update_data.status == TaskStatus.COMPLETED:
-            update_dict["completed_at"] = datetime.utcnow()
-            update_dict["progress_percentage"] = 100
-    
-    if update_data.progress_percentage is not None:
-        update_dict["progress_percentage"] = update_data.progress_percentage
-    
-    if update_data.comment:
-        # Add comment to existing comments array
-        await db.tasks.update_one(
-            {"id": task_id},
-            {"$push": {"comments": f"{current_user.full_name}: {update_data.comment}"}}
-        )
-    
-    if update_dict:
-        await db.tasks.update_one({"id": task_id}, {"$set": update_dict})
-    
-    updated_task = await db.tasks.find_one({"id": task_id})
-    return Task(**updated_task)
-
-# Research Log Routes
-@api_router.post("/research-logs", response_model=ResearchLog)
-async def create_research_log(log_data: ResearchLogCreate, current_user: User = Depends(get_current_user)):
-    research_log = ResearchLog(
-        user_id=current_user.id,
-        activity_type=log_data.activity_type,
-        title=log_data.title,
-        description=log_data.description,
-        duration_hours=log_data.duration_hours,
-        findings=log_data.findings,
-        challenges=log_data.challenges,
-        next_steps=log_data.next_steps,
-        tags=log_data.tags or []
-    )
-    
-    await db.research_logs.insert_one(research_log.dict())
-    return research_log
-
-@api_router.get("/research-logs", response_model=List[ResearchLog])
-async def get_research_logs(current_user: User = Depends(get_current_user)):
-    if current_user.role == UserRole.STUDENT:
-        logs = await db.research_logs.find({"user_id": current_user.id}).sort("date", -1).to_list(1000)
-    else:  # Supervisor - can see logs from their students
-        student_ids = []
-        students = await db.users.find({"supervisor_id": current_user.id}).to_list(1000)
-        student_ids = [student["id"] for student in students]
-        logs = await db.research_logs.find({"user_id": {"$in": student_ids}}).sort("date", -1).to_list(1000)
-    
-    return [ResearchLog(**log) for log in logs]
-
-# Message Routes
-@api_router.post("/messages", response_model=Message)
-async def send_message(message_data: MessageCreate, current_user: User = Depends(get_current_user)):
-    message = Message(
-        sender_id=current_user.id,
-        receiver_id=message_data.receiver_id,
-        content=message_data.content
-    )
-    
-    await db.messages.insert_one(message.dict())
-    return message
-
-@api_router.get("/messages")
-async def get_messages(with_user: str, current_user: User = Depends(get_current_user)):
-    messages = await db.messages.find({
-        "$or": [
-            {"sender_id": current_user.id, "receiver_id": with_user},
-            {"sender_id": with_user, "receiver_id": current_user.id}
-        ]
-    }).sort("timestamp", 1).to_list(1000)
-    
-    return [Message(**msg) for msg in messages]
-
-# Dashboard Routes
-@api_router.get("/dashboard/stats")
-async def get_dashboard_stats(current_user: User = Depends(get_current_user)):
-    if current_user.role == UserRole.STUDENT:
-        total_tasks = await db.tasks.count_documents({"assigned_to": current_user.id})
-        completed_tasks = await db.tasks.count_documents({"assigned_to": current_user.id, "status": "completed"})
-        pending_tasks = await db.tasks.count_documents({"assigned_to": current_user.id, "status": "pending"})
-        in_progress_tasks = await db.tasks.count_documents({"assigned_to": current_user.id, "status": "in_progress"})
-        total_logs = await db.research_logs.count_documents({"user_id": current_user.id})
-        
-        return {
-            "total_tasks": total_tasks,
-            "completed_tasks": completed_tasks,
-            "pending_tasks": pending_tasks,
-            "in_progress_tasks": in_progress_tasks,
-            "completion_rate": (completed_tasks / total_tasks * 100) if total_tasks > 0 else 0,
-            "total_research_logs": total_logs
-        }
-    else:  # Supervisor
-        students = await db.users.find({"supervisor_id": current_user.id}).to_list(1000)
-        student_ids = [student["id"] for student in students]
-        
-        total_students = len(students)
-        total_assigned_tasks = await db.tasks.count_documents({"assigned_by": current_user.id})
-        completed_tasks = await db.tasks.count_documents({"assigned_by": current_user.id, "status": "completed"})
-        
-        return {
-            "total_students": total_students,
-            "total_assigned_tasks": total_assigned_tasks,
-            "completed_tasks": completed_tasks,
-            "completion_rate": (completed_tasks / total_assigned_tasks * 100) if total_assigned_tasks > 0 else 0
-        }
-
-# Students Routes (for supervisors)
-@api_router.get("/students")
-async def get_students(current_user: User = Depends(get_current_user)):
-    if current_user.role != UserRole.SUPERVISOR:
-        raise HTTPException(status_code=403, detail="Only supervisors can view students")
-    
-    students = await db.users.find({"supervisor_id": current_user.id}).to_list(1000)
-    return [{
-        "id": student["id"],
-        "full_name": student["full_name"],
-        "email": student["email"],
-        "department": student.get("department"),
-        "research_area": student.get("research_area")
+        "profile_picture": student.get("profile_picture"),
+        "student_id": student.get("student_id"),
+        "program_type": student.get("program_type"),
+        "study_status": student.get("study_status", "active"),
+        "role": student.get("role", "student")
     } for student in students]
 
 # Include the router in the main app
