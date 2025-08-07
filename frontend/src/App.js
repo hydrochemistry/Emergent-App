@@ -3024,7 +3024,7 @@ const StudentManagementCard = ({ student, user, onStudentUpdated }) => {
                   Promote
                 </Button>
               </DialogTrigger>
-              <DialogContent className="max-w-md">
+              <DialogContent className="w-[95vw] max-w-md mx-4 max-h-[90vh] overflow-y-auto">
                 <DialogHeader>
                   <DialogTitle>Promote {student.full_name}</DialogTitle>
                 </DialogHeader>
