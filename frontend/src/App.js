@@ -987,9 +987,27 @@ const Dashboard = ({ user, logout, setUser }) => {
             </div>
 
             <div className="grid gap-6">
-              {grants.map((grant) => (
-                <GrantCard key={grant.id} grant={grant} user={user} onGrantUpdated={fetchDashboardData} />
-              ))}
+              {grants.length > 0 ? (
+                grants.map((grant) => (
+                  <GrantCard key={grant.id} grant={grant} user={user} onGrantUpdated={fetchDashboardData} />
+                ))
+              ) : (
+                <Card className="text-center py-12">
+                  <CardContent>
+                    <DollarSign className="h-12 w-12 text-gray-400 mx-auto mb-4" />
+                    <h3 className="text-lg font-medium text-gray-900 mb-2">No Grants Found</h3>
+                    <p className="text-gray-500 mb-4">
+                      {user.role === 'supervisor' || user.role === 'lab_manager' 
+                        ? 'Create your first grant to start tracking funding opportunities.'
+                        : 'No grants are currently available for registration.'
+                      }
+                    </p>
+                    {(user.role === 'supervisor' || user.role === 'lab_manager') && (
+                      <CreateGrantDialog students={students} onGrantCreated={fetchDashboardData} />
+                    )}
+                  </CardContent>
+                </Card>
+              )}
             </div>
           </TabsContent>
 
