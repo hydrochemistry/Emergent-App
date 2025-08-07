@@ -204,7 +204,9 @@ async def register(user_data: UserCreate):
         full_name=user_data.full_name,
         role=user_data.role,
         department=user_data.department,
-        research_area=user_data.research_area
+        research_area=user_data.research_area,
+        lab_name=user_data.lab_name,
+        lab_logo=user_data.lab_logo
     )
     
     # If student, try to connect with supervisor
