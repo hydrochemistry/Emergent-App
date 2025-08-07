@@ -2005,7 +2005,9 @@ const CreateResearchLogDialog = ({ onLogCreated }) => {
         challenges: '',
         next_steps: '',
         duration_hours: '',
-        tags: ''
+        tags: '',
+        log_date: new Date().toISOString().split('T')[0],
+        log_time: new Date().toTimeString().split(' ')[0].substring(0, 5)
       });
       setAttachments([]);
       setIsOpen(false);
