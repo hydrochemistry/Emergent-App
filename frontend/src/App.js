@@ -673,26 +673,27 @@ const Dashboard = ({ user, logout, setUser }) => {
 
           {/* Dashboard Tab */}
           <TabsContent value="dashboard" className="mt-6">
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
+            {/* Statistics Overview */}
+            <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
               {user.role === 'student' ? (
                 <>
-                  <StatCard icon={CheckCircle} title="Total Tasks" value={stats.total_tasks || 0} color="blue" />
+                  <StatCard icon={CheckCircle} title="Tasks" value={stats.total_tasks || 0} color="blue" />
                   <StatCard icon={Award} title="Completed" value={stats.completed_tasks || 0} color="green" />
                   <StatCard icon={Clock} title="In Progress" value={stats.in_progress_tasks || 0} color="yellow" />
-                  <StatCard icon={FlaskConical} title="Research Logs" value={stats.total_research_logs || 0} color="purple" />
+                  <StatCard icon={FlaskConical} title="Research" value={stats.total_research_logs || 0} color="purple" />
                 </>
               ) : (
                 <>
                   <StatCard icon={Users} title="Students" value={stats.total_students || 0} color="blue" />
-                  <StatCard icon={CheckCircle} title="Tasks Assigned" value={stats.total_assigned_tasks || 0} color="purple" />
+                  <StatCard icon={CheckCircle} title="Tasks" value={stats.total_assigned_tasks || 0} color="purple" />
                   <StatCard icon={Award} title="Publications" value={stats.total_publications || 0} color="green" />
-                  <StatCard icon={DollarSign} title="Active Grants" value={stats.active_grants || 0} color="yellow" />
+                  <StatCard icon={DollarSign} title="Grants" value={stats.active_grants || 0} color="yellow" />
                 </>
               )}
             </div>
 
             {/* Quick Actions */}
-            <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 mb-8">
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-6 mb-6 sm:mb-8">
               <Card>
                 <CardHeader>
                   <CardTitle className="flex items-center gap-2">
