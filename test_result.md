@@ -195,17 +195,65 @@ backend:
         agent: "testing"
         comment: "✅ COMPREHENSIVE TESTING COMPLETED: User promotion endpoint PUT /api/users/{student_id}/promote working perfectly. Successfully tested promotion to lab_manager and supervisor roles. Permission controls functioning correctly - supervisors cannot promote to admin (returns 403). Invalid role validation working (returns 400). Unauthorized access properly blocked (returns 403). All 5 promotion tests passed (100% success rate)."
 
-  - task: "Research Log Attachments System"
+  - task: "Research Log Creation API"
     implemented: true
-    working: true
+    working: false
     file: "/app/backend/server.py"
-    stuck_count: 0
+    stuck_count: 1
     priority: "high"
-    needs_retesting: false
+    needs_retesting: true
     status_history:
-      - working: true
-        agent: "testing"
-        comment: "✅ COMPREHENSIVE TESTING COMPLETED: Research log attachments endpoint POST /api/research-logs/attachments working perfectly. Successfully tested image and PDF file uploads. File size validation working correctly - files >10MB rejected with 400 status. Various file types accepted including executables. Proper authentication required (403 without token). Invalid research log ID returns 404. All 7 attachment tests passed (100% success rate)."
+      - working: false
+        agent: "user"
+        comment: "User reports 'Error creating research log' when clicking 'Create Log' button as Student"
+
+  - task: "Meeting Creation API"
+    implemented: true
+    working: false
+    file: "/app/backend/server.py"
+    stuck_count: 1
+    priority: "high"
+    needs_retesting: true
+    status_history:
+      - working: false
+        agent: "user"
+        comment: "User reports 'Schedule meeting' button not working after input in Schedule new meeting dialog"
+
+  - task: "Reminder Creation API"
+    implemented: true
+    working: false
+    file: "/app/backend/server.py"
+    stuck_count: 1
+    priority: "high"
+    needs_retesting: true
+    status_history:
+      - working: false
+        agent: "user"
+        comment: "User reports 'Create reminder' button not working"
+
+  - task: "Announcement Creation API"
+    implemented: true
+    working: false
+    file: "/app/backend/server.py"
+    stuck_count: 1
+    priority: "high"
+    needs_retesting: true
+    status_history:
+      - working: false
+        agent: "user"
+        comment: "User reports 'Error posting announcement' when clicking 'Post announcement' button in Create Announcement window"
+
+  - task: "Grant Creation API"
+    implemented: true
+    working: false
+    file: "/app/backend/server.py"
+    stuck_count: 1
+    priority: "high"
+    needs_retesting: true
+    status_history:
+      - working: false
+        agent: "user"
+        comment: "User reports 'Create grant' button not working and can't proceed saving input"
 
 frontend:
   - task: "ProfileEditForm Implementation"
