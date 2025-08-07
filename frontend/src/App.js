@@ -567,7 +567,11 @@ const Dashboard = ({ user, logout, setUser }) => {
               {labSettings.lab_logo ? (
                 <img src={labSettings.lab_logo} alt="Lab Logo" className="h-10 w-10 rounded-full mr-3" />
               ) : (
-                <Building2 className="h-8 w-8 text-blue-600 mr-3" />
+                <img 
+                  src="https://customer-assets.emergentagent.com/job_gradtrack/artifacts/hsqx7kb3_H2O%20BLUE%20TRANS%202%202.png" 
+                  alt="H2O Hydrochemistry Lab" 
+                  className="h-10 w-auto mr-3" 
+                />
               )}
               <div>
                 <h1 className="text-xl font-bold text-gray-900">
