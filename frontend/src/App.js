@@ -620,56 +620,58 @@ const Dashboard = ({ user, logout, setUser }) => {
 
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
         <Tabs value={activeTab} onValueChange={setActiveTab}>
-          <TabsList className="grid grid-cols-3 sm:grid-cols-6 lg:grid-cols-11 w-full max-w-6xl mb-6 text-xs overflow-x-auto">
-            <TabsTrigger value="dashboard" className="flex flex-col items-center p-2 min-w-0">
-              <BarChart3 className="h-4 w-4" />
-              <span className="text-xs truncate">Dashboard</span>
+        <div className="flex justify-center w-full mb-6 sm:mb-8">
+          <TabsList className="inline-flex h-12 items-center justify-center rounded-xl bg-white border border-gray-200 shadow-sm p-1 text-sm font-medium overflow-x-auto scrollbar-hide min-w-fit">
+            <TabsTrigger value="dashboard" className="inline-flex items-center justify-center whitespace-nowrap rounded-lg px-3 py-2 text-sm ring-offset-white transition-all focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-slate-950 focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50 data-[state=active]:bg-blue-600 data-[state=active]:text-white data-[state=active]:shadow-sm min-w-fit">
+              <BarChart3 className="h-4 w-4 sm:mr-2" />
+              <span className="hidden sm:inline">Dashboard</span>
             </TabsTrigger>
-            <TabsTrigger value="tasks" className="flex flex-col items-center p-2 min-w-0">
-              <CheckCircle className="h-4 w-4" />
-              <span className="text-xs truncate">Tasks</span>
+            <TabsTrigger value="tasks" className="inline-flex items-center justify-center whitespace-nowrap rounded-lg px-3 py-2 text-sm ring-offset-white transition-all focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-slate-950 focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50 data-[state=active]:bg-blue-600 data-[state=active]:text-white data-[state=active]:shadow-sm min-w-fit">
+              <CheckCircle className="h-4 w-4 sm:mr-2" />
+              <span className="hidden sm:inline">Tasks</span>
             </TabsTrigger>
-            <TabsTrigger value="research" className="flex flex-col items-center p-2 min-w-0">
-              <FlaskConical className="h-4 w-4" />
-              <span className="text-xs truncate">Research</span>
+            <TabsTrigger value="research" className="inline-flex items-center justify-center whitespace-nowrap rounded-lg px-3 py-2 text-sm ring-offset-white transition-all focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-slate-950 focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50 data-[state=active]:bg-blue-600 data-[state=active]:text-white data-[state=active]:shadow-sm min-w-fit">
+              <FlaskConical className="h-4 w-4 sm:mr-2" />
+              <span className="hidden sm:inline">Research</span>
             </TabsTrigger>
-            <TabsTrigger value="meetings" className="flex flex-col items-center p-2 min-w-0">
-              <Calendar className="h-4 w-4" />
-              <span className="text-xs truncate sm:inline">Meetings</span>
-            </TabsTrigger>
-            <TabsTrigger value="bulletins" className="flex flex-col items-center p-2 min-w-0">
-              <Bell className="h-4 w-4" />
-              <span className="text-xs truncate sm:inline">News</span>
-            </TabsTrigger>
-            <TabsTrigger value="grants" className="flex flex-col items-center p-2 min-w-0">
-              <DollarSign className="h-4 w-4" />
-              <span className="text-xs truncate sm:inline">Grants</span>
-            </TabsTrigger>
-            <TabsTrigger value="publications" className="flex flex-col items-center p-2 min-w-0">
-              <Award className="h-4 w-4" />
-              <span className="text-xs truncate sm:inline">Publications</span>
+            <TabsTrigger value="meetings" className="inline-flex items-center justify-center whitespace-nowrap rounded-lg px-3 py-2 text-sm ring-offset-white transition-all focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-slate-950 focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50 data-[state=active]:bg-blue-600 data-[state=active]:text-white data-[state=active]:shadow-sm min-w-fit">
+              <Calendar className="h-4 w-4 sm:mr-2" />
+              <span className="hidden sm:inline">Meetings</span>
             </TabsTrigger>
             {(user.role === 'supervisor' || user.role === 'lab_manager') && (
-              <TabsTrigger value="students" className="flex flex-col items-center p-2 min-w-0">
-                <Users className="h-4 w-4" />
-                <span className="text-xs truncate sm:inline">Students</span>
+              <TabsTrigger value="students" className="inline-flex items-center justify-center whitespace-nowrap rounded-lg px-3 py-2 text-sm ring-offset-white transition-all focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-slate-950 focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50 data-[state=active]:bg-blue-600 data-[state=active]:text-white data-[state=active]:shadow-sm min-w-fit">
+                <Users className="h-4 w-4 sm:mr-2" />
+                <span className="hidden sm:inline">Students</span>
               </TabsTrigger>
             )}
-            <TabsTrigger value="profile" className="flex flex-col items-center p-2 min-w-0">
-              <Settings className="h-4 w-4" />
-              <span className="text-xs truncate sm:inline">Profile</span>
+            <TabsTrigger value="publications" className="inline-flex items-center justify-center whitespace-nowrap rounded-lg px-3 py-2 text-sm ring-offset-white transition-all focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-slate-950 focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50 data-[state=active]:bg-blue-600 data-[state=active]:text-white data-[state=active]:shadow-sm min-w-fit">
+              <Award className="h-4 w-4 sm:mr-2" />
+              <span className="hidden sm:inline">Publications</span>
             </TabsTrigger>
-            <TabsTrigger value="reminders" className="flex flex-col items-center p-2 min-w-0">
-              <AlertTriangle className="h-4 w-4" />
-              <span className="text-xs truncate sm:inline">Reminders</span>
+            <TabsTrigger value="reminders" className="inline-flex items-center justify-center whitespace-nowrap rounded-lg px-3 py-2 text-sm ring-offset-white transition-all focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-slate-950 focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50 data-[state=active]:bg-blue-600 data-[state=active]:text-white data-[state=active]:shadow-sm min-w-fit">
+              <AlertTriangle className="h-4 w-4 sm:mr-2" />
+              <span className="hidden sm:inline">Reminders</span>
             </TabsTrigger>
-            {(user.role === 'supervisor' || user.role === 'lab_manager' || user.role === 'admin') && (
-              <TabsTrigger value="admin" className="flex flex-col items-center p-2 min-w-0">
-                <Settings className="h-4 w-4" />
-                <span className="text-xs truncate sm:inline">Admin</span>
+            <TabsTrigger value="bulletins" className="inline-flex items-center justify-center whitespace-nowrap rounded-lg px-3 py-2 text-sm ring-offset-white transition-all focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-slate-950 focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50 data-[state=active]:bg-blue-600 data-[state=active]:text-white data-[state=active]:shadow-sm min-w-fit">
+              <Bell className="h-4 w-4 sm:mr-2" />
+              <span className="hidden sm:inline">News</span>
+            </TabsTrigger>
+            <TabsTrigger value="grants" className="inline-flex items-center justify-center whitespace-nowrap rounded-lg px-3 py-2 text-sm ring-offset-white transition-all focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-slate-950 focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50 data-[state=active]:bg-blue-600 data-[state=active]:text-white data-[state=active]:shadow-sm min-w-fit">
+              <DollarSign className="h-4 w-4 sm:mr-2" />
+              <span className="hidden sm:inline">Grants</span>
+            </TabsTrigger>
+            <TabsTrigger value="profile" className="inline-flex items-center justify-center whitespace-nowrap rounded-lg px-3 py-2 text-sm ring-offset-white transition-all focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-slate-950 focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50 data-[state=active]:bg-blue-600 data-[state=active]:text-white data-[state=active]:shadow-sm min-w-fit">
+              <Settings className="h-4 w-4 sm:mr-2" />
+              <span className="hidden sm:inline">Profile</span>
+            </TabsTrigger>
+            {user.role === 'supervisor' && (
+              <TabsTrigger value="admin" className="inline-flex items-center justify-center whitespace-nowrap rounded-lg px-3 py-2 text-sm ring-offset-white transition-all focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-slate-950 focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50 data-[state=active]:bg-blue-600 data-[state=active]:text-white data-[state=active]:shadow-sm min-w-fit">
+                <Settings className="h-4 w-4 sm:mr-2" />
+                <span className="hidden sm:inline">Admin</span>
               </TabsTrigger>
             )}
           </TabsList>
+        </div>
 
           {/* Dashboard Tab */}
           <TabsContent value="dashboard" className="mt-6">
