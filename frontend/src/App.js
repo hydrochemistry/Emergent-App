@@ -19,7 +19,7 @@ import {
   FileText, DollarSign, Award, Bell, Camera, Download, Eye,
   Building2, UserCheck, Banknote, TrendingUp, FileImage, User,
   MapPin, Phone, GraduationCap, CalendarDays, AlertTriangle,
-  Edit, Trash2, BookMarked, FileBarChart
+  Edit, Trash2, BookMarked, FileBarChart, X
 } from "lucide-react";
 
 const BACKEND_URL = process.env.REACT_APP_BACKEND_URL;
