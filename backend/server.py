@@ -391,6 +391,13 @@ class Grant(BaseModel):
     description: Optional[str] = None
     milestones: List[Dict[str, Any]] = []
     created_at: datetime = Field(default_factory=datetime.utcnow)
+    
+    # New fields
+    person_in_charge: Optional[str] = None  # student_id
+    grant_vote_number: Optional[str] = None
+    duration_months: Optional[int] = None
+    grant_type: Optional[str] = None
+    remaining_balance: Optional[float] = None
 
 class GrantCreate(BaseModel):
     title: str
