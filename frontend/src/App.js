@@ -3222,7 +3222,7 @@ const StudentManagementCard = ({ student, user, onStudentUpdated }) => {
       onStudentUpdated();
     } catch (error) {
       console.error('Error promoting user:', error);
-      alert('Error promoting user');
+      alert('Error promoting user: ' + (error.response?.data?.detail || error.message || 'Unknown error occurred'));
     } finally {
       setLoading(false);
     }
