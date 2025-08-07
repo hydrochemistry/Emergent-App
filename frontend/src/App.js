@@ -2779,7 +2779,7 @@ const GrantCard = ({ grant, user, onGrantUpdated }) => {
           </Badge>
         </div>
         
-        <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mt-4 pt-4 border-t">
+        <div className="grid grid-cols-2 md:grid-cols-5 gap-4 mt-4 pt-4 border-t">
           <div>
             <p className="text-xs text-gray-500">Total Amount</p>
             <p className="font-semibold text-green-600">${grant.total_amount?.toLocaleString() || 'N/A'}</p>
@@ -2793,10 +2793,25 @@ const GrantCard = ({ grant, user, onGrantUpdated }) => {
             <p className="font-medium">{grant.grant_type?.replace('_', ' ') || 'N/A'}</p>
           </div>
           <div>
+            <p className="text-xs text-gray-500">Vote Number</p>
+            <p className="font-medium text-purple-600">{grant.grant_vote_number || 'N/A'}</p>
+          </div>
+          <div>
             <p className="text-xs text-gray-500">Remaining Balance</p>
             <p className="font-semibold text-blue-600">${grant.remaining_balance?.toLocaleString() || 'N/A'}</p>
           </div>
         </div>
+
+        {/* Person in Charge Information */}
+        {grant.person_in_charge && (
+          <div className="mt-4 p-3 bg-gray-50 rounded-lg">
+            <div className="flex items-center gap-2">
+              <UserCheck className="h-4 w-4 text-blue-600" />
+              <span className="text-sm font-medium text-gray-900">Person in Charge (PIC)</span>
+            </div>
+            <p className="text-sm text-gray-700 mt-1">{grant.person_in_charge_name || 'Loading...'}</p>
+          </div>
+        )}
 
         {grant.start_date && (
           <div className="flex items-center gap-4 mt-3 pt-3 border-t text-sm text-gray-600">
