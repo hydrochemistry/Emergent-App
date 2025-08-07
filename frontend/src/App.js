@@ -593,7 +593,7 @@ const Dashboard = ({ user, logout, setUser }) => {
               </Button>
               <Avatar className="cursor-pointer" onClick={() => setActiveTab('profile')}>
                 <AvatarFallback>
-                  user.full_name.split(' ').map(n => n[0]).join('')
+                  {user.full_name.split(' ').map(n => n[0]).join('')}
                 </AvatarFallback>
               </Avatar>
               <div>
