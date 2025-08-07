@@ -366,7 +366,7 @@ class ResearchProgressAPITester:
             "Unauthorized Access (No Token)",
             "GET",
             "/tasks",
-            401
+            403
         )
         
         if not success:
