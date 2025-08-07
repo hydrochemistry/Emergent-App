@@ -985,6 +985,13 @@ const Dashboard = ({ user, logout, setUser }) => {
               ))}
             </div>
           </TabsContent>
+
+          {/* Administrator Tab */}
+          {(user.role === 'supervisor' || user.role === 'lab_manager' || user.role === 'admin') && (
+            <TabsContent value="admin" className="mt-6">
+              <AdminPanel user={user} labSettings={labSettings} onSettingsUpdated={fetchDashboardData} />
+            </TabsContent>
+          )}
         </Tabs>
       </div>
     </div>
