@@ -3185,7 +3185,7 @@ const AdminPanel = ({ user, labSettings, onSettingsUpdated }) => {
                       id="logo-upload"
                     />
                     <label htmlFor="logo-upload">
-                      <Button variant="outline" as="span" disabled={loading}>
+                      <Button type="button" variant="outline" disabled={loading}>
                         <Upload className="h-4 w-4 mr-2" />
                         {labData.lab_logo ? 'Change Logo' : 'Upload Logo'}
                       </Button>
