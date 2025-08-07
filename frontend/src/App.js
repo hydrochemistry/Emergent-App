@@ -14,12 +14,12 @@ import { Label } from "./components/ui/label";
 import { Textarea } from "./components/ui/textarea";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "./components/ui/select";
 import { 
-  Calendar, CheckCircle, Clock, MessageSquare, BookOpen, FlaskConical, 
+  Calendar, CheckCircle, CheckSquare, Clock, MessageSquare, BookOpen, FlaskConical, 
   Users, BarChart3, PlusCircle, Settings, LogOut, Upload, Star, 
   FileText, DollarSign, Award, Bell, Camera, Download, Eye,
-  Building2, UserCheck, Banknote, TrendingUp, FileImage, User,
+  Building2, UserCheck, UserMinus, Banknote, TrendingUp, FileImage, User,
   MapPin, Phone, GraduationCap, CalendarDays, AlertTriangle,
-  Edit, Trash2, BookMarked, FileBarChart, X
+  Edit, Trash2, BookMarked, FileBarChart, X, Check
 } from "lucide-react";
 
 const BACKEND_URL = process.env.REACT_APP_BACKEND_URL;
