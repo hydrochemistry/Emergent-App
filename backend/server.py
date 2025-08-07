@@ -70,6 +70,8 @@ class User(BaseModel):
     supervisor_id: Optional[str] = None
     department: Optional[str] = None
     research_area: Optional[str] = None
+    lab_name: Optional[str] = None
+    lab_logo: Optional[str] = None  # URL or base64 string
     created_at: datetime = Field(default_factory=datetime.utcnow)
 
 class UserCreate(BaseModel):
