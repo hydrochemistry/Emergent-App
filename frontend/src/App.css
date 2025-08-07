@@ -222,3 +222,31 @@
   position: relative;
   z-index: 2;
 }
+
+/* Dialog modal fix - ensure proper z-index and click handling */
+[data-radix-popper-content-wrapper] {
+  z-index: 60 !important;
+}
+
+/* Ensure dialog content is above overlay */
+[role="dialog"] {
+  z-index: 60 !important;
+  position: relative !important;
+}
+
+/* Ensure dialog buttons are clickable */
+[role="dialog"] button {
+  pointer-events: auto !important;
+  position: relative !important;
+  z-index: 61 !important;
+}
+
+/* Dialog overlay should not block clicks to dialog content */
+[data-state="open"][data-aria-hidden="true"] {
+  pointer-events: none !important;
+}
+
+/* But allow clicks to pass through to dialog content */
+[data-state="open"]:not([data-aria-hidden="true"]) {
+  pointer-events: auto !important;
+}
