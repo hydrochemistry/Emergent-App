@@ -1073,6 +1073,30 @@ const ComprehensiveStudentProfile = ({ user, setUser, meetings, reminders, notes
     fetchUserProfile();
   }, []);
 
+  useEffect(() => {
+    if (userProfile) {
+      setFormData({
+        full_name: userProfile.full_name || '',
+        contact_number: userProfile.contact_number || '',
+        student_id: userProfile.student_id || '',
+        program_type: userProfile.program_type || '',
+        study_status: userProfile.study_status || '',
+        field_of_study: userProfile.field_of_study || '',
+        department: userProfile.department || '',
+        faculty: userProfile.faculty || '',
+        institute: userProfile.institute || '',
+        enrollment_date: userProfile.enrollment_date ? userProfile.enrollment_date.split('T')[0] : '',
+        expected_graduation_date: userProfile.expected_graduation_date ? userProfile.expected_graduation_date.split('T')[0] : '',
+        nationality: userProfile.nationality || '',
+        citizenship: userProfile.citizenship || '',
+        research_area: userProfile.research_area || '',
+        lab_name: userProfile.lab_name || '',
+        scopus_id: userProfile.scopus_id || '',
+        orcid_id: userProfile.orcid_id || ''
+      });
+    }
+  }, [userProfile]);
+
   const fetchUserProfile = async () => {
     try {
       const response = await axios.get(`${API}/users/profile`);
