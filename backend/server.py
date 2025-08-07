@@ -107,35 +107,149 @@ class FundingType(str, Enum):
     PRIVATE = "private"
     INSTITUTIONAL = "institutional"
 
-# Enhanced Models with new features
+# Enhanced Models with comprehensive student information
 class User(BaseModel):
     id: str = Field(default_factory=lambda: str(uuid.uuid4()))
     email: str
     password_hash: str
     full_name: str
     role: UserRole
-    student_id: Optional[str] = None
-    supervisor_id: Optional[str] = None
+    
+    # Enhanced Student Information
+    student_id: Optional[str] = None  # Student ID / Matric Number
+    contact_number: Optional[str] = None
+    nationality: Optional[str] = None
+    citizenship: Optional[str] = None
+    program_type: Optional[ProgramType] = None
+    field_of_study: Optional[str] = None
     department: Optional[str] = None
+    faculty: Optional[str] = None
+    institute: Optional[str] = None
+    enrollment_date: Optional[datetime] = None
+    expected_graduation_date: Optional[datetime] = None
+    study_status: StudyStatus = StudyStatus.ACTIVE
+    
+    # Supervisor and Lab Information
+    supervisor_id: Optional[str] = None
     research_area: Optional[str] = None
     lab_name: Optional[str] = None
     lab_logo: Optional[str] = None
     profile_picture: Optional[str] = None
     scopus_id: Optional[str] = None
     orcid_id: Optional[str] = None
+    
+    # Administrative
     created_at: datetime = Field(default_factory=datetime.utcnow)
+    updated_at: datetime = Field(default_factory=datetime.utcnow)
 
 class UserCreate(BaseModel):
     email: str
     password: str
     full_name: str
     role: UserRole
+    
+    # Enhanced Registration Fields
+    student_id: Optional[str] = None
+    contact_number: Optional[str] = None
+    nationality: Optional[str] = None
+    citizenship: Optional[str] = None
+    program_type: Optional[ProgramType] = None
+    field_of_study: Optional[str] = None
     department: Optional[str] = None
+    faculty: Optional[str] = None
+    institute: Optional[str] = None
+    enrollment_date: Optional[str] = None  # Will be converted to datetime
+    expected_graduation_date: Optional[str] = None  # Will be converted to datetime
+    
+    # Existing fields
     research_area: Optional[str] = None
     supervisor_email: Optional[str] = None
     lab_name: Optional[str] = None
     scopus_id: Optional[str] = None
     orcid_id: Optional[str] = None
+
+class UserUpdate(BaseModel):
+    full_name: Optional[str] = None
+    student_id: Optional[str] = None
+    contact_number: Optional[str] = None
+    nationality: Optional[str] = None
+    citizenship: Optional[str] = None
+    program_type: Optional[ProgramType] = None
+    field_of_study: Optional[str] = None
+    department: Optional[str] = None
+    faculty: Optional[str] = None
+    institute: Optional[str] = None
+    enrollment_date: Optional[str] = None
+    expected_graduation_date: Optional[str] = None
+    study_status: Optional[StudyStatus] = None
+    research_area: Optional[str] = None
+    lab_name: Optional[str] = None
+    scopus_id: Optional[str] = None
+    orcid_id: Optional[str] = None
+
+class SupervisorMeeting(BaseModel):
+    id: str = Field(default_factory=lambda: str(uuid.uuid4()))
+    student_id: str
+    supervisor_id: str
+    meeting_type: MeetingType
+    meeting_date: datetime
+    duration_minutes: Optional[int] = None
+    agenda: str
+    discussion_points: List[str] = []
+    action_items: List[str] = []
+    next_meeting_date: Optional[datetime] = None
+    meeting_notes: Optional[str] = None
+    student_feedback: Optional[str] = None
+    supervisor_feedback: Optional[str] = None
+    created_at: datetime = Field(default_factory=datetime.utcnow)
+
+class MeetingCreate(BaseModel):
+    student_id: str
+    meeting_type: MeetingType
+    meeting_date: datetime
+    duration_minutes: Optional[int] = None
+    agenda: str
+    discussion_points: Optional[List[str]] = []
+    action_items: Optional[List[str]] = []
+    next_meeting_date: Optional[datetime] = None
+    meeting_notes: Optional[str] = None
+
+class Reminder(BaseModel):
+    id: str = Field(default_factory=lambda: str(uuid.uuid4()))
+    user_id: str
+    created_by: str  # supervisor or system
+    title: str
+    description: str
+    reminder_date: datetime
+    priority: TaskPriority = TaskPriority.MEDIUM
+    is_completed: bool = False
+    reminder_type: str  # 'deadline', 'meeting', 'submission', 'general'
+    created_at: datetime = Field(default_factory=datetime.utcnow)
+
+class ReminderCreate(BaseModel):
+    user_id: str
+    title: str
+    description: str
+    reminder_date: datetime
+    priority: TaskPriority = TaskPriority.MEDIUM
+    reminder_type: str
+
+class SupervisorNote(BaseModel):
+    id: str = Field(default_factory=lambda: str(uuid.uuid4()))
+    student_id: str
+    created_by: str  # supervisor_id or 'postgrad_office'
+    note_type: str  # 'supervision', 'progress', 'academic', 'administrative'
+    title: str
+    content: str
+    is_private: bool = False  # If true, only visible to supervisors/admin
+    created_at: datetime = Field(default_factory=datetime.utcnow)
+
+class NoteCreate(BaseModel):
+    student_id: str
+    note_type: str
+    title: str
+    content: str
+    is_private: bool = False
 
 class UserLogin(BaseModel):
     email: str
