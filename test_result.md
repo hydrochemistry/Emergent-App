@@ -257,15 +257,18 @@ backend:
 
   - task: "Grant Creation API"
     implemented: true
-    working: false
+    working: true
     file: "/app/backend/server.py"
     stuck_count: 1
     priority: "high"
-    needs_retesting: true
+    needs_retesting: false
     status_history:
       - working: false
         agent: "user"
         comment: "User reports 'Create grant' button not working and can't proceed saving input"
+      - working: true
+        agent: "testing"
+        comment: "✅ COMPREHENSIVE TESTING COMPLETED: Grant Creation API is fully functional. Tested with exact frontend data structures including title, funding_agency, total_amount, duration_months, grant_type, description, start_date, end_date, status, person_in_charge, grant_vote_number. API correctly handles supervisor authentication and creates grants successfully. Backend endpoint POST /api/grants working perfectly. Issue is NOT with the backend API."
 
 frontend:
   - task: "ProfileEditForm Implementation"
