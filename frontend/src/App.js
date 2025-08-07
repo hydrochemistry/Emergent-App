@@ -1937,7 +1937,7 @@ const CreateTaskDialog = ({ students, onTaskCreated }) => {
       onTaskCreated();
     } catch (error) {
       console.error('Error creating task:', error);
-      alert('Error creating task');
+      alert('Error creating task: ' + (error.response?.data?.detail || error.message || 'Unknown error occurred'));
     } finally {
       setLoading(false);
     }
