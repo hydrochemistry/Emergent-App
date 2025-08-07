@@ -908,7 +908,34 @@ const Dashboard = ({ user, logout, setUser }) => {
               </div>
             </div>
 
-            <AllPublicationsView user={user} students={students} publications={publications} />
+            <div className="space-y-6">
+              {/* Scopus Publications Integration */}
+              <Card>
+                <CardHeader>
+                  <CardTitle className="flex items-center gap-2">
+                    <BookOpen className="h-5 w-5 text-blue-600" />
+                    Hydrochemistry Laboratory Publications
+                  </CardTitle>
+                  <p className="text-sm text-gray-600">Live publications from Scopus database</p>
+                </CardHeader>
+                <CardContent className="p-0">
+                  <div className="w-full rounded-lg overflow-hidden bg-transparent">
+                    <iframe 
+                      src="https://hydrochemistry.github.io/scopus-publications/" 
+                      width="100%" 
+                      height="600px" 
+                      style={{border:'none', background: 'transparent'}} 
+                      allowTransparency="true"
+                      className="w-full rounded-lg"
+                    >
+                    </iframe>
+                  </div>
+                </CardContent>
+              </Card>
+              
+              {/* Local Publications Management */}
+              <AllPublicationsView user={user} students={students} publications={publications} />
+            </div>
           </TabsContent>
 
           {/* Students Tab */}
