@@ -3010,9 +3010,21 @@ const GrantCard = ({ grant, user, onGrantUpdated }) => {
         )}
 
         {/* Additional Actions for Supervisors */}
-        {(user.role === 'supervisor' || user.role === 'lab_manager') && (
+        {user.role === 'supervisor' && (
           <div className="mt-4 pt-4 border-t">
-            <div className="flex gap-2">
+            <div className="flex flex-wrap gap-2">
+              {grant.status === 'pending' && (
+                <>
+                  <Button variant="default" size="sm" className="bg-green-600 hover:bg-green-700">
+                    <Check className="h-4 w-4 mr-2" />
+                    Approve Grant
+                  </Button>
+                  <Button variant="outline" size="sm" className="text-red-600 border-red-600 hover:bg-red-50">
+                    <X className="h-4 w-4 mr-2" />
+                    Reject
+                  </Button>
+                </>
+              )}
               <Button variant="outline" size="sm">
                 <Eye className="h-4 w-4 mr-2" />
                 View Registrations
