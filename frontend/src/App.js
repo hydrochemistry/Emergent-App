@@ -1036,9 +1036,7 @@ const Dashboard = ({ user, logout, setUser }) => {
                     <p className="text-xs text-gray-500">Remaining</p>
                   </div>
                 </div>
-                {(user.role === 'supervisor' || user.role === 'lab_manager') && (
-                  <CreateGrantDialog students={students} onGrantCreated={fetchDashboardData} />
-                )}
+                <CreateGrantDialog students={students} onGrantCreated={fetchDashboardData} />
               </div>
             </div>
 
