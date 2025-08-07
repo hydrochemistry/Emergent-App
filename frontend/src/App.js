@@ -1857,12 +1857,177 @@ const CreateTaskDialog = ({ students, onTaskCreated }) => {
   );
 };
 
-const CreateResearchLogDialog = ({ onLogCreated }) => (
-  <Button>
-    <PlusCircle className="h-4 w-4 mr-2" />
-    Add Research Log
-  </Button>
-);
+const CreateResearchLogDialog = ({ onLogCreated }) => {
+  const [isOpen, setIsOpen] = useState(false);
+  const [formData, setFormData] = useState({
+    title: '',
+    activity_type: 'experiment',
+    description: '',
+    findings: '',
+    challenges: '',
+    next_steps: '',
+    duration_hours: '',
+    tags: ''
+  });
+  const [loading, setLoading] = useState(false);
+
+  const handleSubmit = async (e) => {
+    e.preventDefault();
+    setLoading(true);
+    
+    try {
+      await axios.post(`${API}/research-logs`, {
+        ...formData,
+        duration_hours: formData.duration_hours ? parseFloat(formData.duration_hours) : null,
+        tags: formData.tags ? formData.tags.split(',').map(tag => tag.trim()) : []
+      });
+      
+      alert('Research log created successfully!');
+      setFormData({
+        title: '',
+        activity_type: 'experiment',
+        description: '',
+        findings: '',
+        challenges: '',
+        next_steps: '',
+        duration_hours: '',
+        tags: ''
+      });
+      setIsOpen(false);
+      onLogCreated();
+    } catch (error) {
+      console.error('Error creating research log:', error);
+      alert('Error creating research log');
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  return (
+    <Dialog open={isOpen} onOpenChange={setIsOpen}>
+      <DialogTrigger asChild>
+        <Button>
+          <PlusCircle className="h-4 w-4 mr-2" />
+          Add Research Log
+        </Button>
+      </DialogTrigger>
+      <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
+        <DialogHeader>
+          <DialogTitle>Create Research Log</DialogTitle>
+        </DialogHeader>
+        <form onSubmit={handleSubmit} className="space-y-4">
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div>
+              <Label htmlFor="title">Title *</Label>
+              <Input
+                id="title"
+                value={formData.title}
+                onChange={(e) => setFormData({...formData, title: e.target.value})}
+                placeholder="Research activity title"
+                required
+              />
+            </div>
+            
+            <div>
+              <Label htmlFor="activity_type">Activity Type</Label>
+              <Select value={formData.activity_type} onValueChange={(value) => setFormData({...formData, activity_type: value})}>
+                <SelectTrigger>
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="experiment">Experiment</SelectItem>
+                  <SelectItem value="literature_review">Literature Review</SelectItem>
+                  <SelectItem value="data_collection">Data Collection</SelectItem>
+                  <SelectItem value="meeting">Meeting</SelectItem>
+                  <SelectItem value="writing">Writing</SelectItem>
+                  <SelectItem value="analysis">Analysis</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+          </div>
+          
+          <div>
+            <Label htmlFor="description">Description *</Label>
+            <Textarea
+              id="description"
+              value={formData.description}
+              onChange={(e) => setFormData({...formData, description: e.target.value})}
+              placeholder="Describe the research activity"
+              rows={3}
+              required
+            />
+          </div>
+          
+          <div>
+            <Label htmlFor="findings">Key Findings</Label>
+            <Textarea
+              id="findings"
+              value={formData.findings}
+              onChange={(e) => setFormData({...formData, findings: e.target.value})}
+              placeholder="What did you discover or learn?"
+              rows={2}
+            />
+          </div>
+          
+          <div>
+            <Label htmlFor="challenges">Challenges Faced</Label>
+            <Textarea
+              id="challenges"
+              value={formData.challenges}
+              onChange={(e) => setFormData({...formData, challenges: e.target.value})}
+              placeholder="Any difficulties or obstacles encountered"
+              rows={2}
+            />
+          </div>
+          
+          <div>
+            <Label htmlFor="next_steps">Next Steps</Label>
+            <Textarea
+              id="next_steps"
+              value={formData.next_steps}
+              onChange={(e) => setFormData({...formData, next_steps: e.target.value})}
+              placeholder="What are the planned next actions?"
+              rows={2}
+            />
+          </div>
+          
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div>
+              <Label htmlFor="duration_hours">Duration (hours)</Label>
+              <Input
+                id="duration_hours"
+                type="number"
+                step="0.5"
+                value={formData.duration_hours}
+                onChange={(e) => setFormData({...formData, duration_hours: e.target.value})}
+                placeholder="Time spent"
+              />
+            </div>
+            
+            <div>
+              <Label htmlFor="tags">Tags (comma-separated)</Label>
+              <Input
+                id="tags"
+                value={formData.tags}
+                onChange={(e) => setFormData({...formData, tags: e.target.value})}
+                placeholder="machine learning, neural networks"
+              />
+            </div>
+          </div>
+          
+          <div className="flex justify-end gap-2">
+            <Button type="button" variant="outline" onClick={() => setIsOpen(false)}>
+              Cancel
+            </Button>
+            <Button type="submit" disabled={loading || !formData.title || !formData.description}>
+              {loading ? 'Creating...' : 'Create Log'}
+            </Button>
+          </div>
+        </form>
+      </DialogContent>
+    </Dialog>
+  );
+};
 
 const CreateMeetingDialog = ({ students, onMeetingCreated }) => (
   <Button>
