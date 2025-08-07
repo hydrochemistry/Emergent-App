@@ -1202,7 +1202,7 @@ async def create_grant(grant_data: GrantCreate, current_user: User = Depends(get
     grant = Grant(
         title=grant_data.title,
         funding_agency=grant_data.funding_agency,
-        funding_type=grant_data.funding_type,
+        funding_type=grant_data.funding_type or FundingType.GOVERNMENT,
         total_amount=grant_data.total_amount,
         balance=grant_data.total_amount,
         status=grant_data.status,
@@ -1210,7 +1210,12 @@ async def create_grant(grant_data: GrantCreate, current_user: User = Depends(get
         end_date=grant_data.end_date,
         principal_investigator=current_user.id,
         student_manager_id=grant_data.student_manager_id,
-        description=grant_data.description
+        description=grant_data.description,
+        person_in_charge=grant_data.person_in_charge,
+        grant_vote_number=grant_data.grant_vote_number,
+        duration_months=grant_data.duration_months,
+        grant_type=grant_data.grant_type,
+        remaining_balance=grant_data.total_amount
     )
     
     await db.grants.insert_one(grant.dict())
