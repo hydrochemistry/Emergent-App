@@ -3436,7 +3436,7 @@ const AdminPanel = ({ user, labSettings, onSettingsUpdated }) => {
       onSettingsUpdated();
     } catch (error) {
       console.error('Error updating lab settings:', error);
-      alert('Error updating lab settings');
+      alert('Error updating lab settings: ' + (error.response?.data?.detail || error.message || 'Unknown error occurred'));
     } finally {
       setLoading(false);
     }
