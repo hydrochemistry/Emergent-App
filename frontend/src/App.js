@@ -608,7 +608,7 @@ const Dashboard = ({ user, logout, setUser }) => {
 
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
         <Tabs value={activeTab} onValueChange={setActiveTab}>
-          <TabsList className="grid grid-cols-5 lg:grid-cols-10 w-full max-w-5xl mb-8 text-xs">
+          <TabsList className="grid grid-cols-6 lg:grid-cols-11 w-full max-w-6xl mb-8 text-xs">
             <TabsTrigger value="dashboard" className="flex flex-col items-center p-2">
               <BarChart3 className="h-4 w-4" />
               <span className="hidden sm:inline">Dashboard</span>
