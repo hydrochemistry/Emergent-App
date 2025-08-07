@@ -102,7 +102,7 @@
 # Testing Data - Main Agent and testing sub agent both should log testing data below this section
 #====================================================================================================
 
-user_problem_statement: "Fix the ProfileEditForm placeholder, implement dashboard announcements as highlights, complete grants registration functionality, and develop comprehensive administrator page for lab details and password changes"
+user_problem_statement: "Multiple critical bugs reported by user: 1) Research log creation failing with 'Error creating research log' for Students, 2) Schedule meeting button not working, 3) Create reminder button not working, 4) Post announcement failing with 'Error posting announcement', 5) Create grant button not working. All create/submit buttons appear to be failing."
 
 backend:
   - task: "User Authentication System"
