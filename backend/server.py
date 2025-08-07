@@ -506,12 +506,38 @@ async def register(user_data: UserCreate):
     
     hashed_password = hash_password(user_data.password)
     
+    # Convert date strings to datetime objects
+    enrollment_date = None
+    expected_graduation_date = None
+    
+    if user_data.enrollment_date:
+        try:
+            enrollment_date = datetime.fromisoformat(user_data.enrollment_date.replace('Z', '+00:00'))
+        except:
+            enrollment_date = None
+    
+    if user_data.expected_graduation_date:
+        try:
+            expected_graduation_date = datetime.fromisoformat(user_data.expected_graduation_date.replace('Z', '+00:00'))
+        except:
+            expected_graduation_date = None
+    
     user = User(
         email=user_data.email,
         password_hash=hashed_password,
         full_name=user_data.full_name,
         role=user_data.role,
+        student_id=user_data.student_id,
+        contact_number=user_data.contact_number,
+        nationality=user_data.nationality,
+        citizenship=user_data.citizenship,
+        program_type=user_data.program_type,
+        field_of_study=user_data.field_of_study,
         department=user_data.department,
+        faculty=user_data.faculty,
+        institute=user_data.institute,
+        enrollment_date=enrollment_date,
+        expected_graduation_date=expected_graduation_date,
         research_area=user_data.research_area,
         lab_name=user_data.lab_name,
         scopus_id=user_data.scopus_id,
@@ -536,10 +562,13 @@ async def register(user_data: UserCreate):
             "email": user.email,
             "full_name": user.full_name,
             "role": user.role,
+            "student_id": user.student_id,
             "department": user.department,
             "research_area": user.research_area,
             "lab_name": user.lab_name,
-            "profile_picture": user.profile_picture
+            "profile_picture": user.profile_picture,
+            "program_type": user.program_type,
+            "study_status": user.study_status
         }
     )
 
