@@ -1131,15 +1131,6 @@ const ComprehensiveStudentProfile = ({ user, setUser, meetings, reminders, notes
                   )}
                 </AvatarFallback>
               </Avatar>
-              <label className="absolute bottom-0 right-0 bg-blue-600 rounded-full p-1 cursor-pointer hover:bg-blue-700">
-                <Camera className="h-4 w-4 text-white" />
-                <input
-                  type="file"
-                  accept="image/*"
-                  onChange={uploadProfilePicture}
-                  className="hidden"
-                />
-              </label>
             </div>
             <div>
               <h1 className="text-2xl font-bold">{userProfile.full_name}</h1>
