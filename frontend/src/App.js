@@ -1088,7 +1088,7 @@ const ComprehensiveStudentProfile = ({ user, setUser, meetings, reminders, notes
                 <AvatarFallback>
                   {userProfile.profile_picture ? (
                     <img 
-                      src={userProfile.profile_picture} 
+                      src={userProfile.profile_picture.startsWith('http') ? userProfile.profile_picture : `${BACKEND_URL}${userProfile.profile_picture}`}
                       alt="Profile" 
                       className="w-full h-full rounded-full object-cover" 
                     />
