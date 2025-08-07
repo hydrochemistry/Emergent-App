@@ -871,10 +871,8 @@ const Dashboard = ({ user, logout, setUser }) => {
           {/* Meetings Tab */}
           <TabsContent value="meetings" className="mt-6">
             <div className="flex justify-between items-center mb-6">
-              <h2 className="text-2xl font-bold">Supervisor Meetings</h2>
-              {(user.role === 'supervisor' || user.role === 'lab_manager') && (
-                <CreateMeetingDialog students={students} onMeetingCreated={fetchDashboardData} />
-              )}
+              <h2 className="text-2xl font-bold">Meetings & Schedule</h2>
+              <CreateMeetingDialog students={students} onMeetingCreated={fetchDashboardData} />
             </div>
 
             <div className="grid gap-6">
