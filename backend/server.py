@@ -230,7 +230,9 @@ async def register(user_data: UserCreate):
             "full_name": user.full_name,
             "role": user.role,
             "department": user.department,
-            "research_area": user.research_area
+            "research_area": user.research_area,
+            "lab_name": user.lab_name,
+            "lab_logo": user.lab_logo
         }
     )
 
