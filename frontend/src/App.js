@@ -3220,6 +3220,44 @@ const StudentManagementCard = ({ student, user, onStudentUpdated }) => {
                 </form>
               </DialogContent>
             </Dialog>
+
+            {/* Demote Dialog */}
+            {student.role !== 'student' && (
+              <Dialog open={isDemoteOpen} onOpenChange={setIsDemoteOpen}>
+                <DialogTrigger asChild>
+                  <Button variant="outline" size="sm" className="text-orange-600 border-orange-600 hover:bg-orange-50">
+                    <UserMinus className="h-4 w-4 mr-2" />
+                    Demote
+                  </Button>
+                </DialogTrigger>
+                <DialogContent className="w-[95vw] max-w-md mx-4 max-h-[90vh] overflow-y-auto">
+                  <DialogHeader>
+                    <DialogTitle>Demote {student.full_name}</DialogTitle>
+                  </DialogHeader>
+                  <form onSubmit={handleDemoteUser} className="space-y-4">
+                    <div>
+                      <Label>Current Role</Label>
+                      <p className="text-sm text-gray-600 capitalize">{student.role.replace('_', ' ')}</p>
+                    </div>
+                    <div>
+                      <Label>Demote to</Label>
+                      <p className="text-sm font-medium text-orange-600">Student (Normal User)</p>
+                    </div>
+                    <div className="text-sm text-orange-600 bg-orange-50 p-3 rounded">
+                      <p>⚠️ This action will remove all elevated privileges and demote the user to a normal student account.</p>
+                    </div>
+                    <div className="flex justify-end gap-2">
+                      <Button type="button" variant="outline" onClick={() => setIsDemoteOpen(false)}>
+                        Cancel
+                      </Button>
+                      <Button type="submit" disabled={loading} className="bg-orange-600 hover:bg-orange-700">
+                        {loading ? 'Demoting...' : 'Demote to Student'}
+                      </Button>
+                    </div>
+                  </form>
+                </DialogContent>
+              </Dialog>
+            )}
           </div>
         </div>
       </CardContent>
