@@ -1971,6 +1971,284 @@ const StudentManagementCard = ({ student, user, onStudentUpdated }) => (
   </Card>
 );
 
+// Admin Panel Component
+const AdminPanel = ({ user, labSettings, onSettingsUpdated }) => {
+  const [activeAdminTab, setActiveAdminTab] = useState('lab-settings');
+  const [labData, setLabData] = useState({
+    lab_name: labSettings?.lab_name || '',
+    lab_logo: labSettings?.lab_logo || '',
+    description: labSettings?.description || '',
+    contact_email: labSettings?.contact_email || '',
+    website: labSettings?.website || '',
+    address: labSettings?.address || ''
+  });
+  const [passwordData, setPasswordData] = useState({
+    current_password: '',
+    new_password: '',
+    confirm_password: ''
+  });
+  const [loading, setLoading] = useState(false);
+
+  const handleLabSettingsUpdate = async () => {
+    setLoading(true);
+    try {
+      await axios.put(`${API}/lab/settings`, labData);
+      alert('Lab settings updated successfully!');
+      onSettingsUpdated();
+    } catch (error) {
+      console.error('Error updating lab settings:', error);
+      alert('Error updating lab settings');
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handlePasswordChange = async () => {
+    if (passwordData.new_password !== passwordData.confirm_password) {
+      alert('New password and confirmation do not match');
+      return;
+    }
+    
+    setLoading(true);
+    try {
+      await axios.post(`${API}/auth/change-password`, {
+        current_password: passwordData.current_password,
+        new_password: passwordData.new_password
+      });
+      alert('Password changed successfully!');
+      setPasswordData({ current_password: '', new_password: '', confirm_password: '' });
+    } catch (error) {
+      console.error('Error changing password:', error);
+      alert(error.response?.data?.detail || 'Error changing password');
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleLogoUpload = async (event) => {
+    const file = event.target.files[0];
+    if (!file) return;
+
+    const formData = new FormData();
+    formData.append('file', file);
+
+    setLoading(true);
+    try {
+      const response = await axios.post(`${API}/lab/upload-logo`, formData, {
+        headers: { 'Content-Type': 'multipart/form-data' }
+      });
+      setLabData({ ...labData, lab_logo: response.data.file_path });
+      alert('Logo uploaded successfully!');
+    } catch (error) {
+      console.error('Error uploading logo:', error);
+      alert('Error uploading logo');
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  return (
+    <div className="space-y-6">
+      <div className="flex justify-between items-center">
+        <h2 className="text-2xl font-bold">Administration Panel</h2>
+        <Badge variant="outline" className="bg-blue-50 text-blue-700">
+          {user.role.replace('_', ' ').toUpperCase()}
+        </Badge>
+      </div>
+
+      <Tabs value={activeAdminTab} onValueChange={setActiveAdminTab}>
+        <TabsList className="grid w-full grid-cols-3">
+          <TabsTrigger value="lab-settings">Lab Settings</TabsTrigger>
+          <TabsTrigger value="user-management">User Management</TabsTrigger>
+          <TabsTrigger value="security">Security</TabsTrigger>
+        </TabsList>
+
+        {/* Lab Settings Tab */}
+        <TabsContent value="lab-settings" className="mt-6">
+          <Card>
+            <CardHeader>
+              <CardTitle className="flex items-center gap-2">
+                <Building2 className="h-5 w-5" />
+                Laboratory Information
+              </CardTitle>
+              <p className="text-sm text-gray-600">Configure your lab's basic information and branding</p>
+            </CardHeader>
+            <CardContent className="space-y-6">
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                <div className="space-y-4">
+                  <div>
+                    <Label htmlFor="lab_name">Lab Name *</Label>
+                    <Input
+                      id="lab_name"
+                      value={labData.lab_name}
+                      onChange={(e) => setLabData({...labData, lab_name: e.target.value})}
+                      placeholder="Enter lab name"
+                    />
+                  </div>
+                  <div>
+                    <Label htmlFor="contact_email">Contact Email</Label>
+                    <Input
+                      id="contact_email"
+                      type="email"
+                      value={labData.contact_email}
+                      onChange={(e) => setLabData({...labData, contact_email: e.target.value})}
+                      placeholder="lab@university.edu"
+                    />
+                  </div>
+                  <div>
+                    <Label htmlFor="website">Website</Label>
+                    <Input
+                      id="website"
+                      type="url"
+                      value={labData.website}
+                      onChange={(e) => setLabData({...labData, website: e.target.value})}
+                      placeholder="https://lab.university.edu"
+                    />
+                  </div>
+                </div>
+                <div className="space-y-4">
+                  <div>
+                    <Label htmlFor="description">Lab Description</Label>
+                    <Textarea
+                      id="description"
+                      value={labData.description}
+                      onChange={(e) => setLabData({...labData, description: e.target.value})}
+                      placeholder="Describe your lab's research focus and mission"
+                      rows={4}
+                    />
+                  </div>
+                  <div>
+                    <Label htmlFor="address">Address</Label>
+                    <Textarea
+                      id="address"
+                      value={labData.address}
+                      onChange={(e) => setLabData({...labData, address: e.target.value})}
+                      placeholder="Lab physical address"
+                      rows={3}
+                    />
+                  </div>
+                </div>
+              </div>
+
+              <div className="border-t pt-6">
+                <Label>Lab Logo</Label>
+                <div className="flex items-center space-x-4 mt-2">
+                  {labData.lab_logo && (
+                    <div className="w-16 h-16 rounded-lg border overflow-hidden">
+                      <img 
+                        src={`${BACKEND_URL}${labData.lab_logo}`} 
+                        alt="Lab logo" 
+                        className="w-full h-full object-cover"
+                      />
+                    </div>
+                  )}
+                  <div>
+                    <input
+                      type="file"
+                      accept="image/*"
+                      onChange={handleLogoUpload}
+                      className="hidden"
+                      id="logo-upload"
+                    />
+                    <label htmlFor="logo-upload">
+                      <Button variant="outline" as="span" disabled={loading}>
+                        <Upload className="h-4 w-4 mr-2" />
+                        {labData.lab_logo ? 'Change Logo' : 'Upload Logo'}
+                      </Button>
+                    </label>
+                  </div>
+                </div>
+              </div>
+
+              <div className="flex justify-end pt-4">
+                <Button onClick={handleLabSettingsUpdate} disabled={loading}>
+                  {loading ? 'Updating...' : 'Save Lab Settings'}
+                </Button>
+              </div>
+            </CardContent>
+          </Card>
+        </TabsContent>
+
+        {/* User Management Tab */}
+        <TabsContent value="user-management" className="mt-6">
+          <Card>
+            <CardHeader>
+              <CardTitle className="flex items-center gap-2">
+                <Users className="h-5 w-5" />
+                User Management
+              </CardTitle>
+              <p className="text-sm text-gray-600">Manage user roles and permissions</p>
+            </CardHeader>
+            <CardContent>
+              <div className="text-center py-8">
+                <Users className="h-12 w-12 text-gray-300 mx-auto mb-4" />
+                <p className="text-gray-500">User management features coming soon</p>
+                <p className="text-sm text-gray-400 mt-1">This will include role management, user promotion, and access control</p>
+              </div>
+            </CardContent>
+          </Card>
+        </TabsContent>
+
+        {/* Security Tab */}
+        <TabsContent value="security" className="mt-6">
+          <Card>
+            <CardHeader>
+              <CardTitle className="flex items-center gap-2">
+                <Settings className="h-5 w-5" />
+                Security Settings
+              </CardTitle>
+              <p className="text-sm text-gray-600">Change your password and security preferences</p>
+            </CardHeader>
+            <CardContent className="space-y-6">
+              <div className="space-y-4">
+                <div>
+                  <Label htmlFor="current_password">Current Password *</Label>
+                  <Input
+                    id="current_password"
+                    type="password"
+                    value={passwordData.current_password}
+                    onChange={(e) => setPasswordData({...passwordData, current_password: e.target.value})}
+                    placeholder="Enter current password"
+                  />
+                </div>
+                <div>
+                  <Label htmlFor="new_password">New Password *</Label>
+                  <Input
+                    id="new_password"
+                    type="password"
+                    value={passwordData.new_password}
+                    onChange={(e) => setPasswordData({...passwordData, new_password: e.target.value})}
+                    placeholder="Enter new password"
+                  />
+                </div>
+                <div>
+                  <Label htmlFor="confirm_password">Confirm New Password *</Label>
+                  <Input
+                    id="confirm_password"
+                    type="password"
+                    value={passwordData.confirm_password}
+                    onChange={(e) => setPasswordData({...passwordData, confirm_password: e.target.value})}
+                    placeholder="Confirm new password"
+                  />
+                </div>
+              </div>
+
+              <div className="flex justify-end pt-4">
+                <Button 
+                  onClick={handlePasswordChange} 
+                  disabled={loading || !passwordData.current_password || !passwordData.new_password}
+                >
+                  {loading ? 'Changing...' : 'Change Password'}
+                </Button>
+              </div>
+            </CardContent>
+          </Card>
+        </TabsContent>
+      </Tabs>
+    </div>
+  );
+};
+
 function App() {
   return (
     <div className="App">
