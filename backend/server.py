@@ -257,7 +257,18 @@ class UserLogin(BaseModel):
 
 class UserUpdate(BaseModel):
     full_name: Optional[str] = None
+    student_id: Optional[str] = None
+    contact_number: Optional[str] = None
+    nationality: Optional[str] = None
+    citizenship: Optional[str] = None
+    program_type: Optional[ProgramType] = None
+    field_of_study: Optional[str] = None
     department: Optional[str] = None
+    faculty: Optional[str] = None
+    institute: Optional[str] = None
+    enrollment_date: Optional[str] = None
+    expected_graduation_date: Optional[str] = None
+    study_status: Optional[StudyStatus] = None
     research_area: Optional[str] = None
     lab_name: Optional[str] = None
     scopus_id: Optional[str] = None
