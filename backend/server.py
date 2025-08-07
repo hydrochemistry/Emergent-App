@@ -1177,6 +1177,45 @@ async def upload_research_log_files(log_id: str, files: List[UploadFile] = File(
     
     return {"message": "Files uploaded successfully", "file_paths": file_paths}
 
+@api_router.post("/research-logs/attachments")
+async def upload_research_log_attachment(
+    file: UploadFile = File(...), 
+    research_log_id: str = Form(...),
+    current_user: User = Depends(get_current_user)
+):
+    """Upload a single attachment for a research log"""
+    log = await db.research_logs.find_one({"id": research_log_id, "user_id": current_user.id})
+    if not log:
+        raise HTTPException(status_code=404, detail="Research log not found")
+    
+    if not file.filename:
+        raise HTTPException(status_code=400, detail="No file provided")
+    
+    # Validate file size and type
+    content = await file.read()
+    if len(content) > 10 * 1024 * 1024:  # 10MB
+        raise HTTPException(status_code=400, detail="File too large. Maximum size is 10MB")
+    
+    # Reset file position
+    await file.seek(0)
+    
+    # Save the file
+    file_path = await save_uploaded_file(file, "research_attachments")
+    
+    # Update the research log with the new attachment
+    await db.research_logs.update_one(
+        {"id": research_log_id},
+        {"$push": {"attachments": {
+            "filename": file.filename,
+            "file_path": file_path,
+            "content_type": file.content_type,
+            "size": len(content),
+            "uploaded_at": datetime.utcnow()
+        }}}
+    )
+    
+    return {"message": "Attachment uploaded successfully", "file_path": file_path}
+
 @api_router.post("/research-logs/{log_id}/endorse")
 async def endorse_research_log(log_id: str, endorsement: ResearchLogEndorsement, current_user: User = Depends(get_current_user)):
     if current_user.role not in [UserRole.SUPERVISOR, UserRole.LAB_MANAGER]:
