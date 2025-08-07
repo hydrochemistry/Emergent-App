@@ -3202,7 +3202,7 @@ const StudentManagementCard = ({ student, user, onStudentUpdated }) => {
       setIsMessageOpen(false);
     } catch (error) {
       console.error('Error sending message:', error);
-      alert('Error sending message');
+      alert('Error sending message: ' + (error.response?.data?.detail || error.message || 'Unknown error occurred'));
     } finally {
       setLoading(false);
     }
