@@ -3480,7 +3480,7 @@ const AdminPanel = ({ user, labSettings, onSettingsUpdated }) => {
       alert('Logo uploaded successfully!');
     } catch (error) {
       console.error('Error uploading logo:', error);
-      alert('Error uploading logo');
+      alert('Error uploading logo: ' + (error.response?.data?.detail || error.message || 'Unknown error occurred'));
     } finally {
       setLoading(false);
     }
