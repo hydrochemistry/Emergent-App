@@ -551,7 +551,7 @@ const Dashboard = ({ user, logout, setUser }) => {
 
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
         <Tabs value={activeTab} onValueChange={setActiveTab}>
-          <TabsList className="grid grid-cols-8 w-full max-w-4xl mb-8">
+          <TabsList className="grid grid-cols-10 w-full max-w-5xl mb-8">
             <TabsTrigger value="dashboard">
               <BarChart3 className="h-4 w-4 mr-2" />
               Dashboard
@@ -563,6 +563,10 @@ const Dashboard = ({ user, logout, setUser }) => {
             <TabsTrigger value="research">
               <FlaskConical className="h-4 w-4 mr-2" />
               Research
+            </TabsTrigger>
+            <TabsTrigger value="meetings">
+              <Calendar className="h-4 w-4 mr-2" />
+              Meetings
             </TabsTrigger>
             <TabsTrigger value="bulletins">
               <Bell className="h-4 w-4 mr-2" />
@@ -584,7 +588,11 @@ const Dashboard = ({ user, logout, setUser }) => {
             )}
             <TabsTrigger value="profile">
               <Settings className="h-4 w-4 mr-2" />
-              Settings
+              Profile
+            </TabsTrigger>
+            <TabsTrigger value="reminders">
+              <Bell className="h-4 w-4 mr-2" />
+              Reminders
             </TabsTrigger>
           </TabsList>
 
