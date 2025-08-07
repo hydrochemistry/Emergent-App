@@ -2464,7 +2464,9 @@ const CreateGrantDialog = ({ students, onGrantCreated }) => {
     description: '',
     start_date: '',
     end_date: '',
-    status: 'active'
+    status: 'active',
+    person_in_charge: '',
+    grant_vote_number: ''
   });
   const [loading, setLoading] = useState(false);
 
