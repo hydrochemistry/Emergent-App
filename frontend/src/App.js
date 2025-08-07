@@ -2119,7 +2119,7 @@ const CreateResearchLogDialog = ({ onLogCreated }) => {
       onLogCreated();
     } catch (error) {
       console.error('Error creating research log:', error);
-      alert('Error creating research log');
+      alert('Error creating research log: ' + (error.response?.data?.detail || error.message || 'Unknown error occurred'));
     } finally {
       setLoading(false);
     }
