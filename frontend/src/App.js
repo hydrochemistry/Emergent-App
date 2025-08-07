@@ -2481,7 +2481,7 @@ const CreateMeetingDialog = ({ students, onMeetingCreated, user }) => {
   );
 };
 
-const CreateReminderDialog = ({ students, onReminderCreated }) => {
+const CreateReminderDialog = ({ students, onReminderCreated, user }) => {
   const [isOpen, setIsOpen] = useState(false);
   const [formData, setFormData] = useState({
     title: '',
