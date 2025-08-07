@@ -599,9 +599,48 @@ async def login(login_data: UserLogin):
 @api_router.put("/users/profile")
 async def update_profile(user_update: UserUpdate, current_user: User = Depends(get_current_user)):
     update_data = {k: v for k, v in user_update.dict().items() if v is not None}
+    
+    # Convert date strings to datetime objects
+    if 'enrollment_date' in update_data and update_data['enrollment_date']:
+        try:
+            update_data['enrollment_date'] = datetime.fromisoformat(update_data['enrollment_date'].replace('Z', '+00:00'))
+        except:
+            del update_data['enrollment_date']
+    
+    if 'expected_graduation_date' in update_data and update_data['expected_graduation_date']:
+        try:
+            update_data['expected_graduation_date'] = datetime.fromisoformat(update_data['expected_graduation_date'].replace('Z', '+00:00'))
+        except:
+            del update_data['expected_graduation_date']
+    
     if update_data:
+        update_data['updated_at'] = datetime.utcnow()
         await db.users.update_one({"id": current_user.id}, {"$set": update_data})
     return {"message": "Profile updated successfully"}
+
+@api_router.get("/users/profile")
+async def get_user_profile(user_id: Optional[str] = None, current_user: User = Depends(get_current_user)):
+    """Get user profile - if user_id provided and user has permission, return that user's profile"""
+    target_user_id = user_id if user_id else current_user.id
+    
+    # Check permissions
+    if user_id and user_id != current_user.id:
+        if current_user.role not in [UserRole.SUPERVISOR, UserRole.LAB_MANAGER]:
+            raise HTTPException(status_code=403, detail="Not authorized to view other profiles")
+        
+        # Supervisors can only view their students' profiles
+        if current_user.role == UserRole.SUPERVISOR:
+            target_user = await db.users.find_one({"id": target_user_id})
+            if not target_user or target_user.get("supervisor_id") != current_user.id:
+                raise HTTPException(status_code=403, detail="Not authorized to view this profile")
+    
+    user = await db.users.find_one({"id": target_user_id})
+    if not user:
+        raise HTTPException(status_code=404, detail="User not found")
+    
+    # Remove sensitive information
+    user.pop("password_hash", None)
+    return user
 
 @api_router.post("/users/profile-picture")
 async def upload_profile_picture(file: UploadFile = File(...), current_user: User = Depends(get_current_user)):
@@ -609,11 +648,14 @@ async def upload_profile_picture(file: UploadFile = File(...), current_user: Use
         raise HTTPException(status_code=400, detail="File must be an image")
     
     file_path = await save_uploaded_file(file, "profile_pictures")
-    await db.users.update_one({"id": current_user.id}, {"$set": {"profile_picture": file_path}})
+    await db.users.update_one(
+        {"id": current_user.id}, 
+        {"$set": {"profile_picture": file_path, "updated_at": datetime.utcnow()}}
+    )
     
     return {"message": "Profile picture updated", "file_path": file_path}
 
-@api_router.post("/users/promote-to-lab-manager")
+@api_router.post("/users/{student_id}/promote-lab-manager")
 async def promote_to_lab_manager(student_id: str, current_user: User = Depends(get_current_user)):
     if current_user.role != UserRole.SUPERVISOR:
         raise HTTPException(status_code=403, detail="Only supervisors can promote students")
@@ -622,8 +664,219 @@ async def promote_to_lab_manager(student_id: str, current_user: User = Depends(g
     if not student:
         raise HTTPException(status_code=404, detail="Student not found or not supervised by you")
     
-    await db.users.update_one({"id": student_id}, {"$set": {"role": UserRole.LAB_MANAGER}})
+    await db.users.update_one(
+        {"id": student_id}, 
+        {"$set": {"role": UserRole.LAB_MANAGER, "updated_at": datetime.utcnow()}}
+    )
     return {"message": "Student promoted to lab manager"}
+
+@api_router.post("/users/{student_id}/revoke-lab-manager")
+async def revoke_lab_manager(student_id: str, current_user: User = Depends(get_current_user)):
+    if current_user.role != UserRole.SUPERVISOR:
+        raise HTTPException(status_code=403, detail="Only supervisors can revoke lab manager status")
+    
+    student = await db.users.find_one({"id": student_id, "supervisor_id": current_user.id})
+    if not student:
+        raise HTTPException(status_code=404, detail="Student not found or not supervised by you")
+    
+    await db.users.update_one(
+        {"id": student_id}, 
+        {"$set": {"role": UserRole.STUDENT, "updated_at": datetime.utcnow()}}
+    )
+    return {"message": "Lab manager status revoked"}
+
+# Supervisor Meeting Routes
+@api_router.post("/meetings", response_model=SupervisorMeeting)
+async def create_meeting(meeting_data: MeetingCreate, current_user: User = Depends(get_current_user)):
+    if current_user.role not in [UserRole.SUPERVISOR, UserRole.LAB_MANAGER]:
+        raise HTTPException(status_code=403, detail="Only supervisors can create meetings")
+    
+    meeting = SupervisorMeeting(
+        student_id=meeting_data.student_id,
+        supervisor_id=current_user.id,
+        meeting_type=meeting_data.meeting_type,
+        meeting_date=meeting_data.meeting_date,
+        duration_minutes=meeting_data.duration_minutes,
+        agenda=meeting_data.agenda,
+        discussion_points=meeting_data.discussion_points or [],
+        action_items=meeting_data.action_items or [],
+        next_meeting_date=meeting_data.next_meeting_date,
+        meeting_notes=meeting_data.meeting_notes
+    )
+    
+    await db.meetings.insert_one(meeting.dict())
+    return meeting
+
+@api_router.get("/meetings")
+async def get_meetings(student_id: Optional[str] = None, current_user: User = Depends(get_current_user)):
+    query = {}
+    
+    if current_user.role == UserRole.STUDENT:
+        query["student_id"] = current_user.id
+    elif student_id:
+        # Verify supervisor has access to this student
+        student = await db.users.find_one({"id": student_id, "supervisor_id": current_user.id})
+        if not student:
+            raise HTTPException(status_code=403, detail="Not authorized to view these meetings")
+        query["student_id"] = student_id
+    else:
+        # Get all meetings for students supervised by this user
+        students = await db.users.find({"supervisor_id": current_user.id}).to_list(1000)
+        student_ids = [student["id"] for student in students]
+        query["student_id"] = {"$in": student_ids}
+    
+    meetings = await db.meetings.find(query).sort("meeting_date", -1).to_list(1000)
+    return [SupervisorMeeting(**meeting) for meeting in meetings]
+
+@api_router.put("/meetings/{meeting_id}")
+async def update_meeting(meeting_id: str, update_data: dict, current_user: User = Depends(get_current_user)):
+    meeting = await db.meetings.find_one({"id": meeting_id})
+    if not meeting:
+        raise HTTPException(status_code=404, detail="Meeting not found")
+    
+    # Check permissions
+    if current_user.role == UserRole.STUDENT and meeting["student_id"] != current_user.id:
+        # Students can only add feedback to their own meetings
+        update_data = {"student_feedback": update_data.get("student_feedback", "")}
+    elif current_user.role in [UserRole.SUPERVISOR, UserRole.LAB_MANAGER] and meeting["supervisor_id"] != current_user.id:
+        raise HTTPException(status_code=403, detail="Not authorized to update this meeting")
+    
+    await db.meetings.update_one({"id": meeting_id}, {"$set": update_data})
+    return {"message": "Meeting updated successfully"}
+
+# Reminders Routes
+@api_router.post("/reminders", response_model=Reminder)
+async def create_reminder(reminder_data: ReminderCreate, current_user: User = Depends(get_current_user)):
+    # Check if user can create reminder for the target user
+    if reminder_data.user_id != current_user.id:
+        if current_user.role not in [UserRole.SUPERVISOR, UserRole.LAB_MANAGER]:
+            raise HTTPException(status_code=403, detail="Not authorized to create reminders for others")
+        
+        target_user = await db.users.find_one({"id": reminder_data.user_id})
+        if not target_user or target_user.get("supervisor_id") != current_user.id:
+            raise HTTPException(status_code=403, detail="Not authorized to create reminder for this user")
+    
+    reminder = Reminder(
+        user_id=reminder_data.user_id,
+        created_by=current_user.id,
+        title=reminder_data.title,
+        description=reminder_data.description,
+        reminder_date=reminder_data.reminder_date,
+        priority=reminder_data.priority,
+        reminder_type=reminder_data.reminder_type
+    )
+    
+    await db.reminders.insert_one(reminder.dict())
+    return reminder
+
+@api_router.get("/reminders")
+async def get_reminders(user_id: Optional[str] = None, current_user: User = Depends(get_current_user)):
+    target_user_id = user_id if user_id else current_user.id
+    
+    # Check permissions
+    if user_id and user_id != current_user.id:
+        if current_user.role not in [UserRole.SUPERVISOR, UserRole.LAB_MANAGER]:
+            raise HTTPException(status_code=403, detail="Not authorized")
+        
+        target_user = await db.users.find_one({"id": target_user_id})
+        if not target_user or target_user.get("supervisor_id") != current_user.id:
+            raise HTTPException(status_code=403, detail="Not authorized")
+    
+    reminders = await db.reminders.find({"user_id": target_user_id}).sort("reminder_date", 1).to_list(1000)
+    return [Reminder(**reminder) for reminder in reminders]
+
+@api_router.put("/reminders/{reminder_id}/complete")
+async def complete_reminder(reminder_id: str, current_user: User = Depends(get_current_user)):
+    reminder = await db.reminders.find_one({"id": reminder_id})
+    if not reminder:
+        raise HTTPException(status_code=404, detail="Reminder not found")
+    
+    if reminder["user_id"] != current_user.id and current_user.role not in [UserRole.SUPERVISOR, UserRole.LAB_MANAGER]:
+        raise HTTPException(status_code=403, detail="Not authorized")
+    
+    await db.reminders.update_one({"id": reminder_id}, {"$set": {"is_completed": True}})
+    return {"message": "Reminder marked as completed"}
+
+# Supervisor Notes Routes
+@api_router.post("/notes", response_model=SupervisorNote)
+async def create_note(note_data: NoteCreate, current_user: User = Depends(get_current_user)):
+    if current_user.role not in [UserRole.SUPERVISOR, UserRole.LAB_MANAGER]:
+        raise HTTPException(status_code=403, detail="Only supervisors can create notes")
+    
+    # Verify student belongs to supervisor
+    student = await db.users.find_one({"id": note_data.student_id, "supervisor_id": current_user.id})
+    if not student:
+        raise HTTPException(status_code=404, detail="Student not found or not supervised by you")
+    
+    note = SupervisorNote(
+        student_id=note_data.student_id,
+        created_by=current_user.id,
+        note_type=note_data.note_type,
+        title=note_data.title,
+        content=note_data.content,
+        is_private=note_data.is_private
+    )
+    
+    await db.notes.insert_one(note.dict())
+    return note
+
+@api_router.get("/notes")
+async def get_notes(student_id: Optional[str] = None, current_user: User = Depends(get_current_user)):
+    if current_user.role == UserRole.STUDENT:
+        # Students can only see non-private notes about themselves
+        notes = await db.notes.find({
+            "student_id": current_user.id,
+            "is_private": False
+        }).sort("created_at", -1).to_list(1000)
+    else:
+        # Supervisors can see all notes for their students
+        query = {}
+        if student_id:
+            # Verify supervisor has access to this student
+            student = await db.users.find_one({"id": student_id, "supervisor_id": current_user.id})
+            if not student:
+                raise HTTPException(status_code=403, detail="Not authorized")
+            query["student_id"] = student_id
+        else:
+            # Get all notes for students supervised by this user
+            students = await db.users.find({"supervisor_id": current_user.id}).to_list(1000)
+            student_ids = [student["id"] for student in students]
+            query["student_id"] = {"$in": student_ids}
+        
+        notes = await db.notes.find(query).sort("created_at", -1).to_list(1000)
+    
+    return [SupervisorNote(**note) for note in notes]
+
+# Publications Page Route
+@api_router.get("/publications/all")
+async def get_all_publications(current_user: User = Depends(get_current_user)):
+    """Get all publications for the lab/supervisor with comprehensive details"""
+    if current_user.role == UserRole.STUDENT:
+        # Students see publications they're tagged in plus their supervisor's publications
+        supervisor_id = current_user.supervisor_id
+        publications = await db.publications.find({
+            "$or": [
+                {"student_contributors": current_user.id},
+                {"supervisor_id": supervisor_id}
+            ]
+        }).sort("year", -1).to_list(1000)
+    else:
+        # Supervisors see all their publications
+        publications = await db.publications.find({"supervisor_id": current_user.id}).sort("year", -1).to_list(1000)
+    
+    # Enhance publications with student contributor names
+    enhanced_publications = []
+    for pub in publications:
+        if pub.get("student_contributors"):
+            student_names = []
+            for student_id in pub["student_contributors"]:
+                student = await db.users.find_one({"id": student_id})
+                if student:
+                    student_names.append(student["full_name"])
+            pub["student_contributor_names"] = student_names
+        enhanced_publications.append(pub)
+    
+    return enhanced_publications
 
 # Lab Settings Routes
 @api_router.post("/lab/settings")
