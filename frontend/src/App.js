@@ -1794,20 +1794,141 @@ const BulletinCard = ({ bulletin, user, onBulletinUpdated }) => (
   </Card>
 );
 
-const GrantCard = ({ grant, user, onGrantUpdated }) => (
-  <Card>
-    <CardContent className="p-6">
-      <h3 className="font-semibold">{grant.title}</h3>
-      <p className="text-sm text-gray-600">{grant.funding_agency}</p>
-      <div className="flex items-center justify-between mt-4">
-        <span>Budget: ${grant.total_amount}</span>
-        <Badge className={getStatusColor(grant.status)}>
-          {grant.status}
-        </Badge>
-      </div>
-    </CardContent>
-  </Card>
-);
+const GrantCard = ({ grant, user, onGrantUpdated }) => {
+  const [isRegistering, setIsRegistering] = useState(false);
+  const [showDetails, setShowDetails] = useState(false);
+  
+  const handleRegisterForGrant = async () => {
+    setIsRegistering(true);
+    try {
+      const response = await axios.post(`${API}/grants/${grant.id}/register`);
+      alert('Successfully registered for grant!');
+      onGrantUpdated();
+    } catch (error) {
+      console.error('Error registering for grant:', error);
+      alert(error.response?.data?.detail || 'Error registering for grant');
+    } finally {
+      setIsRegistering(false);
+    }
+  };
+
+  return (
+    <Card className="hover:shadow-lg transition-shadow">
+      <CardContent className="p-6">
+        <div className="flex items-start justify-between">
+          <div className="flex-1">
+            <h3 className="font-semibold text-lg">{grant.title}</h3>
+            <p className="text-sm text-gray-600 mt-1">
+              <Building2 className="h-4 w-4 inline mr-1" />
+              {grant.funding_agency}
+            </p>
+            {grant.description && (
+              <p className="text-sm text-gray-700 mt-2">
+                {showDetails ? grant.description : `${grant.description.slice(0, 100)}...`}
+                <Button 
+                  variant="link" 
+                  size="sm" 
+                  onClick={() => setShowDetails(!showDetails)}
+                  className="p-0 h-auto text-blue-600"
+                >
+                  {showDetails ? 'Show less' : 'Show more'}
+                </Button>
+              </p>
+            )}
+          </div>
+          <Badge className={getStatusColor(grant.status)} size="sm">
+            {grant.status.replace('_', ' ')}
+          </Badge>
+        </div>
+        
+        <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mt-4 pt-4 border-t">
+          <div>
+            <p className="text-xs text-gray-500">Total Amount</p>
+            <p className="font-semibold text-green-600">${grant.total_amount?.toLocaleString() || 'N/A'}</p>
+          </div>
+          <div>
+            <p className="text-xs text-gray-500">Duration</p>
+            <p className="font-medium">{grant.duration_months || 'N/A'} months</p>
+          </div>
+          <div>
+            <p className="text-xs text-gray-500">Type</p>
+            <p className="font-medium">{grant.grant_type?.replace('_', ' ') || 'N/A'}</p>
+          </div>
+          <div>
+            <p className="text-xs text-gray-500">Remaining Balance</p>
+            <p className="font-semibold text-blue-600">${grant.remaining_balance?.toLocaleString() || 'N/A'}</p>
+          </div>
+        </div>
+
+        {grant.start_date && (
+          <div className="flex items-center gap-4 mt-3 pt-3 border-t text-sm text-gray-600">
+            <span>
+              <CalendarDays className="h-4 w-4 inline mr-1" />
+              Start: {new Date(grant.start_date).toLocaleDateString()}
+            </span>
+            {grant.end_date && (
+              <span>
+                End: {new Date(grant.end_date).toLocaleDateString()}
+              </span>
+            )}
+          </div>
+        )}
+
+        {/* Registration Section for Students */}
+        {user.role === 'student' && grant.status === 'active' && (
+          <div className="mt-4 pt-4 border-t">
+            <div className="flex items-center justify-between">
+              <div>
+                <p className="text-sm font-medium text-gray-900">Grant Registration</p>
+                <p className="text-xs text-gray-600">Apply to participate in this grant</p>
+              </div>
+              <Button 
+                onClick={handleRegisterForGrant}
+                disabled={isRegistering}
+                size="sm"
+                className="bg-blue-600 hover:bg-blue-700"
+              >
+                {isRegistering ? (
+                  <>
+                    <div className="animate-spin h-4 w-4 mr-2 border-2 border-white border-t-transparent rounded-full" />
+                    Registering...
+                  </>
+                ) : (
+                  <>
+                    <Award className="h-4 w-4 mr-2" />
+                    Register for Grant
+                  </>
+                )}
+              </Button>
+            </div>
+          </div>
+        )}
+
+        {/* Additional Actions for Supervisors */}
+        {(user.role === 'supervisor' || user.role === 'lab_manager') && (
+          <div className="mt-4 pt-4 border-t">
+            <div className="flex gap-2">
+              <Button variant="outline" size="sm">
+                <Eye className="h-4 w-4 mr-2" />
+                View Registrations
+              </Button>
+              <Button variant="outline" size="sm">
+                <Edit className="h-4 w-4 mr-2" />
+                Edit Grant
+              </Button>
+              {grant.status === 'active' && (
+                <Button variant="outline" size="sm">
+                  <FileBarChart className="h-4 w-4 mr-2" />
+                  Generate Report
+                </Button>
+              )}
+            </div>
+          </div>
+        )}
+      </CardContent>
+    </Card>
+  );
+};
 
 const StudentManagementCard = ({ student, user, onStudentUpdated }) => (
   <Card>
