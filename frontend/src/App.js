@@ -3075,6 +3075,18 @@ const AdminPanel = ({ user, labSettings, onSettingsUpdated }) => {
   });
   const [loading, setLoading] = useState(false);
 
+  // Update labData when labSettings prop changes
+  useEffect(() => {
+    setLabData({
+      lab_name: labSettings?.lab_name || '',
+      lab_logo: labSettings?.lab_logo || '',
+      description: labSettings?.description || '',
+      contact_email: labSettings?.contact_email || '',
+      website: labSettings?.website || '',
+      address: labSettings?.address || ''
+    });
+  }, [labSettings]);
+
   const handleLabSettingsUpdate = async () => {
     setLoading(true);
     try {
