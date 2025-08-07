@@ -725,28 +725,66 @@ const Dashboard = ({ user, logout, setUser }) => {
                 </CardContent>
               </Card>
 
-              <Card>
-                <CardHeader>
+              <Card className="border-l-4 border-blue-500 shadow-md">
+                <CardHeader className="bg-gradient-to-r from-blue-50 to-indigo-50">
                   <CardTitle className="flex items-center gap-2">
-                    <Bell className="h-5 w-5" />
+                    <Bell className="h-5 w-5 text-blue-600" />
                     Recent Announcements
+                    <Badge variant="outline" className="ml-auto">
+                      {bulletins.length} Active
+                    </Badge>
                   </CardTitle>
                 </CardHeader>
-                <CardContent>
-                  {bulletins.slice(0, 3).map((bulletin) => (
-                    <div key={bulletin.id} className="flex items-start space-x-3 py-2 border-b last:border-b-0">
-                      <Bell className="h-4 w-4 text-blue-600 mt-0.5" />
+                <CardContent className="p-0">
+                  {bulletins.slice(0, 3).map((bulletin, index) => (
+                    <div key={bulletin.id} className={`
+                      flex items-start space-x-3 p-4 
+                      ${index < bulletins.length - 1 ? 'border-b' : ''}
+                      ${bulletin.is_highlight ? 'bg-yellow-50 border-l-4 border-yellow-400' : 'hover:bg-gray-50'}
+                      transition-colors
+                    `}>
+                      {bulletin.is_highlight ? (
+                        <Star className="h-4 w-4 text-yellow-500 mt-0.5 fill-current" />
+                      ) : (
+                        <Bell className="h-4 w-4 text-blue-600 mt-0.5" />
+                      )}
                       <div className="flex-1">
-                        <h4 className="font-medium text-sm">{bulletin.title}</h4>
-                        <p className="text-xs text-gray-600 mt-1">{bulletin.category}</p>
-                        <Badge className={getStatusColor(bulletin.status)} size="sm">
-                          {bulletin.status}
-                        </Badge>
+                        <div className="flex items-start justify-between">
+                          <div>
+                            <h4 className={`font-medium text-sm ${bulletin.is_highlight ? 'text-yellow-900' : 'text-gray-900'}`}>
+                              {bulletin.is_highlight && <span className="text-yellow-600">🌟 </span>}
+                              {bulletin.title}
+                            </h4>
+                            <p className="text-xs text-gray-600 mt-1">{bulletin.category}</p>
+                            {bulletin.is_highlight && (
+                              <p className="text-xs text-yellow-700 mt-1 font-medium">Priority Announcement</p>
+                            )}
+                          </div>
+                          <div className="flex flex-col items-end gap-1">
+                            <Badge 
+                              className={`${getStatusColor(bulletin.status)} text-xs`} 
+                              size="sm"
+                            >
+                              {bulletin.status}
+                            </Badge>
+                            {bulletin.is_highlight && (
+                              <Badge variant="secondary" size="sm" className="text-xs bg-yellow-100 text-yellow-800">
+                                Highlight
+                              </Badge>
+                            )}
+                          </div>
+                        </div>
+                        {bulletin.description && (
+                          <p className="text-xs text-gray-600 mt-2 line-clamp-2">{bulletin.description.slice(0, 100)}...</p>
+                        )}
                       </div>
                     </div>
                   ))}
                   {bulletins.length === 0 && (
-                    <p className="text-gray-500 text-sm">No recent announcements</p>
+                    <div className="p-4 text-center">
+                      <Bell className="h-8 w-8 text-gray-300 mx-auto mb-2" />
+                      <p className="text-gray-500 text-sm">No recent announcements</p>
+                    </div>
                   )}
                 </CardContent>
               </Card>
