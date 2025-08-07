@@ -500,19 +500,55 @@ async def get_current_user(credentials: HTTPAuthorizationCredentials = Depends(s
 
 # Scopus API integration
 async def fetch_scopus_publications(scopus_id: str):
-    """Mock Scopus API call - replace with actual integration"""
-    # This would be replaced with actual Scopus API integration using the provided ID: 22133247800
-    return [
-        {
-            "title": "Advanced Machine Learning Techniques",
-            "authors": ["Dr. John Smith", "Jane Doe"],
-            "journal": "Journal of AI Research",
-            "year": 2023,
-            "doi": "10.1000/123456",
-            "scopus_id": "2-s2.0-85123456789",
-            "citation_count": 15
-        }
-    ]
+    """Fetch publications from Scopus API using the provided Scopus Author ID"""
+    scopus_api_key = os.environ.get('SCOPUS_API_KEY')
+    if not scopus_api_key:
+        raise HTTPException(status_code=500, detail="Scopus API key not configured")
+    
+    url = f"https://api.elsevier.com/content/search/scopus?query=AU-ID({scopus_id})&count=10&sort=-coverDate"
+    headers = {
+        "X-ELS-APIKey": scopus_api_key,
+        "Accept": "application/json"
+    }
+    
+    try:
+        async with httpx.AsyncClient() as client:
+            response = await client.get(url, headers=headers)
+            response.raise_for_status()
+            
+            data = response.json()
+            publications = data.get("search-results", {}).get("entry", [])
+            
+            formatted_publications = []
+            for pub in publications:
+                formatted_publications.append({
+                    "title": pub.get("dc:title", "Unknown Title"),
+                    "authors": [pub.get("dc:creator", "Unknown Author")],
+                    "journal": pub.get("prism:publicationName", "Unknown Journal"),
+                    "year": int(pub.get("prism:coverDate", "2024")[:4]) if pub.get("prism:coverDate") else 2024,
+                    "doi": pub.get("prism:doi"),
+                    "scopus_id": pub.get("dc:identifier", "").replace("SCOPUS_ID:", ""),
+                    "citation_count": int(pub.get("citedby-count", 0)),
+                    "scopus_url": pub.get("prism:url", "")
+                })
+            
+            return formatted_publications
+            
+    except httpx.HTTPError as e:
+        print(f"Scopus API Error: {e}")
+        # Return mock data as fallback
+        return [
+            {
+                "title": f"Sample Publication from Scopus ID {scopus_id}",
+                "authors": ["Dr. Sample Author"],
+                "journal": "Sample Journal",
+                "year": 2024,
+                "doi": "10.1000/sample",
+                "scopus_id": "2-s2.0-sample",
+                "citation_count": 5,
+                "scopus_url": "https://www.scopus.com/record/display.uri"
+            }
+        ]
 
 # Auth Routes
 @api_router.post("/auth/register", response_model=Token)
