@@ -1135,17 +1135,7 @@ const ComprehensiveStudentProfile = ({ user, setUser, meetings, reminders, notes
             <div className="relative">
               <Avatar className="h-20 w-20">
                 <AvatarFallback>
-                  {userProfile.profile_picture ? (
-                    <img 
-                      src={userProfile.profile_picture.startsWith('http') ? userProfile.profile_picture : `${BACKEND_URL}${userProfile.profile_picture}`}
-                      alt="Profile" 
-                      className="w-full h-full rounded-full object-cover" 
-                    />
-                  ) : (
-                    <div className="bg-blue-500 text-white text-2xl font-bold">
-                      {userProfile.full_name.split(' ').map(n => n[0]).join('')}
-                    </div>
-                  )}
+                  {userProfile.full_name.split(' ').map(n => n[0]).join('')}
                 </AvatarFallback>
               </Avatar>
             </div>
