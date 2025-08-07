@@ -621,7 +621,7 @@ const Dashboard = ({ user, logout, setUser }) => {
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
         <Tabs value={activeTab} onValueChange={setActiveTab}>
         <div className="flex justify-center w-full mb-6 sm:mb-8">
-          <TabsList className="inline-flex h-12 items-center justify-center rounded-xl bg-white border border-gray-200 shadow-sm p-1 text-sm font-medium overflow-x-auto scrollbar-hide min-w-fit">
+          <TabsList className="inline-flex h-12 items-center justify-center rounded-xl bg-white border border-gray-200 shadow-sm p-1 text-sm font-medium overflow-x-auto scrollbar-hide w-full max-w-7xl">
             <TabsTrigger value="dashboard" className="inline-flex items-center justify-center whitespace-nowrap rounded-lg px-3 py-2 text-sm ring-offset-white transition-all focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-slate-950 focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50 data-[state=active]:bg-blue-600 data-[state=active]:text-white data-[state=active]:shadow-sm min-w-fit">
               <BarChart3 className="h-4 w-4 sm:mr-2" />
               <span className="hidden sm:inline">Dashboard</span>
