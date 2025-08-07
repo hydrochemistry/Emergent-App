@@ -52,6 +52,24 @@ class UserRole(str, Enum):
     LAB_MANAGER = "lab_manager"
     ADMIN = "admin"
 
+class ProgramType(str, Enum):
+    MSC_RESEARCH = "msc_research"
+    MSC_COURSEWORK = "msc_coursework" 
+    PHD_RESEARCH = "phd_research"
+    PHD_COURSEWORK = "phd_coursework"
+
+class StudyStatus(str, Enum):
+    ACTIVE = "active"
+    DEFERRED = "deferred"
+    ON_LEAVE = "on_leave"
+    GRADUATED = "graduated"
+
+class MeetingType(str, Enum):
+    SUPERVISION = "supervision"
+    PROGRESS_REVIEW = "progress_review"
+    THESIS_DISCUSSION = "thesis_discussion"
+    GENERAL = "general"
+
 class TaskStatus(str, Enum):
     PENDING = "pending"
     IN_PROGRESS = "in_progress"
