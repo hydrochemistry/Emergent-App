@@ -335,7 +335,12 @@ metadata:
   run_ui: false
 
 test_plan:
-  current_focus: []
+  current_focus:
+    - "Research Log Creation API"
+    - "Meeting Creation API" 
+    - "Reminder Creation API"
+    - "Announcement Creation API"
+    - "Grant Creation API"
   stuck_tasks: []
   test_all: false
   test_priority: "high_first"
