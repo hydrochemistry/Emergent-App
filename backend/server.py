@@ -638,8 +638,9 @@ async def get_user_profile(user_id: Optional[str] = None, current_user: User = D
     if not user:
         raise HTTPException(status_code=404, detail="User not found")
     
-    # Remove sensitive information
+    # Remove sensitive information and MongoDB ObjectId
     user.pop("password_hash", None)
+    user.pop("_id", None)
     return user
 
 @api_router.post("/users/profile-picture")
