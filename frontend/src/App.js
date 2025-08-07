@@ -3107,7 +3107,7 @@ const AdminPanel = ({ user, labSettings, onSettingsUpdated }) => {
 
     setLoading(true);
     try {
-      const response = await axios.post(`${API}/lab/upload-logo`, formData, {
+      const response = await axios.post(`${API}/lab/logo`, formData, {
         headers: { 'Content-Type': 'multipart/form-data' }
       });
       setLabData({ ...labData, lab_logo: response.data.file_path });
