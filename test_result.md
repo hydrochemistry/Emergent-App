@@ -444,14 +444,16 @@ metadata:
 
 test_plan:
   current_focus:
-    - "Research Log Creation API"
-    - "Meeting Creation API" 
-    - "Reminder Creation API"
-    - "Announcement Creation API"
-    - "Grant Creation API"
-  stuck_tasks: []
+    - "User Registration System"
+    - "Research Log Creation Form"
+    - "Meeting Creation Form"
+    - "Reminder Creation Form"
+    - "Announcement Creation Form"
+    - "Grant Creation Form"
+  stuck_tasks:
+    - "User Registration System"
   test_all: false
-  test_priority: "high_first"
+  test_priority: "stuck_first"
 
 agent_communication:
   - agent: "main"
