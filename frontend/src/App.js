@@ -3095,6 +3095,26 @@ const StudentManagementCard = ({ student, user, onStudentUpdated }) => {
     }
   };
 
+  const handleDemoteUser = async (e) => {
+    e.preventDefault();
+    setLoading(true);
+    
+    try {
+      await axios.put(`${API}/users/${student.id}/promote`, {
+        new_role: 'student'
+      });
+      
+      alert(`User demoted to student successfully!`);
+      setIsDemoteOpen(false);
+      onStudentUpdated();
+    } catch (error) {
+      console.error('Error demoting user:', error);
+      alert('Error demoting user');
+    } finally {
+      setLoading(false);
+    }
+  };
+
   return (
     <Card>
       <CardContent className="p-6">
