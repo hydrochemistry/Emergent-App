@@ -459,6 +459,13 @@ const Auth = ({ login }) => {
           </form>
         </CardContent>
       </Card>
+      
+      {/* Copyright Footer */}
+      <div className="mt-8 pt-4 border-t border-gray-200">
+        <p className="text-center text-sm text-gray-500">
+          © 2024 Research Lab Management System. All rights reserved. | Professor Dr Ahmad Zaharin Aris
+        </p>
+      </div>
     </div>
   );
 };
