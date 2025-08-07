@@ -69,7 +69,7 @@ const AuthContext = ({ children }) => {
   );
 };
 
-// Authentication Component
+// Enhanced Authentication Component with comprehensive fields
 const Auth = ({ login }) => {
   const [isLogin, setIsLogin] = useState(true);
   const [formData, setFormData] = useState({
@@ -77,7 +77,21 @@ const Auth = ({ login }) => {
     password: '',
     full_name: '',
     role: 'student',
+    
+    // Enhanced Student Information
+    student_id: '',
+    contact_number: '',
+    nationality: '',
+    citizenship: '',
+    program_type: 'msc_research',
+    field_of_study: '',
     department: '',
+    faculty: '',
+    institute: '',
+    enrollment_date: '',
+    expected_graduation_date: '',
+    
+    // Existing fields
     research_area: '',
     supervisor_email: '',
     lab_name: '',
@@ -109,116 +123,264 @@ const Auth = ({ login }) => {
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-100 flex items-center justify-center p-4">
-      <Card className="w-full max-w-md">
+      <Card className="w-full max-w-2xl max-h-[90vh] overflow-y-auto">
         <CardHeader className="text-center">
           <CardTitle className="text-2xl font-bold text-gray-900 flex items-center justify-center gap-2">
             <Building2 className="h-6 w-6 text-blue-600" />
             Research Lab Manager
           </CardTitle>
           <p className="text-gray-600 mt-2">
-            {isLogin ? 'Sign in to your lab account' : 'Create your lab account'}
+            {isLogin ? 'Sign in to your lab account' : 'Create your comprehensive lab profile'}
           </p>
         </CardHeader>
         <CardContent>
           <form onSubmit={handleSubmit} className="space-y-4">
-            <div>
-              <Label htmlFor="email">Email</Label>
-              <Input
-                id="email"
-                type="email"
-                value={formData.email}
-                onChange={(e) => setFormData({...formData, email: e.target.value})}
-                required
-              />
-            </div>
-            <div>
-              <Label htmlFor="password">Password</Label>
-              <Input
-                id="password"
-                type="password"
-                value={formData.password}
-                onChange={(e) => setFormData({...formData, password: e.target.value})}
-                required
-              />
+            {/* Basic Authentication Fields */}
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <div>
+                <Label htmlFor="email">Email *</Label>
+                <Input
+                  id="email"
+                  type="email"
+                  value={formData.email}
+                  onChange={(e) => setFormData({...formData, email: e.target.value})}
+                  required
+                />
+              </div>
+              <div>
+                <Label htmlFor="password">Password *</Label>
+                <Input
+                  id="password"
+                  type="password"
+                  value={formData.password}
+                  onChange={(e) => setFormData({...formData, password: e.target.value})}
+                  required
+                />
+              </div>
             </div>
             
             {!isLogin && (
               <>
-                <div>
-                  <Label htmlFor="full_name">Full Name</Label>
-                  <Input
-                    id="full_name"
-                    value={formData.full_name}
-                    onChange={(e) => setFormData({...formData, full_name: e.target.value})}
-                    required
-                  />
-                </div>
-                <div>
-                  <Label htmlFor="role">Role</Label>
-                  <Select value={formData.role} onValueChange={(value) => setFormData({...formData, role: value})}>
-                    <SelectTrigger>
-                      <SelectValue />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="student">Graduate Student</SelectItem>
-                      <SelectItem value="supervisor">Supervisor</SelectItem>
-                    </SelectContent>
-                  </Select>
-                </div>
-                <div>
-                  <Label htmlFor="department">Department</Label>
-                  <Input
-                    id="department"
-                    value={formData.department}
-                    onChange={(e) => setFormData({...formData, department: e.target.value})}
-                  />
-                </div>
-                <div>
-                  <Label htmlFor="research_area">Research Area</Label>
-                  <Input
-                    id="research_area"
-                    value={formData.research_area}
-                    onChange={(e) => setFormData({...formData, research_area: e.target.value})}
-                  />
-                </div>
-                {formData.role === 'student' && (
-                  <div>
-                    <Label htmlFor="supervisor_email">Supervisor Email</Label>
-                    <Input
-                      id="supervisor_email"
-                      type="email"
-                      value={formData.supervisor_email}
-                      onChange={(e) => setFormData({...formData, supervisor_email: e.target.value})}
-                    />
+                {/* Personal Information */}
+                <div className="border-t pt-4">
+                  <h3 className="text-lg font-medium mb-4">Personal Information</h3>
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div>
+                      <Label htmlFor="full_name">Full Name *</Label>
+                      <Input
+                        id="full_name"
+                        value={formData.full_name}
+                        onChange={(e) => setFormData({...formData, full_name: e.target.value})}
+                        required
+                      />
+                    </div>
+                    <div>
+                      <Label htmlFor="role">Role *</Label>
+                      <Select value={formData.role} onValueChange={(value) => setFormData({...formData, role: value})}>
+                        <SelectTrigger>
+                          <SelectValue />
+                        </SelectTrigger>
+                        <SelectContent>
+                          <SelectItem value="student">Graduate Student</SelectItem>
+                          <SelectItem value="supervisor">Supervisor</SelectItem>
+                        </SelectContent>
+                      </Select>
+                    </div>
                   </div>
+                </div>
+
+                {formData.role === 'student' && (
+                  <>
+                    {/* Student Specific Information */}
+                    <div className="border-t pt-4">
+                      <h3 className="text-lg font-medium mb-4">Student Information</h3>
+                      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                        <div>
+                          <Label htmlFor="student_id">Student ID / Matric Number</Label>
+                          <Input
+                            id="student_id"
+                            value={formData.student_id}
+                            onChange={(e) => setFormData({...formData, student_id: e.target.value})}
+                          />
+                        </div>
+                        <div>
+                          <Label htmlFor="contact_number">Contact Number</Label>
+                          <Input
+                            id="contact_number"
+                            value={formData.contact_number}
+                            onChange={(e) => setFormData({...formData, contact_number: e.target.value})}
+                          />
+                        </div>
+                        <div>
+                          <Label htmlFor="nationality">Nationality</Label>
+                          <Input
+                            id="nationality"
+                            value={formData.nationality}
+                            onChange={(e) => setFormData({...formData, nationality: e.target.value})}
+                          />
+                        </div>
+                        <div>
+                          <Label htmlFor="citizenship">Citizenship</Label>
+                          <Input
+                            id="citizenship"
+                            value={formData.citizenship}
+                            onChange={(e) => setFormData({...formData, citizenship: e.target.value})}
+                          />
+                        </div>
+                      </div>
+                    </div>
+
+                    {/* Academic Information */}
+                    <div className="border-t pt-4">
+                      <h3 className="text-lg font-medium mb-4">Academic Information</h3>
+                      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                        <div>
+                          <Label htmlFor="program_type">Program Type</Label>
+                          <Select value={formData.program_type} onValueChange={(value) => setFormData({...formData, program_type: value})}>
+                            <SelectTrigger>
+                              <SelectValue />
+                            </SelectTrigger>
+                            <SelectContent>
+                              <SelectItem value="msc_research">MSc (Research)</SelectItem>
+                              <SelectItem value="msc_coursework">MSc (Coursework)</SelectItem>
+                              <SelectItem value="phd_research">PhD (Research)</SelectItem>
+                              <SelectItem value="phd_coursework">PhD (Coursework)</SelectItem>
+                            </SelectContent>
+                          </Select>
+                        </div>
+                        <div>
+                          <Label htmlFor="field_of_study">Field of Study / Research Area</Label>
+                          <Input
+                            id="field_of_study"
+                            value={formData.field_of_study}
+                            onChange={(e) => setFormData({...formData, field_of_study: e.target.value})}
+                          />
+                        </div>
+                        <div>
+                          <Label htmlFor="department">Department</Label>
+                          <Input
+                            id="department"
+                            value={formData.department}
+                            onChange={(e) => setFormData({...formData, department: e.target.value})}
+                          />
+                        </div>
+                        <div>
+                          <Label htmlFor="faculty">Faculty</Label>
+                          <Input
+                            id="faculty"
+                            value={formData.faculty}
+                            onChange={(e) => setFormData({...formData, faculty: e.target.value})}
+                          />
+                        </div>
+                        <div>
+                          <Label htmlFor="institute">Institute</Label>
+                          <Input
+                            id="institute"
+                            value={formData.institute}
+                            onChange={(e) => setFormData({...formData, institute: e.target.value})}
+                          />
+                        </div>
+                        <div>
+                          <Label htmlFor="research_area">Research Area</Label>
+                          <Input
+                            id="research_area"
+                            value={formData.research_area}
+                            onChange={(e) => setFormData({...formData, research_area: e.target.value})}
+                          />
+                        </div>
+                      </div>
+                    </div>
+
+                    {/* Dates */}
+                    <div className="border-t pt-4">
+                      <h3 className="text-lg font-medium mb-4">Academic Timeline</h3>
+                      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                        <div>
+                          <Label htmlFor="enrollment_date">Enrollment Date</Label>
+                          <Input
+                            id="enrollment_date"
+                            type="date"
+                            value={formData.enrollment_date}
+                            onChange={(e) => setFormData({...formData, enrollment_date: e.target.value})}
+                          />
+                        </div>
+                        <div>
+                          <Label htmlFor="expected_graduation_date">Expected Graduation Date</Label>
+                          <Input
+                            id="expected_graduation_date"
+                            type="date"
+                            value={formData.expected_graduation_date}
+                            onChange={(e) => setFormData({...formData, expected_graduation_date: e.target.value})}
+                          />
+                        </div>
+                      </div>
+                    </div>
+
+                    {/* Supervisor Information */}
+                    <div className="border-t pt-4">
+                      <h3 className="text-lg font-medium mb-4">Supervisor Information</h3>
+                      <div>
+                        <Label htmlFor="supervisor_email">Supervisor Email</Label>
+                        <Input
+                          id="supervisor_email"
+                          type="email"
+                          value={formData.supervisor_email}
+                          onChange={(e) => setFormData({...formData, supervisor_email: e.target.value})}
+                        />
+                      </div>
+                    </div>
+                  </>
                 )}
+
                 {formData.role === 'supervisor' && (
                   <>
-                    <div>
-                      <Label htmlFor="lab_name">Lab Name</Label>
-                      <Input
-                        id="lab_name"
-                        value={formData.lab_name}
-                        onChange={(e) => setFormData({...formData, lab_name: e.target.value})}
-                      />
-                    </div>
-                    <div>
-                      <Label htmlFor="scopus_id">Scopus Author ID</Label>
-                      <Input
-                        id="scopus_id"
-                        value={formData.scopus_id}
-                        onChange={(e) => setFormData({...formData, scopus_id: e.target.value})}
-                        placeholder="e.g., 22133247800"
-                      />
-                    </div>
-                    <div>
-                      <Label htmlFor="orcid_id">ORCID ID</Label>
-                      <Input
-                        id="orcid_id"
-                        value={formData.orcid_id}
-                        onChange={(e) => setFormData({...formData, orcid_id: e.target.value})}
-                        placeholder="e.g., 0000-0000-0000-0000"
-                      />
+                    {/* Supervisor Lab Information */}
+                    <div className="border-t pt-4">
+                      <h3 className="text-lg font-medium mb-4">Lab Information</h3>
+                      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                        <div>
+                          <Label htmlFor="lab_name">Lab Name</Label>
+                          <Input
+                            id="lab_name"
+                            value={formData.lab_name}
+                            onChange={(e) => setFormData({...formData, lab_name: e.target.value})}
+                          />
+                        </div>
+                        <div>
+                          <Label htmlFor="department">Department</Label>
+                          <Input
+                            id="department"
+                            value={formData.department}
+                            onChange={(e) => setFormData({...formData, department: e.target.value})}
+                          />
+                        </div>
+                        <div>
+                          <Label htmlFor="research_area">Research Area</Label>
+                          <Input
+                            id="research_area"
+                            value={formData.research_area}
+                            onChange={(e) => setFormData({...formData, research_area: e.target.value})}
+                          />
+                        </div>
+                        <div>
+                          <Label htmlFor="scopus_id">Scopus Author ID</Label>
+                          <Input
+                            id="scopus_id"
+                            value={formData.scopus_id}
+                            onChange={(e) => setFormData({...formData, scopus_id: e.target.value})}
+                            placeholder="e.g., 22133247800"
+                          />
+                        </div>
+                        <div>
+                          <Label htmlFor="orcid_id">ORCID ID</Label>
+                          <Input
+                            id="orcid_id"
+                            value={formData.orcid_id}
+                            onChange={(e) => setFormData({...formData, orcid_id: e.target.value})}
+                            placeholder="e.g., 0000-0000-0000-0000"
+                          />
+                        </div>
+                      </div>
                     </div>
                   </>
                 )}
