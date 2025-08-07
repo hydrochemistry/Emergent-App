@@ -2430,12 +2430,212 @@ const CreateBulletinDialog = ({ onBulletinCreated }) => {
   );
 };
 
-const CreateGrantDialog = ({ students, onGrantCreated }) => (
-  <Button>
-    <PlusCircle className="h-4 w-4 mr-2" />
-    Add Grant
-  </Button>
-);
+const CreateGrantDialog = ({ students, onGrantCreated }) => {
+  const [isOpen, setIsOpen] = useState(false);
+  const [formData, setFormData] = useState({
+    title: '',
+    funding_agency: '',
+    total_amount: '',
+    duration_months: '',
+    grant_type: 'research',
+    description: '',
+    start_date: '',
+    end_date: '',
+    status: 'active'
+  });
+  const [loading, setLoading] = useState(false);
+
+  const handleSubmit = async (e) => {
+    e.preventDefault();
+    setLoading(true);
+    
+    try {
+      await axios.post(`${API}/grants`, {
+        ...formData,
+        total_amount: parseFloat(formData.total_amount) || 0,
+        duration_months: parseInt(formData.duration_months) || 0,
+        remaining_balance: parseFloat(formData.total_amount) || 0,
+        start_date: formData.start_date ? new Date(formData.start_date).toISOString() : null,
+        end_date: formData.end_date ? new Date(formData.end_date).toISOString() : null
+      });
+      
+      alert('Grant created successfully!');
+      setFormData({
+        title: '',
+        funding_agency: '',
+        total_amount: '',
+        duration_months: '',
+        grant_type: 'research',
+        description: '',
+        start_date: '',
+        end_date: '',
+        status: 'active'
+      });
+      setIsOpen(false);
+      onGrantCreated();
+    } catch (error) {
+      console.error('Error creating grant:', error);
+      alert('Error creating grant: ' + (error.response?.data?.detail || 'Unknown error'));
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  return (
+    <Dialog open={isOpen} onOpenChange={setIsOpen}>
+      <DialogTrigger asChild>
+        <Button>
+          <PlusCircle className="h-4 w-4 mr-2" />
+          Add Grant
+        </Button>
+      </DialogTrigger>
+      <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
+        <DialogHeader>
+          <DialogTitle>Create New Grant</DialogTitle>
+        </DialogHeader>
+        <form onSubmit={handleSubmit} className="space-y-6">
+          {/* Basic Information */}
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div>
+              <Label htmlFor="title">Grant Title *</Label>
+              <Input
+                id="title"
+                value={formData.title}
+                onChange={(e) => setFormData({...formData, title: e.target.value})}
+                placeholder="Enter grant title"
+                required
+              />
+            </div>
+            
+            <div>
+              <Label htmlFor="funding_agency">Funding Agency *</Label>
+              <Input
+                id="funding_agency"
+                value={formData.funding_agency}
+                onChange={(e) => setFormData({...formData, funding_agency: e.target.value})}
+                placeholder="e.g., NSF, NIH, University Research Board"
+                required
+              />
+            </div>
+          </div>
+          
+          {/* Financial Information */}
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+            <div>
+              <Label htmlFor="total_amount">Total Amount ($) *</Label>
+              <Input
+                id="total_amount"
+                type="number"
+                step="0.01"
+                min="0"
+                value={formData.total_amount}
+                onChange={(e) => setFormData({...formData, total_amount: e.target.value})}
+                placeholder="0.00"
+                required
+              />
+            </div>
+            
+            <div>
+              <Label htmlFor="duration_months">Duration (Months) *</Label>
+              <Input
+                id="duration_months"
+                type="number"
+                min="1"
+                value={formData.duration_months}
+                onChange={(e) => setFormData({...formData, duration_months: e.target.value})}
+                placeholder="12"
+                required
+              />
+            </div>
+            
+            <div>
+              <Label htmlFor="grant_type">Grant Type</Label>
+              <Select value={formData.grant_type} onValueChange={(value) => setFormData({...formData, grant_type: value})}>
+                <SelectTrigger>
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="research">Research Grant</SelectItem>
+                  <SelectItem value="equipment">Equipment Grant</SelectItem>
+                  <SelectItem value="travel">Travel Grant</SelectItem>
+                  <SelectItem value="conference">Conference Grant</SelectItem>
+                  <SelectItem value="fellowship">Fellowship</SelectItem>
+                  <SelectItem value="other">Other</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+          </div>
+          
+          {/* Timeline */}
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div>
+              <Label htmlFor="start_date">Start Date *</Label>
+              <Input
+                id="start_date"
+                type="date"
+                value={formData.start_date}
+                onChange={(e) => setFormData({...formData, start_date: e.target.value})}
+                required
+              />
+            </div>
+            
+            <div>
+              <Label htmlFor="end_date">End Date *</Label>
+              <Input
+                id="end_date"
+                type="date"
+                value={formData.end_date}
+                onChange={(e) => setFormData({...formData, end_date: e.target.value})}
+                required
+              />
+            </div>
+          </div>
+          
+          {/* Description */}
+          <div>
+            <Label htmlFor="description">Grant Description</Label>
+            <Textarea
+              id="description"
+              value={formData.description}
+              onChange={(e) => setFormData({...formData, description: e.target.value})}
+              placeholder="Describe the grant objectives, scope, and expected outcomes..."
+              rows={4}
+            />
+          </div>
+          
+          {/* Status */}
+          <div>
+            <Label htmlFor="status">Initial Status</Label>
+            <Select value={formData.status} onValueChange={(value) => setFormData({...formData, status: value})}>
+              <SelectTrigger>
+                <SelectValue />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="active">Active</SelectItem>
+                <SelectItem value="pending">Pending Approval</SelectItem>
+                <SelectItem value="completed">Completed</SelectItem>
+                <SelectItem value="suspended">Suspended</SelectItem>
+              </SelectContent>
+            </Select>
+          </div>
+          
+          {/* Action Buttons */}
+          <div className="flex justify-end gap-2 pt-4 border-t">
+            <Button type="button" variant="outline" onClick={() => setIsOpen(false)} disabled={loading}>
+              Cancel
+            </Button>
+            <Button 
+              type="submit" 
+              disabled={loading || !formData.title || !formData.funding_agency || !formData.total_amount || !formData.duration_months || !formData.start_date || !formData.end_date}
+            >
+              {loading ? 'Creating...' : 'Create Grant'}
+            </Button>
+          </div>
+        </form>
+      </DialogContent>
+    </Dialog>
+  );
+};
 
 const MeetingCard = ({ meeting, user, onMeetingUpdated }) => (
   <Card>
