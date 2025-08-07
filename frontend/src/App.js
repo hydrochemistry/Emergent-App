@@ -2171,12 +2171,151 @@ const CreateMeetingDialog = ({ students, onMeetingCreated }) => {
   );
 };
 
-const CreateReminderDialog = ({ students, onReminderCreated }) => (
-  <Button>
-    <PlusCircle className="h-4 w-4 mr-2" />
-    Add Reminder
-  </Button>
-);
+const CreateReminderDialog = ({ students, onReminderCreated }) => {
+  const [isOpen, setIsOpen] = useState(false);
+  const [formData, setFormData] = useState({
+    title: '',
+    description: '',
+    reminder_date: '',
+    reminder_time: '',
+    priority: 'medium',
+    assigned_to: ''
+  });
+  const [loading, setLoading] = useState(false);
+
+  const handleSubmit = async (e) => {
+    e.preventDefault();
+    setLoading(true);
+    
+    try {
+      const reminderDateTime = new Date(`${formData.reminder_date}T${formData.reminder_time}`).toISOString();
+      
+      await axios.post(`${API}/reminders`, {
+        ...formData,
+        reminder_date: reminderDateTime
+      });
+      
+      alert('Reminder added successfully!');
+      setFormData({
+        title: '',
+        description: '',
+        reminder_date: '',
+        reminder_time: '',
+        priority: 'medium',
+        assigned_to: ''
+      });
+      setIsOpen(false);
+      onReminderCreated();
+    } catch (error) {
+      console.error('Error creating reminder:', error);
+      alert('Error creating reminder');
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  return (
+    <Dialog open={isOpen} onOpenChange={setIsOpen}>
+      <DialogTrigger asChild>
+        <Button>
+          <PlusCircle className="h-4 w-4 mr-2" />
+          Add Reminder
+        </Button>
+      </DialogTrigger>
+      <DialogContent className="max-w-md">
+        <DialogHeader>
+          <DialogTitle>Create Reminder</DialogTitle>
+        </DialogHeader>
+        <form onSubmit={handleSubmit} className="space-y-4">
+          <div>
+            <Label htmlFor="title">Reminder Title *</Label>
+            <Input
+              id="title"
+              value={formData.title}
+              onChange={(e) => setFormData({...formData, title: e.target.value})}
+              placeholder="Enter reminder title"
+              required
+            />
+          </div>
+          
+          <div>
+            <Label htmlFor="description">Description</Label>
+            <Textarea
+              id="description"
+              value={formData.description}
+              onChange={(e) => setFormData({...formData, description: e.target.value})}
+              placeholder="Reminder details"
+              rows={2}
+            />
+          </div>
+          
+          <div className="grid grid-cols-2 gap-4">
+            <div>
+              <Label htmlFor="reminder_date">Date *</Label>
+              <Input
+                id="reminder_date"
+                type="date"
+                value={formData.reminder_date}
+                onChange={(e) => setFormData({...formData, reminder_date: e.target.value})}
+                required
+              />
+            </div>
+            <div>
+              <Label htmlFor="reminder_time">Time *</Label>
+              <Input
+                id="reminder_time"
+                type="time"
+                value={formData.reminder_time}
+                onChange={(e) => setFormData({...formData, reminder_time: e.target.value})}
+                required
+              />
+            </div>
+          </div>
+          
+          <div>
+            <Label htmlFor="priority">Priority</Label>
+            <Select value={formData.priority} onValueChange={(value) => setFormData({...formData, priority: value})}>
+              <SelectTrigger>
+                <SelectValue />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="low">Low</SelectItem>
+                <SelectItem value="medium">Medium</SelectItem>
+                <SelectItem value="high">High</SelectItem>
+                <SelectItem value="urgent">Urgent</SelectItem>
+              </SelectContent>
+            </Select>
+          </div>
+          
+          <div>
+            <Label htmlFor="assigned_to">Assign To (Optional)</Label>
+            <Select value={formData.assigned_to} onValueChange={(value) => setFormData({...formData, assigned_to: value})}>
+              <SelectTrigger>
+                <SelectValue placeholder="Select student (optional)" />
+              </SelectTrigger>
+              <SelectContent>
+                {students.map((student) => (
+                  <SelectItem key={student.id} value={student.id}>
+                    {student.full_name}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          </div>
+          
+          <div className="flex justify-end gap-2">
+            <Button type="button" variant="outline" onClick={() => setIsOpen(false)}>
+              Cancel
+            </Button>
+            <Button type="submit" disabled={loading || !formData.title || !formData.reminder_date || !formData.reminder_time}>
+              {loading ? 'Creating...' : 'Create Reminder'}
+            </Button>
+          </div>
+        </form>
+      </DialogContent>
+    </Dialog>
+  );
+};
 
 const CreateBulletinDialog = ({ onBulletinCreated }) => {
   const [isOpen, setIsOpen] = useState(false);
