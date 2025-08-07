@@ -619,53 +619,53 @@ const Dashboard = ({ user, logout, setUser }) => {
 
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
         <Tabs value={activeTab} onValueChange={setActiveTab}>
-          <TabsList className="grid grid-cols-6 lg:grid-cols-11 w-full max-w-6xl mb-8 text-xs">
-            <TabsTrigger value="dashboard" className="flex flex-col items-center p-2">
+          <TabsList className="grid grid-cols-3 sm:grid-cols-6 lg:grid-cols-11 w-full max-w-6xl mb-6 text-xs overflow-x-auto">
+            <TabsTrigger value="dashboard" className="flex flex-col items-center p-2 min-w-0">
               <BarChart3 className="h-4 w-4" />
-              <span className="hidden sm:inline">Dashboard</span>
+              <span className="text-xs truncate">Dashboard</span>
             </TabsTrigger>
-            <TabsTrigger value="tasks" className="flex flex-col items-center p-2">
+            <TabsTrigger value="tasks" className="flex flex-col items-center p-2 min-w-0">
               <CheckCircle className="h-4 w-4" />
-              <span className="hidden sm:inline">Tasks</span>
+              <span className="text-xs truncate">Tasks</span>
             </TabsTrigger>
-            <TabsTrigger value="research" className="flex flex-col items-center p-2">
+            <TabsTrigger value="research" className="flex flex-col items-center p-2 min-w-0">
               <FlaskConical className="h-4 w-4" />
-              <span className="hidden sm:inline">Research</span>
+              <span className="text-xs truncate">Research</span>
             </TabsTrigger>
-            <TabsTrigger value="meetings" className="flex flex-col items-center p-2">
+            <TabsTrigger value="meetings" className="flex flex-col items-center p-2 min-w-0">
               <Calendar className="h-4 w-4" />
-              <span className="hidden sm:inline">Meetings</span>
+              <span className="text-xs truncate sm:inline">Meetings</span>
             </TabsTrigger>
-            <TabsTrigger value="bulletins" className="flex flex-col items-center p-2">
+            <TabsTrigger value="bulletins" className="flex flex-col items-center p-2 min-w-0">
               <Bell className="h-4 w-4" />
-              <span className="hidden sm:inline">News</span>
+              <span className="text-xs truncate sm:inline">News</span>
             </TabsTrigger>
-            <TabsTrigger value="grants" className="flex flex-col items-center p-2">
+            <TabsTrigger value="grants" className="flex flex-col items-center p-2 min-w-0">
               <DollarSign className="h-4 w-4" />
-              <span className="hidden sm:inline">Grants</span>
+              <span className="text-xs truncate sm:inline">Grants</span>
             </TabsTrigger>
-            <TabsTrigger value="publications" className="flex flex-col items-center p-2">
+            <TabsTrigger value="publications" className="flex flex-col items-center p-2 min-w-0">
               <Award className="h-4 w-4" />
-              <span className="hidden sm:inline">Publications</span>
+              <span className="text-xs truncate sm:inline">Publications</span>
             </TabsTrigger>
             {(user.role === 'supervisor' || user.role === 'lab_manager') && (
-              <TabsTrigger value="students" className="flex flex-col items-center p-2">
+              <TabsTrigger value="students" className="flex flex-col items-center p-2 min-w-0">
                 <Users className="h-4 w-4" />
-                <span className="hidden sm:inline">Students</span>
+                <span className="text-xs truncate sm:inline">Students</span>
               </TabsTrigger>
             )}
-            <TabsTrigger value="profile" className="flex flex-col items-center p-2">
+            <TabsTrigger value="profile" className="flex flex-col items-center p-2 min-w-0">
               <Settings className="h-4 w-4" />
-              <span className="hidden sm:inline">Profile</span>
+              <span className="text-xs truncate sm:inline">Profile</span>
             </TabsTrigger>
-            <TabsTrigger value="reminders" className="flex flex-col items-center p-2">
+            <TabsTrigger value="reminders" className="flex flex-col items-center p-2 min-w-0">
               <AlertTriangle className="h-4 w-4" />
-              <span className="hidden sm:inline">Reminders</span>
+              <span className="text-xs truncate sm:inline">Reminders</span>
             </TabsTrigger>
             {(user.role === 'supervisor' || user.role === 'lab_manager' || user.role === 'admin') && (
-              <TabsTrigger value="admin" className="flex flex-col items-center p-2">
+              <TabsTrigger value="admin" className="flex flex-col items-center p-2 min-w-0">
                 <Settings className="h-4 w-4" />
-                <span className="hidden sm:inline">Admin</span>
+                <span className="text-xs truncate sm:inline">Admin</span>
               </TabsTrigger>
             )}
           </TabsList>
