@@ -651,6 +651,12 @@ const Dashboard = ({ user, logout, setUser }) => {
               <AlertTriangle className="h-4 w-4" />
               <span className="hidden sm:inline">Reminders</span>
             </TabsTrigger>
+            {(user.role === 'supervisor' || user.role === 'lab_manager' || user.role === 'admin') && (
+              <TabsTrigger value="admin" className="flex flex-col items-center p-2">
+                <Settings className="h-4 w-4" />
+                <span className="hidden sm:inline">Admin</span>
+              </TabsTrigger>
+            )}
           </TabsList>
 
           {/* Dashboard Tab */}
