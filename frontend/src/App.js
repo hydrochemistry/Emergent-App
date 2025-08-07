@@ -2103,6 +2103,66 @@ const CreateResearchLogDialog = ({ onLogCreated }) => {
             </div>
           </div>
           
+          {/* File Attachments Section */}
+          <div className="space-y-4 border-t pt-4">
+            <div>
+              <Label>Research Attachments</Label>
+              <p className="text-xs text-gray-500 mb-2">Upload images, documents, data files (Max 10MB each)</p>
+              <div className="flex items-center gap-2">
+                <input
+                  type="file"
+                  multiple
+                  accept="image/*,.pdf,.txt,.doc,.docx"
+                  onChange={handleFileUpload}
+                  className="hidden"
+                  id="file-upload"
+                />
+                <label htmlFor="file-upload">
+                  <Button type="button" variant="outline" size="sm">
+                    <Upload className="h-4 w-4 mr-2" />
+                    Add Files
+                  </Button>
+                </label>
+                <span className="text-xs text-gray-500">
+                  Images, PDF, Word documents
+                </span>
+              </div>
+            </div>
+            
+            {/* Display selected files */}
+            {attachments.length > 0 && (
+              <div className="space-y-2">
+                <Label>Selected Files ({attachments.length})</Label>
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 max-h-32 overflow-y-auto">
+                  {attachments.map((file, index) => (
+                    <div key={index} className="flex items-center justify-between p-2 bg-gray-50 rounded border">
+                      <div className="flex items-center gap-2 min-w-0">
+                        {file.type.startsWith('image/') ? (
+                          <FileImage className="h-4 w-4 text-blue-600 flex-shrink-0" />
+                        ) : (
+                          <FileText className="h-4 w-4 text-gray-600 flex-shrink-0" />
+                        )}
+                        <div className="min-w-0">
+                          <p className="text-sm font-medium truncate">{file.name}</p>
+                          <p className="text-xs text-gray-500">{(file.size / 1024).toFixed(1)} KB</p>
+                        </div>
+                      </div>
+                      <Button
+                        type="button"
+                        variant="ghost"
+                        size="sm"
+                        onClick={() => removeAttachment(index)}
+                        className="text-red-600 hover:text-red-800 flex-shrink-0"
+                      >
+                        <X className="h-4 w-4" />
+                      </Button>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            )}
+          </div>
+          
           <div className="flex justify-end gap-2">
             <Button type="button" variant="outline" onClick={() => setIsOpen(false)}>
               Cancel
