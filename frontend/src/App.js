@@ -2501,8 +2501,12 @@ const CreateReminderDialog = ({ students, onReminderCreated, user }) => {
       const reminderDateTime = new Date(`${formData.reminder_date}T${formData.reminder_time}`).toISOString();
       
       await axios.post(`${API}/reminders`, {
-        ...formData,
-        reminder_date: reminderDateTime
+        user_id: user.id, // Add required user_id field
+        title: formData.title,
+        description: formData.description || '',
+        reminder_date: reminderDateTime,
+        priority: formData.priority,
+        reminder_type: 'general' // Default reminder type
       });
       
       alert('Reminder added successfully!');
