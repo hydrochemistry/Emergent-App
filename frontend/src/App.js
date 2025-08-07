@@ -984,7 +984,7 @@ const Dashboard = ({ user, logout, setUser }) => {
           <TabsContent value="reminders" className="mt-6">
             <div className="flex justify-between items-center mb-6">
               <h2 className="text-2xl font-bold">Reminders & Alerts</h2>
-              <CreateReminderDialog students={students} onReminderCreated={fetchDashboardData} />
+              <CreateReminderDialog students={students} onReminderCreated={fetchDashboardData} user={user} />
             </div>
 
             <div className="grid gap-6">
