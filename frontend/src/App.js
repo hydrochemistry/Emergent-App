@@ -2043,12 +2043,118 @@ const CreateReminderDialog = ({ students, onReminderCreated }) => (
   </Button>
 );
 
-const CreateBulletinDialog = ({ onBulletinCreated }) => (
-  <Button>
-    <PlusCircle className="h-4 w-4 mr-2" />
-    Post Announcement
-  </Button>
-);
+const CreateBulletinDialog = ({ onBulletinCreated }) => {
+  const [isOpen, setIsOpen] = useState(false);
+  const [formData, setFormData] = useState({
+    title: '',
+    content: '',
+    category: 'announcement',
+    is_highlight: false
+  });
+  const [loading, setLoading] = useState(false);
+
+  const handleSubmit = async (e) => {
+    e.preventDefault();
+    setLoading(true);
+    
+    try {
+      await axios.post(`${API}/bulletins`, formData);
+      
+      alert('Announcement posted successfully!');
+      setFormData({
+        title: '',
+        content: '',
+        category: 'announcement',
+        is_highlight: false
+      });
+      setIsOpen(false);
+      onBulletinCreated();
+    } catch (error) {
+      console.error('Error creating bulletin:', error);
+      alert('Error posting announcement');
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  return (
+    <Dialog open={isOpen} onOpenChange={setIsOpen}>
+      <DialogTrigger asChild>
+        <Button>
+          <PlusCircle className="h-4 w-4 mr-2" />
+          Post Announcement
+        </Button>
+      </DialogTrigger>
+      <DialogContent className="max-w-md">
+        <DialogHeader>
+          <DialogTitle>Create Announcement</DialogTitle>
+        </DialogHeader>
+        <form onSubmit={handleSubmit} className="space-y-4">
+          <div>
+            <Label htmlFor="title">Title *</Label>
+            <Input
+              id="title"
+              value={formData.title}
+              onChange={(e) => setFormData({...formData, title: e.target.value})}
+              placeholder="Announcement title"
+              required
+            />
+          </div>
+          
+          <div>
+            <Label htmlFor="content">Content *</Label>
+            <Textarea
+              id="content"
+              value={formData.content}
+              onChange={(e) => setFormData({...formData, content: e.target.value})}
+              placeholder="Write your announcement..."
+              rows={4}
+              required
+            />
+          </div>
+          
+          <div>
+            <Label htmlFor="category">Category</Label>
+            <Select value={formData.category} onValueChange={(value) => setFormData({...formData, category: value})}>
+              <SelectTrigger>
+                <SelectValue />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="announcement">Announcement</SelectItem>
+                <SelectItem value="event">Event</SelectItem>
+                <SelectItem value="deadline">Deadline</SelectItem>
+                <SelectItem value="news">News</SelectItem>
+                <SelectItem value="update">Update</SelectItem>
+              </SelectContent>
+            </Select>
+          </div>
+          
+          <div className="flex items-center space-x-2">
+            <input
+              type="checkbox"
+              id="is_highlight"
+              checked={formData.is_highlight}
+              onChange={(e) => setFormData({...formData, is_highlight: e.target.checked})}
+              className="rounded"
+            />
+            <Label htmlFor="is_highlight" className="text-sm">
+              Mark as priority highlight (⭐ Featured on dashboard)
+            </Label>
+          </div>
+          
+          <div className="flex justify-end gap-2">
+            <Button type="button" variant="outline" onClick={() => setIsOpen(false)}>
+              Cancel
+            </Button>
+            <Button type="submit" disabled={loading || !formData.title || !formData.content}>
+              {loading ? 'Publishing...' : 'Post Announcement'}
+            </Button>
+          </div>
+        </form>
+      </DialogContent>
+    </Dialog>
+  );
+};
 
 const CreateGrantDialog = ({ students, onGrantCreated }) => (
   <Button>
