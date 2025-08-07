@@ -746,10 +746,10 @@ const Dashboard = ({ user, logout, setUser }) => {
                 </CardContent>
               </Card>
 
-              <Card className="border-l-4 border-blue-500 shadow-md">
-                <CardHeader className="bg-gradient-to-r from-blue-50 to-indigo-50">
+              <Card>
+                <CardHeader>
                   <CardTitle className="flex items-center gap-2">
-                    <Bell className="h-5 w-5 text-blue-600" />
+                    <Bell className="h-5 w-5" />
                     Recent Announcements
                     <Badge variant="outline" className="ml-auto">
                       {bulletins.length} Active
