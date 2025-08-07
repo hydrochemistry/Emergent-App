@@ -2106,7 +2106,7 @@ const CreateResearchLogDialog = ({ onLogCreated }) => {
             />
           </div>
           
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
             <div>
               <Label htmlFor="duration_hours">Duration (hours)</Label>
               <Input
@@ -2120,14 +2120,36 @@ const CreateResearchLogDialog = ({ onLogCreated }) => {
             </div>
             
             <div>
-              <Label htmlFor="tags">Tags (comma-separated)</Label>
+              <Label htmlFor="log_date">Log Date *</Label>
               <Input
-                id="tags"
-                value={formData.tags}
-                onChange={(e) => setFormData({...formData, tags: e.target.value})}
-                placeholder="machine learning, neural networks"
+                id="log_date"
+                type="date"
+                value={formData.log_date}
+                onChange={(e) => setFormData({...formData, log_date: e.target.value})}
+                required
               />
             </div>
+            
+            <div>
+              <Label htmlFor="log_time">Log Time *</Label>
+              <Input
+                id="log_time"
+                type="time"
+                value={formData.log_time}
+                onChange={(e) => setFormData({...formData, log_time: e.target.value})}
+                required
+              />
+            </div>
+          </div>
+          
+          <div>
+            <Label htmlFor="tags">Tags (comma-separated)</Label>
+            <Input
+              id="tags"
+              value={formData.tags}
+              onChange={(e) => setFormData({...formData, tags: e.target.value})}
+              placeholder="machine learning, neural networks"
+            />
           </div>
           
           {/* File Attachments Section */}
