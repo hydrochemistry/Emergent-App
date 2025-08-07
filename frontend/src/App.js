@@ -2268,7 +2268,7 @@ const CreateReminderDialog = ({ students, onReminderCreated }) => {
           Add Reminder
         </Button>
       </DialogTrigger>
-      <DialogContent className="max-w-md">
+      <DialogContent className="w-[95vw] max-w-md mx-4 max-h-[90vh] overflow-y-auto">
         <DialogHeader>
           <DialogTitle>Create Reminder</DialogTitle>
         </DialogHeader>
