@@ -183,6 +183,30 @@ backend:
         agent: "testing"
         comment: "✅ COMPREHENSIVE TESTING COMPLETED: Publications endpoints working correctly. POST /api/publications/sync-scopus syncs publications from Scopus API. GET /api/publications retrieves role-based publications. GET /api/publications/all provides enhanced publication view with student contributor details. Publication management system operational."
 
+  - task: "User Promotion System"
+    implemented: true
+    working: true
+    file: "/app/backend/server.py"
+    stuck_count: 0
+    priority: "high"
+    needs_retesting: false
+    status_history:
+      - working: true
+        agent: "testing"
+        comment: "✅ COMPREHENSIVE TESTING COMPLETED: User promotion endpoint PUT /api/users/{student_id}/promote working perfectly. Successfully tested promotion to lab_manager and supervisor roles. Permission controls functioning correctly - supervisors cannot promote to admin (returns 403). Invalid role validation working (returns 400). Unauthorized access properly blocked (returns 403). All 5 promotion tests passed (100% success rate)."
+
+  - task: "Research Log Attachments System"
+    implemented: true
+    working: true
+    file: "/app/backend/server.py"
+    stuck_count: 0
+    priority: "high"
+    needs_retesting: false
+    status_history:
+      - working: true
+        agent: "testing"
+        comment: "✅ COMPREHENSIVE TESTING COMPLETED: Research log attachments endpoint POST /api/research-logs/attachments working perfectly. Successfully tested image and PDF file uploads. File size validation working correctly - files >10MB rejected with 400 status. Various file types accepted including executables. Proper authentication required (403 without token). Invalid research log ID returns 404. All 7 attachment tests passed (100% success rate)."
+
 frontend:
   - task: "ProfileEditForm Implementation"
     implemented: true
