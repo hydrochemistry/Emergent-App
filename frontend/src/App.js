@@ -2284,10 +2284,6 @@ const CreateResearchLogDialog = ({ onLogCreated }) => {
     setLoading(true);
     
     try {
-      console.log('🔍 Creating research log with data:', formData);
-      console.log('🔑 Current auth token:', axios.defaults.headers.common['Authorization']);
-      console.log('🌐 API endpoint:', `${API}/research-logs`);
-      
       // Prepare the data for submission
       const submitData = {
         title: formData.title,
@@ -2302,16 +2298,11 @@ const CreateResearchLogDialog = ({ onLogCreated }) => {
         log_time: formData.log_time
       };
       
-      console.log('📤 Submitting data:', submitData);
-      
       // First create the research log
       const logResponse = await axios.post(`${API}/research-logs`, submitData);
-      
-      console.log('✅ Research log created successfully:', logResponse.data);
 
       // Then upload attachments if any
       if (attachments.length > 0) {
-        console.log('📎 Uploading attachments...');
         const uploadPromises = attachments.map(async (file) => {
           const fileFormData = new FormData();
           fileFormData.append('file', file);
@@ -2323,7 +2314,6 @@ const CreateResearchLogDialog = ({ onLogCreated }) => {
         });
 
         await Promise.all(uploadPromises);
-        console.log('✅ All attachments uploaded successfully');
       }
       
       alert('Research log created successfully!');
