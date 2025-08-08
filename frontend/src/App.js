@@ -2439,7 +2439,7 @@ const CreateMeetingDialog = ({ students, onMeetingCreated, user }) => {
       setFormData({
         agenda: '',
         meeting_date: '',
-        meeting_time: '',
+        meeting_time: '09:00',
         meeting_type: 'supervision',
         attendees: [],
         location: '',
