@@ -2038,10 +2038,16 @@ async def get_messages(with_user: str, current_user: User = Depends(get_current_
 # Students Routes
 @api_router.get("/students")
 async def get_students(current_user: User = Depends(get_current_user)):
-    if current_user.role not in [UserRole.SUPERVISOR, UserRole.LAB_MANAGER]:
+    """Get all students for user management - enhanced with comprehensive data"""
+    if current_user.role not in [UserRole.SUPERVISOR, UserRole.LAB_MANAGER, UserRole.ADMIN]:
         raise HTTPException(status_code=403, detail="Not authorized")
     
-    students = await db.users.find({"supervisor_id": current_user.id}).to_list(1000)
+    # Get all users regardless of supervisor for admin/lab manager, or just assigned students for supervisors
+    if current_user.role in [UserRole.LAB_MANAGER, UserRole.ADMIN]:
+        students = await db.users.find({"role": {"$in": ["student", "lab_manager"]}}).to_list(1000)
+    else:
+        students = await db.users.find({"supervisor_id": current_user.id}).to_list(1000)
+    
     return [{
         "id": student["id"],
         "full_name": student["full_name"],
@@ -2052,8 +2058,88 @@ async def get_students(current_user: User = Depends(get_current_user)):
         "student_id": student.get("student_id"),
         "program_type": student.get("program_type"),
         "study_status": student.get("study_status", "active"),
-        "role": student.get("role", "student")
+        "role": student.get("role", "student"),
+        "created_at": student.get("created_at"),
+        "last_login": student.get("last_login"),
+        "is_active": student.get("is_active", True)
     } for student in students]
+
+@api_router.put("/users/{user_id}/edit")
+async def edit_user_profile(user_id: str, user_data: dict, current_user: User = Depends(get_current_user)):
+    """Edit user profile - comprehensive user management"""
+    if current_user.role not in [UserRole.SUPERVISOR, UserRole.LAB_MANAGER, UserRole.ADMIN]:
+        raise HTTPException(status_code=403, detail="Not authorized to edit user profiles")
+    
+    # Check if user exists and is authorized to edit
+    user_to_edit = await db.users.find_one({"id": user_id})
+    if not user_to_edit:
+        raise HTTPException(status_code=404, detail="User not found")
+    
+    # Supervisors can only edit their own students
+    if current_user.role == UserRole.SUPERVISOR and user_to_edit.get("supervisor_id") != current_user.id:
+        raise HTTPException(status_code=403, detail="Can only edit your assigned students")
+    
+    # Prepare update data
+    update_data = {}
+    editable_fields = ["full_name", "department", "research_area", "program_type", "study_status", "student_id"]
+    for field in editable_fields:
+        if field in user_data and user_data[field] is not None:
+            update_data[field] = user_data[field]
+    
+    update_data["updated_at"] = datetime.utcnow()
+    
+    await db.users.update_one({"id": user_id}, {"$set": update_data})
+    return {"message": "User profile updated successfully"}
+
+@api_router.post("/users/{user_id}/freeze")
+async def freeze_user_access(user_id: str, current_user: User = Depends(get_current_user)):
+    """Freeze user access - suspend account temporarily"""
+    if current_user.role not in [UserRole.SUPERVISOR, UserRole.LAB_MANAGER, UserRole.ADMIN]:
+        raise HTTPException(status_code=403, detail="Not authorized to freeze user access")
+    
+    user_to_freeze = await db.users.find_one({"id": user_id})
+    if not user_to_freeze:
+        raise HTTPException(status_code=404, detail="User not found")
+    
+    await db.users.update_one(
+        {"id": user_id}, 
+        {"$set": {"is_active": False, "study_status": "suspended", "updated_at": datetime.utcnow()}}
+    )
+    return {"message": "User access frozen successfully"}
+
+@api_router.post("/users/{user_id}/unfreeze")
+async def unfreeze_user_access(user_id: str, current_user: User = Depends(get_current_user)):
+    """Unfreeze user access - restore account"""
+    if current_user.role not in [UserRole.SUPERVISOR, UserRole.LAB_MANAGER, UserRole.ADMIN]:
+        raise HTTPException(status_code=403, detail="Not authorized to unfreeze user access")
+    
+    await db.users.update_one(
+        {"id": user_id}, 
+        {"$set": {"is_active": True, "study_status": "active", "updated_at": datetime.utcnow()}}
+    )
+    return {"message": "User access restored successfully"}
+
+@api_router.delete("/users/{user_id}")
+async def delete_user_profile(user_id: str, current_user: User = Depends(get_current_user)):
+    """Delete user profile permanently - ultimate admin control"""
+    if current_user.role not in [UserRole.SUPERVISOR, UserRole.LAB_MANAGER, UserRole.ADMIN]:
+        raise HTTPException(status_code=403, detail="Not authorized to delete user profiles")
+    
+    user_to_delete = await db.users.find_one({"id": user_id})
+    if not user_to_delete:
+        raise HTTPException(status_code=404, detail="User not found")
+    
+    # Prevent deleting other supervisors/admins
+    if user_to_delete.get("role") in ["supervisor", "admin"] and current_user.role != "admin":
+        raise HTTPException(status_code=403, detail="Cannot delete supervisor or admin users")
+    
+    # Delete all user-related data
+    await db.users.delete_one({"id": user_id})
+    await db.research_logs.delete_many({"user_id": user_id})
+    await db.reminders.delete_many({"user_id": user_id})
+    await db.meetings.delete_many({"$or": [{"supervisor_id": user_id}, {"student_id": user_id}]})
+    
+    return {"message": "User profile and all associated data deleted successfully"}
 
 # Include the router in the main app
 app.include_router(api_router)
