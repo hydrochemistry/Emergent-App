@@ -2605,7 +2605,7 @@ const CreateResearchLogDialog = ({ onLogCreated }) => {
             <Button type="button" variant="outline" onClick={() => setIsOpen(false)}>
               Cancel
             </Button>
-            <Button type="submit" disabled={loading || !formData.title || !formData.description}>
+            <Button type="submit" disabled={loading}>
               {loading ? 'Creating...' : 'Create Log'}
             </Button>
           </div>
