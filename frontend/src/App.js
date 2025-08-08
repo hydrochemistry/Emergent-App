@@ -2362,15 +2362,43 @@ const CreateMeetingDialog = ({ students, onMeetingCreated, user }) => {
     setLoading(true);
     
     try {
-      const meetingDateTime = new Date(`${formData.meeting_date}T${formData.meeting_time}`).toISOString();
+      // Validate required fields
+      if (!formData.agenda) {
+        alert('Please enter a meeting agenda');
+        setLoading(false);
+        return;
+      }
+      
+      if (!formData.meeting_date) {
+        alert('Please select a meeting date');
+        setLoading(false);
+        return;
+      }
+      
+      if (!formData.meeting_time) {
+        alert('Please select a meeting time');
+        setLoading(false);
+        return;
+      }
+      
+      // Create proper ISO datetime string
+      const meetingDateTime = new Date(`${formData.meeting_date}T${formData.meeting_time}:00`);
+      
+      // Validate the date is valid
+      if (isNaN(meetingDateTime.getTime())) {
+        alert('Invalid date or time format. Please check your inputs.');
+        setLoading(false);
+        return;
+      }
       
       await axios.post(`${API}/meetings`, {
-        student_id: user.id, // Add required student_id field
+        student_id: user.id,
         meeting_type: formData.meeting_type,
-        meeting_date: meetingDateTime,
+        meeting_date: meetingDateTime.toISOString(),
         agenda: formData.agenda,
         meeting_notes: formData.notes || undefined,
-        duration_minutes: 60 // Default duration
+        duration_minutes: 60,
+        location: formData.location || undefined
       });
       
       alert('Meeting scheduled successfully!');
