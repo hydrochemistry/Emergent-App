@@ -1988,6 +1988,29 @@ const TaskCard = ({ task, user, onTaskUpdated }) => (
 // Research Log Card Component
 const ResearchLogCard = ({ log, user, onLogUpdated }) => {
   const [showAttachments, setShowAttachments] = useState(false);
+  const [isReviewing, setIsReviewing] = useState(false);
+  const [reviewLoading, setReviewLoading] = useState(false);
+
+  const handleReviewAction = async (action, feedback = '') => {
+    setReviewLoading(true);
+    try {
+      const reviewData = {
+        action: action, // 'accept', 'revision', 'reject'
+        feedback: feedback,
+        reviewed_by: user.id,
+        reviewed_at: new Date().toISOString()
+      };
+
+      await axios.post(`${API}/research-logs/${log.id}/review`, reviewData);
+      alert(`Research log ${action}ed successfully!`);
+      onLogUpdated();
+    } catch (error) {
+      alert(`Error ${action}ing research log: ${error.response?.data?.detail || error.message}`);
+    } finally {
+      setReviewLoading(false);
+      setIsReviewing(false);
+    }
+  };
   
   return (
     <Card>
