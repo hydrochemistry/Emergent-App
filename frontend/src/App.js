@@ -4674,7 +4674,6 @@ const CreateMilestoneDialog = ({ onMilestoneCreated }) => {
               value={formData.milestone_title}
               onChange={(e) => setFormData({...formData, milestone_title: e.target.value})}
               placeholder="Enter milestone name"
-              required
             />
           </div>
           
