@@ -485,7 +485,7 @@ class GrantRegistrationCreate(BaseModel):
 class Publication(BaseModel):
     id: str = Field(default_factory=lambda: str(uuid.uuid4()))
     title: str
-    authors: str  # Changed from List[str] to str for simplicity
+    authors: List[str]  # Fixed back to List[str] for frontend compatibility
     journal: Optional[str] = None
     conference: Optional[str] = None  # Added for conference publications
     publication_year: int = Field(alias="year")  # Renamed from year to publication_year
@@ -497,7 +497,6 @@ class Publication(BaseModel):
     citation_count: int = 0
     student_contributors: List[str] = []  # student_ids
     supervisor_id: Optional[str] = None  # Made optional
-    created_at: datetime = Field(default_factory=datetime.utcnow)
     created_at: datetime = Field(default_factory=datetime.utcnow)
     retrieved_at: Optional[datetime] = None
 
