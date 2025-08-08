@@ -1264,6 +1264,41 @@ async def endorse_research_log(log_id: str, endorsement: ResearchLogEndorsement,
     
     return {"message": "Research log endorsed successfully"}
 
+@api_router.post("/research-logs/{log_id}/review")
+async def review_research_log(
+    log_id: str, 
+    review_data: dict,
+    current_user: User = Depends(get_current_user)
+):
+    """Review research log with accept, revision, or reject actions"""
+    if current_user.role not in [UserRole.SUPERVISOR, UserRole.LAB_MANAGER, UserRole.ADMIN]:
+        raise HTTPException(status_code=403, detail="Not authorized to review research logs")
+    
+    # Validate the log exists
+    log = await db.research_logs.find_one({"id": log_id})
+    if not log:
+        raise HTTPException(status_code=404, detail="Research log not found")
+    
+    # Validate action
+    valid_actions = ['accepted', 'revision', 'rejected']
+    action = review_data.get('action')
+    if action not in valid_actions:
+        raise HTTPException(status_code=400, detail=f"Invalid action. Must be one of: {valid_actions}")
+    
+    # Update the research log with review information
+    await db.research_logs.update_one(
+        {"id": log_id},
+        {"$set": {
+            "review_status": action,
+            "review_feedback": review_data.get("feedback", ""),
+            "reviewed_by": current_user.id,
+            "reviewed_at": datetime.utcnow().isoformat(),
+            "reviewer_name": current_user.full_name
+        }}
+    )
+    
+    return {"message": f"Research log {action} successfully"}
+
 @api_router.get("/research-logs/{log_id}/pdf")
 async def download_research_log_pdf(log_id: str, current_user: User = Depends(get_current_user)):
     """Generate and download research log as PDF"""
