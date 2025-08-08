@@ -36,15 +36,6 @@ UPLOAD_DIR.mkdir(exist_ok=True)
 # Create the main app without a prefix
 app = FastAPI()
 
-# Add CORS middleware to allow frontend communication
-app.add_middleware(
-    CORSMiddleware,
-    allow_origins=["*"],  # In production, replace with specific origins
-    allow_credentials=True,
-    allow_methods=["*"],
-    allow_headers=["*"],
-)
-
 # Mount static files
 app.mount("/uploads", StaticFiles(directory=str(UPLOAD_DIR)), name="uploads")
 
