@@ -1909,182 +1909,208 @@ const ProfileEditForm = ({ formData, setFormData, loading, onSave, onCancel, use
   return (
     <div className="space-y-6">
       {/* Basic Information */}
-    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-      <div>
-        <Label htmlFor="full_name">Full Name *</Label>
-        <Input
-          id="full_name"
-          value={formData.full_name || ''}
-          onChange={(e) => setFormData({...formData, full_name: e.target.value})}
-          required
-        />
-      </div>
-      <div>
-        <Label htmlFor="contact_number">Contact Number</Label>
-        <Input
-          id="contact_number"
-          type="tel"
-          value={formData.contact_number || ''}
-          onChange={(e) => setFormData({...formData, contact_number: e.target.value})}
-        />
-      </div>
-    </div>
-
-    {/* Academic Information */}
-    <div className="space-y-4">
-      <h3 className="text-lg font-semibold text-gray-900">Academic Information</h3>
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-        <div>
-          <Label htmlFor="student_id">Student ID</Label>
-          <Input
-            id="student_id"
-            value={formData.student_id || ''}
-            onChange={(e) => setFormData({...formData, student_id: e.target.value})}
-          />
-        </div>
-        <div>
-          <Label htmlFor="program_type">Program Type</Label>
-          <Select value={formData.program_type || ''} onValueChange={(value) => setFormData({...formData, program_type: value})}>
-            <SelectTrigger>
-              <SelectValue placeholder="Select program" />
-            </SelectTrigger>
-            <SelectContent>
-              <SelectItem value="msc_research">MSc (Research)</SelectItem>
-              <SelectItem value="msc_coursework">MSc (Coursework)</SelectItem>
-              <SelectItem value="phd_research">PhD (Research)</SelectItem>
-              <SelectItem value="phd_coursework">PhD (Coursework)</SelectItem>
-            </SelectContent>
-          </Select>
-        </div>
-        <div>
-          <Label htmlFor="study_status">Study Status</Label>
-          <Select value={formData.study_status || ''} onValueChange={(value) => setFormData({...formData, study_status: value})}>
-            <SelectTrigger>
-              <SelectValue placeholder="Select status" />
-            </SelectTrigger>
-            <SelectContent>
-              <SelectItem value="active">Active</SelectItem>
-              <SelectItem value="deferred">Deferred</SelectItem>
-              <SelectItem value="on_leave">On Leave</SelectItem>
-              <SelectItem value="graduated">Graduated</SelectItem>
-            </SelectContent>
-          </Select>
-        </div>
-        <div>
-          <Label htmlFor="field_of_study">Field of Study</Label>
-          <Input
-            id="field_of_study"
-            value={formData.field_of_study || ''}
-            onChange={(e) => setFormData({...formData, field_of_study: e.target.value})}
-          />
-        </div>
-        <div>
-          <Label htmlFor="department">Department</Label>
-          <Input
-            id="department"
-            value={formData.department || ''}
-            onChange={(e) => setFormData({...formData, department: e.target.value})}
-          />
-        </div>
-        <div>
-          <Label htmlFor="faculty">Faculty</Label>
-          <Input
-            id="faculty"
-            value={formData.faculty || ''}
-            onChange={(e) => setFormData({...formData, faculty: e.target.value})}
-          />
-        </div>
-        <div>
-          <Label htmlFor="institute">Institute</Label>
-          <Input
-            id="institute"
-            value={formData.institute || ''}
-            onChange={(e) => setFormData({...formData, institute: e.target.value})}
-          />
-        </div>
-        <div>
-          <Label htmlFor="enrollment_date">Enrollment Date</Label>
-          <Input
-            id="enrollment_date"
-            type="date"
-            value={formData.enrollment_date ? formData.enrollment_date.split('T')[0] : ''}
-            onChange={(e) => setFormData({...formData, enrollment_date: e.target.value})}
-          />
-        </div>
-        <div>
-          <Label htmlFor="expected_graduation_date">Expected Graduation Date</Label>
-          <Input
-            id="expected_graduation_date"
-            type="date"
-            value={formData.expected_graduation_date ? formData.expected_graduation_date.split('T')[0] : ''}
-            onChange={(e) => setFormData({...formData, expected_graduation_date: e.target.value})}
-          />
-        </div>
-      </div>
-    </div>
-
-    {/* Personal Information */}
-    <div className="space-y-4">
-      <h3 className="text-lg font-semibold text-gray-900">Personal Information</h3>
       <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
         <div>
-          <Label htmlFor="nationality">Nationality</Label>
+          <Label htmlFor="full_name">Full Name *</Label>
           <Input
-            id="nationality"
-            value={formData.nationality || ''}
-            onChange={(e) => setFormData({...formData, nationality: e.target.value})}
+            id="full_name"
+            value={formData.full_name || ''}
+            onChange={(e) => setFormData({...formData, full_name: e.target.value})}
+            required
           />
         </div>
         <div>
-          <Label htmlFor="citizenship">Citizenship</Label>
+          <Label htmlFor="contact_number">Contact Number</Label>
           <Input
-            id="citizenship"
-            value={formData.citizenship || ''}
-            onChange={(e) => setFormData({...formData, citizenship: e.target.value})}
+            id="contact_number"
+            type="tel"
+            value={formData.contact_number || ''}
+            onChange={(e) => setFormData({...formData, contact_number: e.target.value})}
           />
         </div>
       </div>
-    </div>
 
-    {/* Research Information */}
-    <div className="space-y-4">
-      <h3 className="text-lg font-semibold text-gray-900">Research Information</h3>
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-        <div>
-          <Label htmlFor="research_area">Research Area</Label>
-          <Textarea
-            id="research_area"
-            value={formData.research_area || ''}
-            onChange={(e) => setFormData({...formData, research_area: e.target.value})}
-            rows={3}
-          />
+      {/* Supervisor Profile - Only Salutation */}
+      {user?.role === 'supervisor' ? (
+        <div className="space-y-4">
+          <h3 className="text-lg font-semibold text-gray-900">Supervisor Information</h3>
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div>
+              <Label htmlFor="salutation">Salutation</Label>
+              <Select value={formData.salutation || ''} onValueChange={(value) => setFormData({...formData, salutation: value})}>
+                <SelectTrigger>
+                  <SelectValue placeholder="Select salutation" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="professor_dr">Professor Dr.</SelectItem>
+                  <SelectItem value="dr">Dr.</SelectItem>
+                  <SelectItem value="prof">Prof.</SelectItem>
+                  <SelectItem value="assoc_prof_dr">Associate Professor Dr.</SelectItem>
+                  <SelectItem value="asst_prof_dr">Assistant Professor Dr.</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+          </div>
         </div>
-        <div>
-          <Label htmlFor="lab_name">Lab Name</Label>
-          <Input
-            id="lab_name"
-            value={formData.lab_name || ''}
-            onChange={(e) => setFormData({...formData, lab_name: e.target.value})}
-          />
+      ) : (
+        <>
+        {/* Academic Information - Only for Students */}
+        <div className="space-y-4">
+          <h3 className="text-lg font-semibold text-gray-900">Academic Information</h3>
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+            <div>
+              <Label htmlFor="student_id">Student ID</Label>
+              <Input
+                id="student_id"
+                value={formData.student_id || ''}
+                onChange={(e) => setFormData({...formData, student_id: e.target.value})}
+              />
+            </div>
+            <div>
+              <Label htmlFor="program_type">Program Type</Label>
+              <Select value={formData.program_type || ''} onValueChange={(value) => setFormData({...formData, program_type: value})}>
+                <SelectTrigger>
+                  <SelectValue placeholder="Select program" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="msc_research">MSc (Research)</SelectItem>
+                  <SelectItem value="msc_coursework">MSc (Coursework)</SelectItem>
+                  <SelectItem value="phd_research">PhD (Research)</SelectItem>
+                  <SelectItem value="phd_coursework">PhD (Coursework)</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+            <div>
+              <Label htmlFor="study_status">Study Status</Label>
+              <Select value={formData.study_status || ''} onValueChange={(value) => setFormData({...formData, study_status: value})}>
+                <SelectTrigger>
+                  <SelectValue placeholder="Select status" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="active">Active</SelectItem>
+                  <SelectItem value="deferred">Deferred</SelectItem>
+                  <SelectItem value="on_leave">On Leave</SelectItem>
+                  <SelectItem value="graduated">Graduated</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+            <div>
+              <Label htmlFor="field_of_study">Field of Study</Label>
+              <Input
+                id="field_of_study"
+                value={formData.field_of_study || ''}
+                onChange={(e) => setFormData({...formData, field_of_study: e.target.value})}
+              />
+            </div>
+            <div>
+              <Label htmlFor="department">Department</Label>
+              <Input
+                id="department"
+                value={formData.department || ''}
+                onChange={(e) => setFormData({...formData, department: e.target.value})}
+              />
+            </div>
+            <div>
+              <Label htmlFor="faculty">Faculty</Label>
+              <Input
+                id="faculty"
+                value={formData.faculty || ''}
+                onChange={(e) => setFormData({...formData, faculty: e.target.value})}
+              />
+            </div>
+            <div>
+              <Label htmlFor="institute">Institute</Label>
+              <Input
+                id="institute"
+                value={formData.institute || ''}
+                onChange={(e) => setFormData({...formData, institute: e.target.value})}
+              />
+            </div>
+            <div>
+              <Label htmlFor="enrollment_date">Enrollment Date</Label>
+              <Input
+                id="enrollment_date"
+                type="date"
+                value={formData.enrollment_date ? formData.enrollment_date.split('T')[0] : ''}
+                onChange={(e) => setFormData({...formData, enrollment_date: e.target.value})}
+              />
+            </div>
+            <div>
+              <Label htmlFor="expected_graduation_date">Expected Graduation Date</Label>
+              <Input
+                id="expected_graduation_date"
+                type="date"
+                value={formData.expected_graduation_date ? formData.expected_graduation_date.split('T')[0] : ''}
+                onChange={(e) => setFormData({...formData, expected_graduation_date: e.target.value})}
+              />
+            </div>
+          </div>
         </div>
-        <div>
-          <Label htmlFor="scopus_id">Scopus ID</Label>
-          <Input
-            id="scopus_id"
-            value={formData.scopus_id || ''}
-            onChange={(e) => setFormData({...formData, scopus_id: e.target.value})}
-          />
+
+        {/* Personal Information - Only for Students */}
+        <div className="space-y-4">
+          <h3 className="text-lg font-semibold text-gray-900">Personal Information</h3>
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div>
+              <Label htmlFor="nationality">Nationality</Label>
+              <Input
+                id="nationality"
+                value={formData.nationality || ''}
+                onChange={(e) => setFormData({...formData, nationality: e.target.value})}
+              />
+            </div>
+            <div>
+              <Label htmlFor="citizenship">Citizenship</Label>
+              <Input
+                id="citizenship"
+                value={formData.citizenship || ''}
+                onChange={(e) => setFormData({...formData, citizenship: e.target.value})}
+              />
+            </div>
+          </div>
         </div>
-        <div>
-          <Label htmlFor="orcid_id">ORCID ID</Label>
-          <Input
-            id="orcid_id"
-            value={formData.orcid_id || ''}
-            onChange={(e) => setFormData({...formData, orcid_id: e.target.value})}
-          />
+
+        {/* Research Information - Only for Students */}
+        <div className="space-y-4">
+          <h3 className="text-lg font-semibold text-gray-900">Research Information</h3>
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div>
+              <Label htmlFor="research_area">Research Area</Label>
+              <Textarea
+                id="research_area"
+                value={formData.research_area || ''}
+                onChange={(e) => setFormData({...formData, research_area: e.target.value})}
+                rows={3}
+              />
+            </div>
+            <div>
+              <Label htmlFor="lab_name">Lab Name</Label>
+              <Input
+                id="lab_name"
+                value={formData.lab_name || ''}
+                onChange={(e) => setFormData({...formData, lab_name: e.target.value})}
+              />
+            </div>
+            <div>
+              <Label htmlFor="scopus_id">Scopus ID</Label>
+              <Input
+                id="scopus_id"
+                value={formData.scopus_id || ''}
+                onChange={(e) => setFormData({...formData, scopus_id: e.target.value})}
+              />
+            </div>
+            <div>
+              <Label htmlFor="orcid_id">ORCID ID</Label>
+              <Input
+                id="orcid_id"
+                value={formData.orcid_id || ''}
+                onChange={(e) => setFormData({...formData, orcid_id: e.target.value})}
+              />
+            </div>
+          </div>
         </div>
-      </div>
-    </div>
+        </>
+      )}
 
     {/* Action Buttons */}
     <div className="flex justify-end gap-2 pt-4 border-t">
