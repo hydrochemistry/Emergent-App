@@ -66,6 +66,7 @@ class StudyStatus(str, Enum):
     DEFERRED = "deferred"
     ON_LEAVE = "on_leave"
     GRADUATED = "graduated"
+    SUSPENDED = "suspended"
 
 class MeetingType(str, Enum):
     SUPERVISION = "supervision"
