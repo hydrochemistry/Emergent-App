@@ -4636,7 +4636,7 @@ const GrantCard = ({ grant, user, onGrantUpdated }) => {
         )}
 
         {/* Additional Actions for Supervisors */}
-        {user.role === 'supervisor' && (
+        {(user.role === 'supervisor' || user.role === 'lab_manager' || user.role === 'admin') && (
           <div className="mt-4 pt-4 border-t">
             <div className="flex flex-wrap gap-2">
               {grant.status === 'pending' && (
@@ -4662,6 +4662,16 @@ const GrantCard = ({ grant, user, onGrantUpdated }) => {
                   Generate Report
                 </Button>
               )}
+              <Button 
+                variant="outline" 
+                size="sm" 
+                onClick={handleDeleteGrant}
+                disabled={isDeleting}
+                className="text-red-600 border-red-600 hover:bg-red-50"
+              >
+                <Trash2 className="h-4 w-4 mr-2" />
+                {isDeleting ? 'Deleting...' : 'Delete Grant'}
+              </Button>
             </div>
           </div>
         )}
