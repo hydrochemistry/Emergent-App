@@ -4051,6 +4051,76 @@ const EditGrantDialog = ({ grant, onGrantUpdated, isPIC = false }) => {
   );
 }
 
+// Scopus Publication Dialog Component
+const ScopusPublicationDialog = ({ onPublicationAdded }) => {
+  const [isOpen, setIsOpen] = useState(false);
+  const [scopusId, setScopusId] = useState('');
+  const [loading, setLoading] = useState(false);
+
+  const handleSubmit = async (e) => {
+    e.preventDefault();
+    if (!scopusId.trim()) {
+      alert('Please enter a Scopus ID');
+      return;
+    }
+
+    setLoading(true);
+    try {
+      const response = await axios.post(`${API}/publications/scopus`, {
+        scopus_id: scopusId.trim()
+      });
+      
+      alert('Publication added successfully from Scopus!');
+      setScopusId('');
+      setIsOpen(false);
+      onPublicationAdded();
+    } catch (error) {
+      console.error('Error adding publication:', error);
+      alert('Error adding publication: ' + (error.response?.data?.detail || error.message));
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  return (
+    <Dialog open={isOpen} onOpenChange={setIsOpen}>
+      <DialogTrigger asChild>
+        <Button variant="outline" size="sm" className="w-full">
+          <Plus className="h-3 w-3 mr-1" />
+          Add from Scopus
+        </Button>
+      </DialogTrigger>
+      <DialogContent>
+        <DialogHeader>
+          <DialogTitle>Add Publication from Scopus</DialogTitle>
+        </DialogHeader>
+        <form onSubmit={handleSubmit} className="space-y-4">
+          <div>
+            <Label htmlFor="scopus_id">Scopus ID</Label>
+            <Input
+              id="scopus_id"
+              value={scopusId}
+              onChange={(e) => setScopusId(e.target.value)}
+              placeholder="Enter Scopus ID (e.g., 2-s2.0-85123456789)"
+            />
+            <p className="text-xs text-gray-500 mt-1">
+              Enter the Scopus ID to automatically fetch publication details
+            </p>
+          </div>
+          <div className="flex gap-2 justify-end">
+            <Button type="button" variant="outline" onClick={() => setIsOpen(false)} disabled={loading}>
+              Cancel
+            </Button>
+            <Button type="submit" disabled={loading || !scopusId.trim()}>
+              {loading ? 'Adding...' : 'Add Publication'}
+            </Button>
+          </div>
+        </form>
+      </DialogContent>
+    </Dialog>
+  );
+};
+
 const MeetingCard = ({ meeting, user, onMeetingUpdated }) => (
   <Card>
     <CardContent className="p-6">
