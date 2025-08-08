@@ -1568,6 +1568,8 @@ async def get_active_grants(current_user: User = Depends(get_current_user)):
         remaining_balance = grant.get("total_amount", 0) - grant.get("spent_amount", 0)
         grant["remaining_balance"] = remaining_balance
         total_cumulative_balance += remaining_balance
+        # Remove MongoDB ObjectId to prevent serialization issues
+        grant.pop("_id", None)
     
     return {
         "active_grants": grants,
