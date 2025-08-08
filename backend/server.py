@@ -1462,8 +1462,15 @@ async def get_research_logs(current_user: User = Depends(get_current_user)):
     
     # Add student information for all users to see
     student_map = {student["id"]: student for student in students}
-    if current_user.role != UserRole.STUDENT:
-        student_map[current_user.id] = {"full_name": current_user.full_name, "student_id": current_user.id, "email": current_user.email}
+    
+    # Add supervisor information to the map for lab-wide visibility
+    supervisor_user = await db.users.find_one({"id": supervisor_id})
+    if supervisor_user:
+        student_map[supervisor_id] = {
+            "full_name": supervisor_user.get("full_name", "Unknown Supervisor"),
+            "student_id": supervisor_user.get("student_id", supervisor_id),
+            "email": supervisor_user.get("email", "")
+        }
     
     for log in logs:
         student_info = student_map.get(log["user_id"], {})
