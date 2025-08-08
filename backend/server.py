@@ -1450,21 +1450,22 @@ async def create_grant(grant_data: GrantCreate, current_user: User = Depends(get
 
 @api_router.get("/grants", response_model=List[Grant])
 async def get_grants(current_user: User = Depends(get_current_user)):
-    """Get grants - enhanced visibility for all users while maintaining creation restrictions"""
-    # All users can view grants, but with different filtering based on role
-    if current_user.role == UserRole.STUDENT:
-        # Students can see all grants (enhanced visibility) but with focus on their involvement
-        grants = await db.grants.find({}).to_list(1000)
-    else:
-        # Supervisors see grants they created
-        grants = await db.grants.find({"principal_investigator": current_user.id}).to_list(1000)
+    """Get grants - all users can see all grants for proper synchronization"""
+    # All users see all grants for full lab visibility and synchronization
+    grants = await db.grants.find({}).to_list(1000)
     
-    # Add cumulative value calculation for dashboard display
+    # Add enhanced balance calculations for dashboard display
     for grant in grants:
         if "total_amount" in grant and "spent_amount" in grant:
             grant["remaining_balance"] = grant["total_amount"] - grant.get("spent_amount", 0)
+        elif "balance" in grant:
+            grant["remaining_balance"] = grant["balance"]
         else:
             grant["remaining_balance"] = grant.get("total_amount", 0)
+        
+        # Ensure current_balance field is populated for consistency
+        if "current_balance" not in grant:
+            grant["current_balance"] = grant.get("remaining_balance", grant.get("total_amount", 0))
     
     return [Grant(**grant) for grant in grants]
 
