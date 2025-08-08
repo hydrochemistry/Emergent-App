@@ -1781,7 +1781,7 @@ async def add_publication_from_scopus(scopus_data: dict, current_user: User = De
         publication_data = {
             "id": str(uuid.uuid4()),
             "title": f"Publication from Scopus ID: {scopus_id}",
-            "authors": f"{current_user.full_name}",
+            "authors": [current_user.full_name],  # Fixed to be a list
             "journal": "Journal Name (Retrieved from Scopus)",
             "year": datetime.utcnow().year,  # Use 'year' field as expected by the alias
             "doi": f"10.1000/scopus.{scopus_id}",
