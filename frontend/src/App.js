@@ -503,11 +503,18 @@ const Dashboard = ({ user, logout, setUser }) => {
 
   const fetchDashboardData = async () => {
     try {
+      console.log('🔍 Starting fetchDashboardData...');
+      console.log('🔑 Current auth token:', axios.defaults.headers.common['Authorization']);
+      console.log('🌐 API URL:', API);
+      
       const [
         tasksRes, logsRes, statsRes, bulletinsRes, grantsRes, 
         pubsRes, labRes, meetingsRes, remindersRes, notesRes
       ] = await Promise.all([
-        axios.get(`${API}/tasks`).catch(() => ({data: []})),
+        axios.get(`${API}/tasks`).catch((error) => {
+          console.error('Tasks API error:', error);
+          return {data: []};
+        }),
         axios.get(`${API}/research-logs`).catch(() => ({data: []})),
         axios.get(`${API}/dashboard/stats`).catch(() => ({data: {}})),
         axios.get(`${API}/bulletins`).catch(() => ({data: []})),
@@ -515,16 +522,21 @@ const Dashboard = ({ user, logout, setUser }) => {
         axios.get(`${API}/publications`).catch(() => ({data: []})),
         axios.get(`${API}/lab/settings`).catch(() => ({data: {}})),
         axios.get(`${API}/meetings`).catch((error) => {
-          console.error('Error fetching meetings:', error);
+          console.error('❌ Error fetching meetings:', error.response?.data || error.message);
+          console.error('❌ Full error object:', error);
           return {data: []};
         }),
         axios.get(`${API}/reminders`).catch((error) => {
-          console.error('Error fetching reminders:', error);
+          console.error('❌ Error fetching reminders:', error.response?.data || error.message);
           return {data: []};
         }),
         axios.get(`${API}/notes`).catch(() => ({data: []}))
       ]);
 
+      console.log('✅ API calls completed');
+      console.log('📊 Raw meetings response:', meetingsRes);
+      console.log('📊 Meetings data:', meetingsRes.data);
+      
       setTasks(tasksRes.data || []);
       setResearchLogs(logsRes.data || []);
       setStats(statsRes.data || {});
@@ -533,10 +545,10 @@ const Dashboard = ({ user, logout, setUser }) => {
       setPublications(pubsRes.data || []);
       setLabSettings(labRes.data || {});
       
-      console.log('Meetings API response:', meetingsRes.data);
+      console.log('🔄 Setting meetings state with:', meetingsRes.data);
       setMeetings(meetingsRes.data || []);
       
-      console.log('Reminders API response:', remindersRes.data);
+      console.log('🔄 Setting reminders state with:', remindersRes.data);
       setReminders(remindersRes.data || []);
       setNotes(notesRes.data || []);
 
