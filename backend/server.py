@@ -1734,21 +1734,28 @@ async def add_publication_from_scopus(scopus_data: dict, current_user: User = De
     try:
         # Mock Scopus API call - In production, you would call the actual Scopus API here
         # For now, create a publication with basic info and the Scopus ID
-        publication = Publication(
-            title=f"Publication from Scopus ID: {scopus_id}",
-            authors=f"{current_user.full_name}",
-            journal="Journal Name (Retrieved from Scopus)",
-            publication_year=datetime.utcnow().year,
-            doi=f"10.1000/scopus.{scopus_id}",
-            scopus_id=scopus_id,
-            abstract="Abstract retrieved from Scopus API",
-            keywords=["scopus", "research"],
-            status="published",
-            supervisor_id=current_user.id if current_user.role != UserRole.STUDENT else None,
-            student_contributors=[current_user.id] if current_user.role == UserRole.STUDENT else []
-        )
+        publication_data = {
+            "id": str(uuid.uuid4()),
+            "title": f"Publication from Scopus ID: {scopus_id}",
+            "authors": f"{current_user.full_name}",
+            "journal": "Journal Name (Retrieved from Scopus)",
+            "year": datetime.utcnow().year,  # Use 'year' field as expected by the alias
+            "doi": f"10.1000/scopus.{scopus_id}",
+            "scopus_id": scopus_id,
+            "abstract": "Abstract retrieved from Scopus API",
+            "keywords": ["scopus", "research"],
+            "status": "published",
+            "citation_count": 0,
+            "supervisor_id": current_user.id if current_user.role != UserRole.STUDENT else None,
+            "student_contributors": [current_user.id] if current_user.role == UserRole.STUDENT else [],
+            "created_at": datetime.utcnow(),
+            "retrieved_at": datetime.utcnow()
+        }
         
-        await db.publications.insert_one(publication.dict())
+        await db.publications.insert_one(publication_data)
+        
+        # Return the publication using the Publication model
+        publication = Publication(**publication_data)
         return publication
         
     except Exception as e:
