@@ -3128,7 +3128,6 @@ const CreateBulletinDialog = ({ onBulletinCreated }) => {
               value={formData.title}
               onChange={(e) => setFormData({...formData, title: e.target.value})}
               placeholder="Announcement title"
-              required
             />
           </div>
           
