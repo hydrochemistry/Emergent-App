@@ -537,7 +537,6 @@ const Dashboard = ({ user, logout, setUser }) => {
       console.log('📊 Raw meetings response:', meetingsRes);
       console.log('📊 Meetings data:', meetingsRes.data);
       
-      setTasks(tasksRes.data || []);
       setResearchLogs(logsRes.data || []);
       setStats(statsRes.data || {});
       setBulletins(bulletinsRes.data || []);
