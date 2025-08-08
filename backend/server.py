@@ -156,6 +156,7 @@ class UserCreate(BaseModel):
     password: str
     full_name: str
     role: UserRole
+    salutation: Optional[str] = None  # Added salutation field for supervisors
     
     # Enhanced Registration Fields
     student_id: Optional[str] = None
