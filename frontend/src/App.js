@@ -2082,27 +2082,29 @@ const TaskCard = ({ task, user, onTaskUpdated }) => (
 // Research Log Card Component
 const ResearchLogCard = ({ log, user, onLogUpdated }) => {
   const [showAttachments, setShowAttachments] = useState(false);
-  const [isReviewing, setIsReviewing] = useState(false);
+  const [reviewState, setReviewState] = useState('none'); // 'none', 'revision', 'rejection'
   const [reviewLoading, setReviewLoading] = useState(false);
+  const [reviewFeedback, setReviewFeedback] = useState('');
 
   const handleReviewAction = async (action, feedback = '') => {
     setReviewLoading(true);
     try {
       const reviewData = {
-        action: action, // 'accept', 'revision', 'reject'
+        action: action, // 'accepted', 'revision', 'rejected'
         feedback: feedback,
         reviewed_by: user.id,
         reviewed_at: new Date().toISOString()
       };
 
       await axios.post(`${API}/research-logs/${log.id}/review`, reviewData);
-      alert(`Research log ${action}ed successfully!`);
+      alert(`Research log ${action} successfully!`);
       onLogUpdated();
     } catch (error) {
       alert(`Error ${action}ing research log: ${error.response?.data?.detail || error.message}`);
     } finally {
       setReviewLoading(false);
-      setIsReviewing(false);
+      setReviewState('none');
+      setReviewFeedback('');
     }
   };
   
