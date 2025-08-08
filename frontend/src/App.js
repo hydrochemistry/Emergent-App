@@ -506,6 +506,7 @@ const Dashboard = ({ user, logout, setUser }) => {
   const [labSettings, setLabSettings] = useState({});
   const [meetings, setMeetings] = useState([]);
   const [reminders, setReminders] = useState([]);
+  const [milestones, setMilestones] = useState([]);
   const [notes, setNotes] = useState([]);
   const [loading, setLoading] = useState(true);
 
