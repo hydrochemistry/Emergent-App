@@ -565,6 +565,11 @@ async def get_current_user(credentials: HTTPAuthorizationCredentials = Depends(s
     user = await db.users.find_one({"id": user_id})
     if user is None:
         raise HTTPException(status_code=401, detail="User not found")
+    
+    # Check if user is approved (except for supervisors/admins who are auto-approved)
+    if not user.get("is_approved", False) and user.get("role") not in ["supervisor", "admin", "lab_manager"]:
+        raise HTTPException(status_code=403, detail="Account pending approval. Please wait for supervisor authorization.")
+    
     return User(**user)
 
 # Scopus API integration
