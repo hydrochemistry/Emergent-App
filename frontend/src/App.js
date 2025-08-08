@@ -2469,7 +2469,21 @@ const CreateMeetingDialog = ({ students, onMeetingCreated, user }) => {
       onMeetingCreated();
     } catch (error) {
       console.error('Error scheduling meeting:', error);
-      alert('Error scheduling meeting: ' + (error.response?.data?.detail || error.message || 'Unknown error occurred'));
+      let errorMessage = 'Error scheduling meeting: ';
+      
+      if (error.response?.data?.detail) {
+        errorMessage += error.response.data.detail;
+      } else if (error.response?.data?.message) {
+        errorMessage += error.response.data.message;
+      } else if (error.message) {
+        errorMessage += error.message;
+      } else if (typeof error === 'string') {
+        errorMessage += error;
+      } else {
+        errorMessage += 'Unknown error occurred. Please check all required fields.';
+      }
+      
+      alert(errorMessage);
     } finally {
       setLoading(false);
     }
