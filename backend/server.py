@@ -705,11 +705,14 @@ async def register(user_data: UserCreate):
         orcid_id=user_data.orcid_id
     )
     
-    # Connect student with supervisor
+    # Connect student with supervisor and auto-approve if supervisor exists
     if user_data.role == UserRole.STUDENT and user_data.supervisor_email:
         supervisor = await db.users.find_one({"email": user_data.supervisor_email, "role": {"$in": ["supervisor", "lab_manager"]}})
         if supervisor:
             user.supervisor_id = supervisor["id"]
+            user.is_approved = True  # Auto-approve students with valid supervisors
+            user.approved_by = supervisor["id"]
+            user.approved_at = datetime.utcnow()
     
     await db.users.insert_one(user.dict())
     
