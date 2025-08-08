@@ -488,7 +488,7 @@ class Publication(BaseModel):
     authors: List[str]  # Fixed back to List[str] for frontend compatibility
     journal: Optional[str] = None
     conference: Optional[str] = None  # Added for conference publications
-    publication_year: int = Field(alias="year")  # Renamed from year to publication_year
+    publication_year: int  # Direct field name, no alias needed
     doi: Optional[str] = None
     scopus_id: Optional[str] = None
     abstract: Optional[str] = None  # Added abstract field
