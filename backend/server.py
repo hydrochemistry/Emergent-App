@@ -1837,7 +1837,12 @@ async def sync_scopus_publications(current_user: User = Depends(get_current_user
 async def get_publications(current_user: User = Depends(get_current_user)):
     """Get lab-wide publications synchronized from lab Scopus ID - same data for all users"""
     # Get supervisor ID to fetch lab publications
-    supervisor_id = current_user.supervisor_id or current_user.id
+    if current_user.role == UserRole.STUDENT:
+        supervisor_id = current_user.supervisor_id
+        if not supervisor_id:
+            return []  # No supervisor assigned, return empty
+    else:
+        supervisor_id = current_user.id
     
     # Fetch publications for the lab (tied to supervisor) - sorted by publication year (newest first)
     publications = await db.publications.find({"supervisor_id": supervisor_id}).sort("publication_year", -1).to_list(1000)
