@@ -3365,30 +3365,44 @@ const BulletinCard = ({ bulletin, user, onBulletinUpdated }) => {
             <Badge className={getStatusColor(bulletin.status)} size="sm">
               {bulletin.status}
             </Badge>
-            {canApprove && isPending && (
-              <div className="flex gap-2">
-                <Button
-                  size="sm"
-                  variant="outline"
-                  className="text-green-600 border-green-600 hover:bg-green-50"
-                  onClick={() => handleApprove(true)}
-                  disabled={isApproving}
-                >
-                  <Check className="h-3 w-3 mr-1" />
-                  Approve
-                </Button>
+            <div className="flex flex-wrap gap-2">
+              {canApprove && isPending && (
+                <>
+                  <Button
+                    size="sm"
+                    variant="outline"
+                    className="text-green-600 border-green-600 hover:bg-green-50"
+                    onClick={() => handleApprove(true)}
+                    disabled={isApproving || isDeleting}
+                  >
+                    <Check className="h-3 w-3 mr-1" />
+                    Approve
+                  </Button>
+                  <Button
+                    size="sm"
+                    variant="outline"
+                    className="text-red-600 border-red-600 hover:bg-red-50"
+                    onClick={() => handleApprove(false)}
+                    disabled={isApproving || isDeleting}
+                  >
+                    <X className="h-3 w-3 mr-1" />
+                    Reject
+                  </Button>
+                </>
+              )}
+              {canDelete && (
                 <Button
                   size="sm"
                   variant="outline"
                   className="text-red-600 border-red-600 hover:bg-red-50"
-                  onClick={() => handleApprove(false)}
-                  disabled={isApproving}
+                  onClick={handleDelete}
+                  disabled={isApproving || isDeleting}
                 >
-                  <X className="h-3 w-3 mr-1" />
-                  Reject
+                  <Trash2 className="h-3 w-3 mr-1" />
+                  {isDeleting ? 'Deleting...' : 'Delete'}
                 </Button>
-              </div>
-            )}
+              )}
+            </div>
           </div>
         </div>
         
