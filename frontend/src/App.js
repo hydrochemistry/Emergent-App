@@ -606,13 +606,9 @@ const Dashboard = ({ user, logout, setUser }) => {
                 <User className="h-4 w-4" />
               </Button>
               <Avatar className="h-8 w-8 sm:h-10 sm:w-10 cursor-pointer flex-shrink-0" onClick={() => setActiveTab('profile')}>
-                {user.profile_picture ? (
-                  <img src={user.profile_picture} alt="Profile" className="w-full h-full object-cover rounded-full" />
-                ) : (
-                  <AvatarFallback>
-                    {user.full_name.split(' ').map(n => n[0]).join('')}
-                  </AvatarFallback>
-                )}
+                <AvatarFallback>
+                  {user.full_name.split(' ').map(n => n[0]).join('')}
+                </AvatarFallback>
               </Avatar>
               <div className="hidden sm:block">
                 <p className="text-sm font-medium text-gray-900">{user.full_name}</p>
