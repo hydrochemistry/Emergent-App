@@ -4663,7 +4663,6 @@ const CreateMilestoneDialog = ({ onMilestoneCreated }) => {
               value={formData.project_title}
               onChange={(e) => setFormData({...formData, project_title: e.target.value})}
               placeholder="Enter project name"
-              required
             />
           </div>
           
