@@ -1844,16 +1844,21 @@ async def get_all_publications(current_user: User = Depends(get_current_user)):
                 {"student_contributors": current_user.id},
                 {"supervisor_id": supervisor_id}
             ]
-        }).sort("year", -1).to_list(1000)
+        }).sort("publication_year", -1).to_list(1000)
     else:
         # Supervisors see all their publications
-        publications = await db.publications.find({"supervisor_id": current_user.id}).sort("year", -1).to_list(1000)
+        publications = await db.publications.find({"supervisor_id": current_user.id}).sort("publication_year", -1).to_list(1000)
     
     # Enhance publications with student contributor names
     enhanced_publications = []
     for pub in publications:
         # Remove MongoDB ObjectId
         pub.pop("_id", None)
+        
+        # Handle field migration from 'year' to 'publication_year'
+        if "year" in pub and "publication_year" not in pub:
+            pub["publication_year"] = pub.pop("year")
+        
         if pub.get("student_contributors"):
             student_names = []
             for student_id in pub["student_contributors"]:
