@@ -4931,7 +4931,8 @@ const AdminPanel = ({ user, labSettings, onSettingsUpdated, menuSettings, onMenu
       description: labSettings?.description || '',
       contact_email: labSettings?.contact_email || '',
       website: labSettings?.website || '',
-      address: labSettings?.address || ''
+      address: labSettings?.address || '',
+      lab_scopus_id: labSettings?.lab_scopus_id || ''
     });
   }, [labSettings]);
 
