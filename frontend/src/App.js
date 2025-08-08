@@ -2549,15 +2549,42 @@ const CreateReminderDialog = ({ students, onReminderCreated, user }) => {
     setLoading(true);
     
     try {
-      const reminderDateTime = new Date(`${formData.reminder_date}T${formData.reminder_time}`).toISOString();
+      // Validate required fields
+      if (!formData.title) {
+        alert('Please enter a reminder title');
+        setLoading(false);
+        return;
+      }
+      
+      if (!formData.reminder_date) {
+        alert('Please select a reminder date');
+        setLoading(false);
+        return;
+      }
+      
+      if (!formData.reminder_time) {
+        alert('Please select a reminder time');
+        setLoading(false);
+        return;
+      }
+      
+      // Create proper ISO datetime string
+      const reminderDateTime = new Date(`${formData.reminder_date}T${formData.reminder_time}:00`);
+      
+      // Validate the date is valid
+      if (isNaN(reminderDateTime.getTime())) {
+        alert('Invalid date or time format. Please check your inputs.');
+        setLoading(false);
+        return;
+      }
       
       await axios.post(`${API}/reminders`, {
-        user_id: user.id, // Add required user_id field
+        user_id: user.id,
         title: formData.title,
         description: formData.description || '',
-        reminder_date: reminderDateTime,
+        reminder_date: reminderDateTime.toISOString(),
         priority: formData.priority,
-        reminder_type: 'general' // Default reminder type
+        reminder_type: 'general'
       });
       
       alert('Reminder added successfully!');
