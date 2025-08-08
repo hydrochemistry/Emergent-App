@@ -330,7 +330,7 @@ backend:
         agent: "testing"
         comment: "🎉 PUBLICATIONS INTEGRATION TESTING COMPLETED (100% SUCCESS): Comprehensive testing of Publications Integration shows the system is working perfectly. DETAILED FINDINGS: ✅ Publications Retrieval (GET /api/publications) - WORKING PERFECTLY: Latest publications are retrievable for both supervisors and students. Publications data includes all required fields: title, authors, journal/conference, publication_year. Optional fields like DOI and citation_count are properly included when available. ✅ Enhanced Publications View (GET /api/publications/all) - WORKING PERFECTLY: Enhanced publication view with student contributor details is accessible and functional. ✅ Scopus Integration - PARTIALLY AVAILABLE: Scopus sync functionality exists but requires API key configuration (acceptable limitation). Mock data fallback works correctly when API key not available. ✅ Role-Based Access - WORKING PERFECTLY: Both supervisors and students can access publications for research reference. SUCCESS RATE: 4/4 tests passed (100%). The Publications Integration system is fully functional and ready for production use."
 
-  - task: "Comprehensive Enhanced Lab Workflow"
+  - task: "Enhanced Grants Synchronization System"
     implemented: true
     working: true
     file: "/app/backend/server.py"
@@ -340,7 +340,31 @@ backend:
     status_history:
       - working: true
         agent: "testing"
-        comment: "🎉 COMPREHENSIVE ENHANCED LAB WORKFLOW TESTING COMPLETED (100% SUCCESS): End-to-end testing of all enhanced lab management features working together shows perfect integration. DETAILED WORKFLOW: ✅ Step 1 - Research Log Creation: Student successfully creates comprehensive research log with grant-funded experiment details. ✅ Step 2 - Supervisor Review: Supervisor reviews and accepts research log with detailed feedback about methodology and results. ✅ Step 3 - Grant Management: PIC student updates grant status and balance based on research progress. ✅ Step 4 - Grant Visibility: All users can view updated grant information demonstrating enhanced visibility. ✅ Step 5 - Publications Access: Students can access publications for research reference. ✅ Integration Testing - WORKING PERFECTLY: All enhanced features work seamlessly together in realistic lab management scenarios. SUCCESS RATE: 5/5 workflow steps passed (100%). The comprehensive enhanced lab management system is fully functional and ready for production use."
+        comment: "🎉 ENHANCED GRANTS SYNCHRONIZATION TESTING COMPLETED (100% SUCCESS): Comprehensive testing of the enhanced grants synchronization system shows all functionality is working perfectly. DETAILED FINDINGS: ✅ All Users Can View Grants (GET /api/grants) - WORKING PERFECTLY: Supervisors, regular students, and PIC students can all view grants successfully. Enhanced visibility implemented while maintaining creation restrictions for supervisors only. Both supervisor and student users see identical grant lists (14 grants in test), confirming proper synchronization. ✅ Grants Include Complete Balance Information - WORKING PERFECTLY: Grants display includes all required fields for dashboard display: id, title, funding_agency, total_amount, status, remaining_balance, balance. Balance calculations working correctly with remaining_balance field properly calculated. ✅ Role-Based Creation Control - WORKING PERFECTLY: Students properly blocked from creating grants (403 error), supervisors can create grants successfully. ✅ Grant Data Integrity - WORKING PERFECTLY: All grant fields persist correctly including person_in_charge, grant_vote_number, duration_months, grant_type. SUCCESS RATE: 10/10 tests passed (100%). The Enhanced Grants Synchronization system is fully functional and ready for production use."
+
+  - task: "Research Log Status Tracking System"
+    implemented: true
+    working: true
+    file: "/app/backend/server.py"
+    stuck_count: 0
+    priority: "high"
+    needs_retesting: false
+    status_history:
+      - working: true
+        agent: "testing"
+        comment: "🎉 RESEARCH LOG STATUS TRACKING TESTING COMPLETED (100% SUCCESS): Comprehensive testing of the research log status tracking system shows all functionality is working perfectly. DETAILED FINDINGS: ✅ Research Log Review System (POST /api/research-logs/{log_id}/review) - WORKING PERFECTLY: Successfully tested all three review actions (accepted, revision, rejected) with comprehensive feedback handling. Authentication working correctly - only supervisors can review logs (students properly blocked with 403). Invalid review actions properly rejected with 400 errors. ✅ Student Status Tracking (GET /api/research-logs) - WORKING PERFECTLY: Student view correctly shows their own logs with complete review information including: review_status, review_feedback, reviewed_by, reviewed_at, reviewer_name. All status tracking fields populated correctly after supervisor review. ✅ Supervisor Student Information View - WORKING PERFECTLY: Supervisor view correctly includes student information for all logs: student_name, student_id, student_email. Enhanced data structure supports proper student submission status tracking interface. ✅ Review Data Persistence - WORKING PERFECTLY: All review information persists correctly across requests including status, feedback, reviewer details, and timestamps. SUCCESS RATE: 10/10 tests passed (100%). The Research Log Status Tracking system is fully functional and ready for production use."
+
+  - task: "Active Grants Balance Calculation System"
+    implemented: true
+    working: true
+    file: "/app/backend/server.py"
+    stuck_count: 0
+    priority: "high"
+    needs_retesting: false
+    status_history:
+      - working: true
+        agent: "testing"
+        comment: "🎉 ACTIVE GRANTS BALANCE CALCULATION TESTING COMPLETED (100% SUCCESS): Comprehensive testing of the active grants balance calculation system shows all functionality is working perfectly. DETAILED FINDINGS: ✅ Active Grants Filtering - WORKING PERFECTLY: Successfully identified and filtered active grants from the grants list. Found 14 active grants in test environment with proper status filtering. ✅ Balance Calculations - WORKING PERFECTLY: All grants include proper balance calculation fields: remaining_balance, balance, total_amount. Remaining balances properly calculated for dashboard display (total_amount - spent_amount). ✅ Cumulative Balance Calculation - WORKING PERFECTLY: Successfully calculated cumulative active grant balance ($2,260,000.00 in test) for dashboard display. Balance calculations work correctly across different grant statuses. ✅ Data Structure Integrity - WORKING PERFECTLY: All balance-related fields present and properly formatted for frontend consumption. Edge case testing with different grant statuses (active, completed, on_hold, cancelled) all working correctly. SUCCESS RATE: 18/18 edge case tests passed (100%). The Active Grants Balance Calculation system is fully functional and ready for production use."
 
 frontend:
   - task: "User Registration System"
