@@ -2837,13 +2837,6 @@ const CreateReminderDialog = ({ students, onReminderCreated, user }) => {
       const reminderTime = formData.reminder_time || '09:00';
       const reminderDateTime = new Date(`${reminderDate}T${reminderTime}:00`);
       
-      // Validate the date is valid
-      if (isNaN(reminderDateTime.getTime())) {
-        alert('Invalid date or time format. Please check your inputs.');
-        setLoading(false);
-        return;
-      }
-      
       await axios.post(`${API}/reminders`, {
         user_id: user.id,
         title: formData.title,
