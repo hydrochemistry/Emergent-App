@@ -2099,6 +2099,28 @@ async def generate_pdf_report(report_type: str, current_user: User = Depends(get
 # Dashboard Stats
 @api_router.get("/dashboard/stats")
 async def get_dashboard_stats(current_user: User = Depends(get_current_user)):
+    # Get supervisor ID for lab-wide stats synchronization
+    if current_user.role == UserRole.STUDENT:
+        supervisor_id = current_user.supervisor_id
+        if not supervisor_id:
+            print(f"Warning: Student {current_user.id} has no supervisor assigned")
+            supervisor_id = current_user.id  # Fallback to own ID
+    else:
+        supervisor_id = current_user.id
+    
+    # Get active grants for the lab (same visibility as grants endpoint)
+    lab_member_ids = await get_lab_member_ids(supervisor_id)
+    active_grants = await db.grants.find({
+        "principal_investigator": {"$in": lab_member_ids},
+        "status": "active"
+    }).to_list(1000)
+    
+    # Calculate cumulative active grants balance
+    total_active_grants_balance = sum(
+        grant.get("total_amount", 0) - grant.get("spent_amount", 0) 
+        for grant in active_grants
+    )
+    
     if current_user.role == UserRole.STUDENT:
         total_tasks = await db.tasks.count_documents({"assigned_to": current_user.id})
         completed_tasks = await db.tasks.count_documents({"assigned_to": current_user.id, "status": "completed"})
@@ -2106,13 +2128,24 @@ async def get_dashboard_stats(current_user: User = Depends(get_current_user)):
         in_progress_tasks = await db.tasks.count_documents({"assigned_to": current_user.id, "status": "in_progress"})
         total_logs = await db.research_logs.count_documents({"user_id": current_user.id})
         
+        # Get student's research log status summary
+        student_logs = await db.research_logs.find({"user_id": current_user.id}).to_list(1000)
+        approved_logs = sum(1 for log in student_logs if log.get("review_status") == "accepted")
+        pending_logs = sum(1 for log in student_logs if log.get("review_status") in [None, "pending"])
+        revision_logs = sum(1 for log in student_logs if log.get("review_status") == "revision")
+        
         return {
             "total_tasks": total_tasks,
             "completed_tasks": completed_tasks,
             "pending_tasks": pending_tasks,
             "in_progress_tasks": in_progress_tasks,
             "completion_rate": (completed_tasks / total_tasks * 100) if total_tasks > 0 else 0,
-            "total_research_logs": total_logs
+            "total_research_logs": total_logs,
+            "approved_research_logs": approved_logs,
+            "pending_research_logs": pending_logs,
+            "revision_research_logs": revision_logs,
+            "active_grants_count": len(active_grants),
+            "active_grants_balance": total_active_grants_balance
         }
     else:
         students = await db.users.find({"supervisor_id": current_user.id}).to_list(1000)
@@ -2122,7 +2155,6 @@ async def get_dashboard_stats(current_user: User = Depends(get_current_user)):
         total_assigned_tasks = await db.tasks.count_documents({"assigned_by": current_user.id})
         completed_tasks = await db.tasks.count_documents({"assigned_by": current_user.id, "status": "completed"})
         total_publications = await db.publications.count_documents({"supervisor_id": current_user.id})
-        active_grants = await db.grants.count_documents({"principal_investigator": current_user.id, "status": "active"})
         
         return {
             "total_students": total_students,
@@ -2130,6 +2162,8 @@ async def get_dashboard_stats(current_user: User = Depends(get_current_user)):
             "completed_tasks": completed_tasks,
             "completion_rate": (completed_tasks / total_assigned_tasks * 100) if total_assigned_tasks > 0 else 0,
             "total_publications": total_publications,
+            "active_grants_count": len(active_grants),
+            "active_grants_balance": total_active_grants_balance,
             "active_grants": active_grants
         }
 
