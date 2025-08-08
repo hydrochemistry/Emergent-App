@@ -532,7 +532,11 @@ const Dashboard = ({ user, logout, setUser }) => {
       setGrants(grantsRes.data || []);
       setPublications(pubsRes.data || []);
       setLabSettings(labRes.data || {});
+      
+      console.log('Meetings API response:', meetingsRes.data);
       setMeetings(meetingsRes.data || []);
+      
+      console.log('Reminders API response:', remindersRes.data);
       setReminders(remindersRes.data || []);
       setNotes(notesRes.data || []);
 
