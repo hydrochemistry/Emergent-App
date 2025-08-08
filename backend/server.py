@@ -1787,7 +1787,11 @@ async def tag_student_in_publication(pub_id: str, student_id: str, current_user:
 
 @api_router.post("/publications/scopus")
 async def add_publication_from_scopus(scopus_data: dict, current_user: User = Depends(get_current_user)):
-    """Add publication by fetching data from Scopus API using Scopus ID"""
+    """Add publication by fetching data from Scopus API using Scopus ID - Only supervisors can add"""
+    # Only supervisors, lab managers, and admins can add publications from Scopus
+    if current_user.role not in [UserRole.SUPERVISOR, UserRole.LAB_MANAGER, UserRole.ADMIN]:
+        raise HTTPException(status_code=403, detail="Only supervisors can add publications from Scopus")
+    
     scopus_id = scopus_data.get("scopus_id")
     if not scopus_id:
         raise HTTPException(status_code=400, detail="Scopus ID is required")
@@ -1800,15 +1804,15 @@ async def add_publication_from_scopus(scopus_data: dict, current_user: User = De
             "title": f"Publication from Scopus ID: {scopus_id}",
             "authors": [current_user.full_name],  # Fixed to be a list
             "journal": "Journal Name (Retrieved from Scopus)",
-            "year": datetime.utcnow().year,  # Use 'year' field as expected by the alias
+            "publication_year": datetime.utcnow().year,  # Use publication_year field directly
             "doi": f"10.1000/scopus.{scopus_id}",
             "scopus_id": scopus_id,
             "abstract": "Abstract retrieved from Scopus API",
             "keywords": ["scopus", "research"],
             "status": "published",
             "citation_count": 0,
-            "supervisor_id": current_user.id if current_user.role != UserRole.STUDENT else None,
-            "student_contributors": [current_user.id] if current_user.role == UserRole.STUDENT else [],
+            "supervisor_id": current_user.id,
+            "student_contributors": [],  # Publications are synchronized across all users
             "created_at": datetime.utcnow(),
             "retrieved_at": datetime.utcnow()
         }
