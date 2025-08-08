@@ -4876,39 +4876,6 @@ const MilestoneCard = ({ milestone, user, onMilestoneUpdated }) => {
   );
 };
 
-// Authentication token configuration - apply to all requests
-axios.interceptors.request.use(
-  (config) => {
-    const token = localStorage.getItem('token');
-    if (token) {
-      config.headers.Authorization = `Bearer ${token}`;
-    }
-    console.log('🔑 Request headers:', config.headers);
-    return config;
-  },
-  (error) => {
-    console.error('❌ Request interceptor error:', error);
-    return Promise.reject(error);
-  }
-);
-
-// Response interceptor for error handling
-axios.interceptors.response.use(
-  (response) => {
-    return response;
-  },
-  (error) => {
-    console.error('❌ Response error:', error.response?.status, error.response?.data);
-    if (error.response?.status === 401) {
-      // Token expired or invalid
-      localStorage.removeItem('token');
-      localStorage.removeItem('userData');
-      window.location.reload();
-    }
-    return Promise.reject(error);
-  }
-);
-
 function App() {
   return (
     <div className="App">
