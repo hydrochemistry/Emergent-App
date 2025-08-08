@@ -1335,6 +1335,35 @@ const Dashboard = ({ user, logout, setUser }) => {
               </div>
             </div>
 
+            {/* Active Grants Section - Priority Display */}
+            {grants.filter(g => g.status === 'active').length > 0 && (
+              <Card className="mb-6 border-l-4 border-l-green-500">
+                <CardHeader>
+                  <CardTitle className="flex items-center gap-2 text-green-700">
+                    <TrendingUp className="h-5 w-5" />
+                    Active Grants ({grants.filter(g => g.status === 'active').length})
+                  </CardTitle>
+                  <p className="text-sm text-gray-600">
+                    Currently active grants available for all lab members to view and participate in
+                  </p>
+                </CardHeader>
+                <CardContent>
+                  <div className="grid gap-4">
+                    {grants
+                      .filter(g => g.status === 'active')
+                      .map((grant) => (
+                        <GrantCard key={grant.id} grant={grant} user={user} onGrantUpdated={fetchDashboardData} />
+                      ))}
+                  </div>
+                </CardContent>
+              </Card>
+            )}
+
+            {/* All Grants Section */}
+            <div className="mb-4">
+              <h3 className="text-lg font-semibold text-gray-900 mb-4">All Grants</h3>
+            </div>
+
             <div className="grid gap-6">
               {grants.length > 0 ? (
                 grants.map((grant) => (
