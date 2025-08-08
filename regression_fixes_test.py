@@ -112,6 +112,17 @@ class RegressionFixesTester:
                     self.student_id = data["user_data"]["id"]
                     self.log_result("Student Setup", True, "Using existing student user")
             
+            # Approve the student user (students need supervisor approval)
+            if self.supervisor_token and self.student_token and self.student_id:
+                response = await self.client.post(
+                    f"{API_BASE}/users/{self.student_id}/approve",
+                    headers=self.get_supervisor_headers()
+                )
+                if response.status_code == 200:
+                    self.log_result("Student Approval", True, "Student user approved by supervisor")
+                else:
+                    self.log_result("Student Approval", False, f"Failed to approve student: {response.status_code}")
+            
             return self.supervisor_token and self.student_token
             
         except Exception as e:
