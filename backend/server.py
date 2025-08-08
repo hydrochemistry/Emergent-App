@@ -928,36 +928,43 @@ async def create_lab_settings(lab_data: LabSettingsUpdate, current_user: User = 
 
 @api_router.put("/lab/settings")
 async def update_lab_settings(lab_data: LabSettingsUpdate, current_user: User = Depends(get_current_user)):
-    """PUT endpoint for updating lab settings"""
-    if current_user.role not in [UserRole.SUPERVISOR, UserRole.LAB_MANAGER]:
+    """PUT endpoint for updating lab settings with automatic publications sync"""
+    if current_user.role not in [UserRole.SUPERVISOR, UserRole.LAB_MANAGER, UserRole.ADMIN]:
         raise HTTPException(status_code=403, detail="Not authorized to manage lab settings")
     
-    # Check if lab settings already exist
-    existing_settings = await db.lab_settings.find_one({"supervisor_id": current_user.id})
+    # Get current supervisor ID
+    supervisor_id = current_user.supervisor_id or current_user.id
     
-    if existing_settings:
-        # Update existing settings
-        update_data = {k: v for k, v in lab_data.dict().items() if v is not None}
-        update_data['updated_at'] = datetime.utcnow()
-        await db.lab_settings.update_one(
-            {"supervisor_id": current_user.id},
-            {"$set": update_data}
-        )
-        updated_settings = await db.lab_settings.find_one({"supervisor_id": current_user.id})
-        return LabSettings(**updated_settings)
-    else:
-        # Create new settings if none exist
-        lab_settings = LabSettings(
-            lab_name=lab_data.lab_name or current_user.lab_name or "Research Lab",
-            description=lab_data.description,
-            address=lab_data.address,
-            website=lab_data.website,
-            contact_email=lab_data.contact_email,
-            supervisor_id=current_user.id
-        )
-        
-        await db.lab_settings.insert_one(lab_settings.dict())
-        return lab_settings
+    # Prepare update data
+    update_data = {}
+    for field, value in lab_data.dict(exclude_unset=True).items():
+        if value is not None:
+            update_data[field] = value
+    
+    update_data["updated_at"] = datetime.utcnow()
+    
+    # Check if lab_scopus_id is being updated
+    sync_publications = False
+    if "lab_scopus_id" in update_data and update_data["lab_scopus_id"]:
+        sync_publications = True
+        new_scopus_id = update_data["lab_scopus_id"]
+    
+    # Update lab settings
+    await db.lab_settings.update_one(
+        {"supervisor_id": supervisor_id},
+        {"$set": update_data},
+        upsert=True
+    )
+    
+    # Sync publications if Scopus ID was updated
+    if sync_publications:
+        try:
+            await sync_lab_publications_from_scopus(new_scopus_id, supervisor_id)
+        except Exception as e:
+            print(f"Warning: Failed to sync publications: {str(e)}")
+            # Don't fail the lab settings update if publications sync fails
+    
+    return {"message": "Lab settings updated successfully"}
 
 @api_router.post("/lab/logo")
 async def upload_lab_logo(file: UploadFile = File(...), current_user: User = Depends(get_current_user)):
