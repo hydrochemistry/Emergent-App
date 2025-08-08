@@ -692,6 +692,17 @@ const Dashboard = ({ user, logout, setUser }) => {
                   {user.role.replace('_', ' ').toUpperCase()}
                 </p>
               </div>
+              {(user.role === 'supervisor' || user.role === 'lab_manager' || user.role === 'admin') && (
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={() => setActiveTab('admin')}
+                  className={`${activeTab === 'admin' ? 'bg-white text-blue-600' : 'text-white border-white hover:bg-white hover:text-blue-600'} transition-colors`}
+                >
+                  <Settings className="h-4 w-4 mr-1" />
+                  Admin
+                </Button>
+              )}
               <Button variant="outline" size="sm" onClick={logout} className="text-xs">
                 <LogOut className="h-4 w-4" />
                 <span className="hidden sm:ml-2 sm:inline">Logout</span>
