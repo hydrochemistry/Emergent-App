@@ -77,6 +77,7 @@ const formatStudyStatus = (status) => {
 const AuthContext = ({ children }) => {
   const [user, setUser] = useState(null);
   const [loading, setLoading] = useState(true);
+  console.log('🔍 API URL being used:', API);
 
   useEffect(() => {
     const token = localStorage.getItem('token');
