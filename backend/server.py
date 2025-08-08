@@ -145,6 +145,9 @@ class User(BaseModel):
     orcid_id: Optional[str] = None
     
     # Administrative
+    is_approved: bool = False  # Requires supervisor approval for new registrations
+    approved_by: Optional[str] = None  # Supervisor who approved the user
+    approved_at: Optional[datetime] = None
     created_at: datetime = Field(default_factory=datetime.utcnow)
     updated_at: datetime = Field(default_factory=datetime.utcnow)
 
