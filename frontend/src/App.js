@@ -514,8 +514,14 @@ const Dashboard = ({ user, logout, setUser }) => {
         axios.get(`${API}/grants`).catch(() => ({data: []})),
         axios.get(`${API}/publications`).catch(() => ({data: []})),
         axios.get(`${API}/lab/settings`).catch(() => ({data: {}})),
-        axios.get(`${API}/meetings`).catch(() => ({data: []})),
-        axios.get(`${API}/reminders`).catch(() => ({data: []})),
+        axios.get(`${API}/meetings`).catch((error) => {
+          console.error('Error fetching meetings:', error);
+          return {data: []};
+        }),
+        axios.get(`${API}/reminders`).catch((error) => {
+          console.error('Error fetching reminders:', error);
+          return {data: []};
+        }),
         axios.get(`${API}/notes`).catch(() => ({data: []}))
       ]);
 
