@@ -569,7 +569,11 @@ metadata:
   run_ui: false
 
 test_plan:
-  current_focus: []
+  current_focus:
+    - "Profile Update API" 
+    - "Research Log Status Tracking System"
+    - "Enhanced Grants Synchronization System"
+    - "Publications Integration System"
   stuck_tasks: []
   test_all: false
   test_priority: "high_first"
