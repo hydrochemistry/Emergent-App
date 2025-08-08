@@ -133,7 +133,20 @@ class BackendTester:
                 self.log_result("Research Log Status Test", False, "Could not create test student")
                 return
             
-            # Create a research log as supervisor for the student
+            # Login as student to create research log
+            login_data = {
+                "email": "test.student@research.lab",
+                "password": "TestPassword123!"
+            }
+            response = await self.client.post(f"{API_BASE}/auth/login", json=login_data)
+            if response.status_code != 200:
+                self.log_result("Student Login", False, "Could not login as student")
+                return
+            
+            student_token = response.json()["access_token"]
+            student_headers = {"Authorization": f"Bearer {student_token}"}
+            
+            # Create a research log as student
             research_log_data = {
                 "activity_type": "experiment",
                 "title": "Test Research Log for Status Tracking",
@@ -148,7 +161,7 @@ class BackendTester:
             response = await self.client.post(
                 f"{API_BASE}/research-logs",
                 json=research_log_data,
-                headers=self.get_auth_headers()
+                headers=student_headers
             )
             
             if response.status_code in [200, 201]:
@@ -165,16 +178,16 @@ class BackendTester:
                 response = await self.client.post(
                     f"{API_BASE}/research-logs/{log_id}/review",
                     json=review_data,
-                    headers=self.get_auth_headers()
+                    headers=self.get_auth_headers()  # Supervisor token
                 )
                 
                 if response.status_code == 200:
                     self.log_result("Research Log Review", True, "Research log review functionality working")
                     
-                    # Test getting research logs with status information
+                    # Test getting research logs with status information (as supervisor)
                     response = await self.client.get(
                         f"{API_BASE}/research-logs",
-                        headers=self.get_auth_headers()
+                        headers=self.get_auth_headers()  # Supervisor token
                     )
                     
                     if response.status_code == 200:
