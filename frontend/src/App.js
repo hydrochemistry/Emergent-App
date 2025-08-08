@@ -1244,7 +1244,7 @@ const ComprehensiveStudentProfile = ({ user, setUser, meetings, reminders, notes
       alert('Profile updated successfully!');
     } catch (error) {
       console.error('Error updating profile:', error);
-      alert('Error updating profile: ' + (error.response?.data?.detail || error.message || 'Unknown error occurred'));
+      alert('Error updating profile: ' + (typeof error.response?.data?.detail === 'string' ? error.response.data.detail : JSON.stringify(error.response?.data?.detail || error.message || 'Unknown error occurred')));
     } finally {
       setLoading(false);
     }
