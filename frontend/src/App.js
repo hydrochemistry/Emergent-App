@@ -1065,7 +1065,7 @@ const Dashboard = ({ user, logout, setUser }) => {
                           </div>
                         </div>
                       ))}
-                    {researchLogs.filter(log => log.student_id === user.id).length === 0 && (
+                    {researchLogs.filter(log => log.user_id === user.id || log.student_id === user.id).length === 0 && (
                       <div className="text-center py-8">
                         <ClipboardCheck className="h-8 w-8 text-gray-300 mx-auto mb-2" />
                         <p className="text-gray-500 text-sm">No research logs submitted yet</p>
