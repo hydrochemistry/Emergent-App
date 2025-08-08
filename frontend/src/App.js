@@ -2422,7 +2422,6 @@ const CreateResearchLogDialog = ({ onLogCreated }) => {
               onChange={(e) => setFormData({...formData, description: e.target.value})}
               placeholder="Describe the research activity"
               rows={3}
-              required
             />
           </div>
           
