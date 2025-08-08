@@ -359,6 +359,8 @@ class ResearchLogCreate(BaseModel):
     challenges: Optional[str] = None
     next_steps: Optional[str] = None
     tags: Optional[List[str]] = []
+    log_date: Optional[str] = None  # Added missing field
+    log_time: Optional[str] = None  # Added missing field
 
 class ResearchLogEndorsement(BaseModel):
     log_id: str
