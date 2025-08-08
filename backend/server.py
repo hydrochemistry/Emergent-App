@@ -1339,6 +1339,36 @@ async def get_grants(current_user: User = Depends(get_current_user)):
     
     return [Grant(**grant) for grant in grants]
 
+@api_router.put("/grants/{grant_id}")
+async def update_grant(grant_id: str, grant_update: dict, current_user: User = Depends(get_current_user)):
+    """Update grant information"""
+    # Check if user has permission to update grants
+    if current_user.role not in [UserRole.SUPERVISOR, UserRole.LAB_MANAGER, UserRole.ADMIN]:
+        raise HTTPException(status_code=403, detail="Not authorized to update grants")
+    
+    # Find the grant
+    grant = await db.grants.find_one({"id": grant_id})
+    if not grant:
+        raise HTTPException(status_code=404, detail="Grant not found")
+    
+    # Prepare update data
+    update_data = {}
+    allowed_fields = [
+        "title", "funding_agency", "total_amount", "current_balance", 
+        "duration_months", "grant_type", "status", "person_in_charge", 
+        "grant_vote_number", "start_date", "end_date", "description"
+    ]
+    
+    for field in allowed_fields:
+        if field in grant_update:
+            update_data[field] = grant_update[field]
+    
+    if update_data:
+        update_data["updated_at"] = datetime.utcnow()
+        await db.grants.update_one({"id": grant_id}, {"$set": update_data})
+    
+    return {"message": "Grant updated successfully"}
+
 @api_router.put("/grants/{grant_id}/spend")
 async def record_grant_spending(grant_id: str, amount: float, current_user: User = Depends(get_current_user)):
     grant = await db.grants.find_one({"id": grant_id})
