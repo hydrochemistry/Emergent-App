@@ -337,6 +337,16 @@ class ResearchLog(BaseModel):
     supervisor_endorsement: Optional[bool] = None
     supervisor_comments: Optional[str] = None
     supervisor_rating: Optional[int] = None
+    # New review system fields
+    review_status: Optional[str] = None  # 'accepted', 'revision', 'rejected'
+    review_feedback: Optional[str] = None
+    reviewed_by: Optional[str] = None
+    reviewed_at: Optional[str] = None
+    reviewer_name: Optional[str] = None
+    # Additional student info fields for supervisor view
+    student_name: Optional[str] = None
+    student_id: Optional[str] = None
+    student_email: Optional[str] = None
 
 class ResearchLogCreate(BaseModel):
     activity_type: ActivityType
