@@ -3092,7 +3092,7 @@ const CreateGrantDialog = ({ students, onGrantCreated }) => {
             </Button>
             <Button 
               type="submit" 
-              disabled={loading || !formData.title || !formData.funding_agency || !formData.total_amount || !formData.duration_months || !formData.start_date || !formData.end_date}
+              disabled={loading || !formData.title || !formData.funding_agency}
             >
               {loading ? 'Creating...' : 'Create Grant'}
             </Button>
