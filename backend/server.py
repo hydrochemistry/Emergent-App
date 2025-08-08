@@ -103,6 +103,8 @@ class GrantStatus(str, Enum):
     COMPLETED = "completed"
     PENDING = "pending"
     CLOSED = "closed"
+    ON_HOLD = "on_hold"
+    CANCELLED = "cancelled"
 
 class FundingType(str, Enum):
     NATIONAL = "national"
