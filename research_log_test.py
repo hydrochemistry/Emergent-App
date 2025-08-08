@@ -10,7 +10,7 @@ from datetime import datetime
 
 class ResearchLogTester:
     def __init__(self):
-        self.base_url = "https://271c89aa-8749-475f-8a8f-92c118c46442.preview.emergentagent.com"
+        self.base_url = "https://c5e539fb-9522-486d-b275-1bb355b557d8.preview.emergentagent.com"
         self.api_url = f"{self.base_url}/api"
         self.student_token = None
         self.supervisor_token = None
