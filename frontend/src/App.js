@@ -1029,7 +1029,7 @@ const Dashboard = ({ user, logout, setUser }) => {
                 <CardContent>
                   <div className="space-y-3">
                     {researchLogs
-                      .filter(log => log.student_id === user.id)
+                      .filter(log => log.user_id === user.id || log.student_id === user.id)
                       .map((log) => (
                         <div key={log.id} className="flex items-center justify-between p-3 border rounded-lg hover:bg-gray-50">
                           <div className="flex-1">
