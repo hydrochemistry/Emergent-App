@@ -811,10 +811,10 @@ const Dashboard = ({ user, logout, setUser }) => {
                       </div>
                     </div>
                   ))}
-                  {bulletins.length === 0 && (
+                  {bulletins.filter(b => b.status === 'approved').length === 0 && (
                     <div className="p-4 text-center">
                       <Bell className="h-8 w-8 text-gray-300 mx-auto mb-2" />
-                      <p className="text-gray-500 text-sm">No recent announcements</p>
+                      <p className="text-gray-500 text-sm">No approved announcements</p>
                     </div>
                   )}
                 </CardContent>
