@@ -462,16 +462,10 @@ metadata:
 
 test_plan:
   current_focus:
-    - "User Registration System"
-    - "Research Log Creation Form"
-    - "Meeting Creation Form"
-    - "Reminder Creation Form"
-    - "Announcement Creation Form"
-    - "Grant Creation Form"
-  stuck_tasks:
-    - "User Registration System"
+    - "ProfileEditForm Implementation"
+  stuck_tasks: []
   test_all: false
-  test_priority: "stuck_first"
+  test_priority: "high_first"
 
 agent_communication:
   - agent: "main"
