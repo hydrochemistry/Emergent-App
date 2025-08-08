@@ -3319,6 +3319,258 @@ const CreateGrantDialog = ({ students, onGrantCreated }) => {
   );
 };
 
+const EditGrantDialog = ({ grant, onGrantUpdated }) => {
+  const [isOpen, setIsOpen] = useState(false);
+  const [formData, setFormData] = useState({
+    title: grant.title || '',
+    funding_agency: grant.funding_agency || '',
+    total_amount: grant.total_amount || '',
+    current_balance: grant.current_balance || grant.total_amount || '',
+    duration_months: grant.duration_months || '',
+    grant_type: grant.grant_type || 'research',
+    status: grant.status || 'active',
+    person_in_charge: grant.person_in_charge || '',
+    grant_vote_number: grant.grant_vote_number || '',
+    start_date: grant.start_date ? grant.start_date.split('T')[0] : '',
+    end_date: grant.end_date ? grant.end_date.split('T')[0] : '',
+    description: grant.description || ''
+  });
+  const [loading, setLoading] = useState(false);
+
+  const handleSubmit = async (e) => {
+    e.preventDefault();
+    setLoading(true);
+    
+    try {
+      console.log('🔍 Updating grant with data:', formData);
+      
+      const updateData = {
+        ...formData,
+        total_amount: parseFloat(formData.total_amount) || 0,
+        current_balance: parseFloat(formData.current_balance) || 0,
+        duration_months: parseInt(formData.duration_months) || 0,
+        start_date: formData.start_date ? new Date(formData.start_date).toISOString() : null,
+        end_date: formData.end_date ? new Date(formData.end_date).toISOString() : null
+      };
+      
+      await axios.put(`${API}/grants/${grant.id}`, updateData);
+      
+      alert('Grant updated successfully!');
+      setIsOpen(false);
+      onGrantUpdated();
+    } catch (error) {
+      console.error('Error updating grant:', error);
+      let errorMessage = 'Error updating grant: ';
+      
+      if (error.response?.data?.detail) {
+        if (typeof error.response.data.detail === 'string') {
+          errorMessage += error.response.data.detail;
+        } else {
+          errorMessage += JSON.stringify(error.response.data.detail);
+        }
+      } else if (error.message) {
+        errorMessage += error.message;
+      } else {
+        errorMessage += 'Unknown error occurred';
+      }
+      
+      alert(errorMessage);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  return (
+    <Dialog open={isOpen} onOpenChange={setIsOpen}>
+      <DialogTrigger asChild>
+        <Button variant="outline" size="sm">
+          <Edit className="h-4 w-4 mr-2" />
+          Edit Grant
+        </Button>
+      </DialogTrigger>
+      <DialogContent className="w-[95vw] max-w-2xl mx-4 max-h-[90vh] overflow-y-auto">
+        <DialogHeader>
+          <DialogTitle>Edit Grant: {grant.title}</DialogTitle>
+        </DialogHeader>
+        <form onSubmit={handleSubmit} className="space-y-4">
+          {/* Grant Details */}
+          <div>
+            <Label htmlFor="title">Grant Title *</Label>
+            <Input
+              id="title"
+              value={formData.title}
+              onChange={(e) => setFormData({...formData, title: e.target.value})}
+              placeholder="Enter grant title"
+              required
+            />
+          </div>
+          
+          <div>
+            <Label htmlFor="funding_agency">Funding Agency *</Label>
+            <Input
+              id="funding_agency"
+              value={formData.funding_agency}
+              onChange={(e) => setFormData({...formData, funding_agency: e.target.value})}
+              placeholder="e.g., NSF, NIH, DARPA"
+              required
+            />
+          </div>
+          
+          {/* Financial Information */}
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div>
+              <Label htmlFor="total_amount">Total Amount ($) *</Label>
+              <Input
+                id="total_amount"
+                type="number"
+                step="0.01"
+                min="0"
+                value={formData.total_amount}
+                onChange={(e) => setFormData({...formData, total_amount: e.target.value})}
+                placeholder="0.00"
+                required
+              />
+            </div>
+            
+            <div>
+              <Label htmlFor="current_balance">Current Balance ($) *</Label>
+              <Input
+                id="current_balance"
+                type="number"
+                step="0.01"
+                min="0"
+                max={formData.total_amount}
+                value={formData.current_balance}
+                onChange={(e) => setFormData({...formData, current_balance: e.target.value})}
+                placeholder="Current remaining balance"
+                required
+              />
+            </div>
+          </div>
+          
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+            <div>
+              <Label htmlFor="duration_months">Duration (Months) *</Label>
+              <Input
+                id="duration_months"
+                type="number"
+                min="1"
+                value={formData.duration_months}
+                onChange={(e) => setFormData({...formData, duration_months: e.target.value})}
+                placeholder="12"
+                required
+              />
+            </div>
+            
+            <div>
+              <Label htmlFor="grant_type">Grant Type</Label>
+              <Select value={formData.grant_type} onValueChange={(value) => setFormData({...formData, grant_type: value})}>
+                <SelectTrigger>
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="research">Research Grant</SelectItem>
+                  <SelectItem value="equipment">Equipment Grant</SelectItem>
+                  <SelectItem value="travel">Travel Grant</SelectItem>
+                  <SelectItem value="conference">Conference Grant</SelectItem>
+                  <SelectItem value="fellowship">Fellowship</SelectItem>
+                  <SelectItem value="other">Other</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+            
+            <div>
+              <Label htmlFor="status">Status</Label>
+              <Select value={formData.status} onValueChange={(value) => setFormData({...formData, status: value})}>
+                <SelectTrigger>
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="active">Active</SelectItem>
+                  <SelectItem value="pending">Pending Approval</SelectItem>
+                  <SelectItem value="completed">Completed</SelectItem>
+                  <SelectItem value="suspended">Suspended</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+          </div>
+          
+          {/* Timeline */}
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div>
+              <Label htmlFor="start_date">Start Date</Label>
+              <Input
+                id="start_date"
+                type="date"
+                value={formData.start_date}
+                onChange={(e) => setFormData({...formData, start_date: e.target.value})}
+              />
+            </div>
+            
+            <div>
+              <Label htmlFor="end_date">End Date</Label>
+              <Input
+                id="end_date"
+                type="date"
+                value={formData.end_date}
+                onChange={(e) => setFormData({...formData, end_date: e.target.value})}
+              />
+            </div>
+          </div>
+          
+          {/* Description */}
+          <div>
+            <Label htmlFor="description">Grant Description</Label>
+            <Textarea
+              id="description"
+              value={formData.description}
+              onChange={(e) => setFormData({...formData, description: e.target.value})}
+              placeholder="Describe the grant objectives, scope, and expected outcomes..."
+              rows={4}
+            />
+          </div>
+          
+          {/* Management Information */}
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div>
+              <Label htmlFor="person_in_charge">Person in Charge (PIC)</Label>
+              <Input
+                id="person_in_charge"
+                value={formData.person_in_charge}
+                onChange={(e) => setFormData({...formData, person_in_charge: e.target.value})}
+                placeholder="Name of responsible person"
+              />
+            </div>
+            
+            <div>
+              <Label htmlFor="grant_vote_number">Grant Vote Number</Label>
+              <Input
+                id="grant_vote_number"
+                value={formData.grant_vote_number}
+                onChange={(e) => setFormData({...formData, grant_vote_number: e.target.value})}
+                placeholder="e.g., GV-2024-001"
+              />
+            </div>
+          </div>
+          
+          {/* Action Buttons */}
+          <div className="flex justify-end gap-2 pt-4 border-t">
+            <Button type="button" variant="outline" onClick={() => setIsOpen(false)} disabled={loading}>
+              Cancel
+            </Button>
+            <Button 
+              type="submit" 
+              disabled={loading || !formData.title || !formData.funding_agency}
+            >
+              {loading ? 'Updating...' : 'Update Grant'}
+            </Button>
+          </div>
+        </form>
+      </DialogContent>
+    </Dialog>
+  );
+}
+
 const MeetingCard = ({ meeting, user, onMeetingUpdated }) => (
   <Card>
     <CardContent className="p-6">
