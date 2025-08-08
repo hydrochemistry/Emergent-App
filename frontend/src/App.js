@@ -3139,7 +3139,6 @@ const CreateBulletinDialog = ({ onBulletinCreated }) => {
               onChange={(e) => setFormData({...formData, content: e.target.value})}
               placeholder="Write your announcement..."
               rows={4}
-              required
             />
           </div>
           
