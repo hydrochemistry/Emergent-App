@@ -228,10 +228,15 @@
   z-index: 60 !important;
 }
 
-/* Ensure dialog content is above overlay */
+/* Ensure dialog content is above overlay and centered */
 [role="dialog"] {
   z-index: 60 !important;
-  position: relative !important;
+  position: fixed !important;
+  top: 50% !important;
+  left: 50% !important;
+  transform: translate(-50%, -50%) !important;
+  max-height: 90vh !important;
+  overflow-y: auto !important;
 }
 
 /* Ensure dialog buttons are clickable */
@@ -265,4 +270,13 @@ form button[type="submit"] {
 
 [data-radix-portal] * {
   pointer-events: auto !important;
+}
+
+/* Force dialog content to center properly */
+[data-state="open"][role="dialog"] {
+  position: fixed !important;
+  top: 50% !important;
+  left: 50% !important;
+  transform: translate(-50%, -50%) !important;
+  margin: 0 !important;
 }
