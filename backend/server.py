@@ -1325,6 +1325,14 @@ async def get_research_logs(current_user: User = Depends(get_current_user)):
         students = await db.users.find({"supervisor_id": current_user.id}).to_list(1000)
         student_ids = [student["id"] for student in students]
         logs = await db.research_logs.find({"user_id": {"$in": student_ids}}).sort("date", -1).to_list(1000)
+        
+        # Add student information for supervisor view
+        student_map = {student["id"]: student for student in students}
+        for log in logs:
+            student_info = student_map.get(log["user_id"], {})
+            log["student_name"] = student_info.get("full_name", "Unknown Student")
+            log["student_id"] = student_info.get("student_id", log["user_id"])
+            log["student_email"] = student_info.get("email", "")
     
     return [ResearchLog(**log) for log in logs]
 
