@@ -2724,7 +2724,6 @@ const CreateMeetingDialog = ({ students, onMeetingCreated, user }) => {
               value={formData.agenda}
               onChange={(e) => setFormData({...formData, agenda: e.target.value})}
               placeholder="Enter meeting agenda"
-              required
             />
           </div>
           
