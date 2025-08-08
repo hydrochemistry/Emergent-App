@@ -1554,6 +1554,23 @@ async def update_grant(grant_id: str, grant_update: dict, current_user: User = D
     
     return {"message": "Grant updated successfully"}
 
+@api_router.delete("/grants/{grant_id}")
+async def delete_grant(grant_id: str, current_user: User = Depends(get_current_user)):
+    """Delete a grant - only supervisors, lab managers, and admins can delete"""
+    if current_user.role not in [UserRole.SUPERVISOR, UserRole.LAB_MANAGER, UserRole.ADMIN]:
+        raise HTTPException(status_code=403, detail="Only supervisors and administrators can delete grants")
+    
+    grant = await db.grants.find_one({"id": grant_id})
+    if not grant:
+        raise HTTPException(status_code=404, detail="Grant not found")
+    
+    # Check if user is authorized to delete this grant
+    if grant.get("principal_investigator") != current_user.id and current_user.role not in [UserRole.LAB_MANAGER, UserRole.ADMIN]:
+        raise HTTPException(status_code=403, detail="You can only delete grants you created")
+    
+    await db.grants.delete_one({"id": grant_id})
+    return {"message": "Grant deleted successfully"}
+
 # Milestone endpoints
 @api_router.post("/milestones", response_model=Milestone)
 async def create_milestone(milestone: MilestoneCreate, current_user: User = Depends(get_current_user)):
