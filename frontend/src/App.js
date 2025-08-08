@@ -586,6 +586,9 @@ const Dashboard = ({ user, logout, setUser }) => {
       console.log('🔄 Setting cleaned reminders state with:', filteredReminders);
       setReminders(filteredReminders);
       
+      console.log('🔄 Setting milestones state with:', milestonesRes.data);
+      setMilestones(milestonesRes.data || []);
+      
       console.log('🔄 Setting cleaned tasks state with:', filteredTasks);
       setTasks(filteredTasks);
       setNotes(notesRes.data || []);
