@@ -2383,7 +2383,7 @@ const CreateMeetingDialog = ({ students, onMeetingCreated, user }) => {
   const [formData, setFormData] = useState({
     agenda: '',
     meeting_date: '',
-    meeting_time: '',
+    meeting_time: '09:00', // Default to 9:00 AM
     meeting_type: 'supervision',
     attendees: [],
     location: '',
