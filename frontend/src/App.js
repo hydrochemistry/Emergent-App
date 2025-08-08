@@ -662,9 +662,8 @@ const Dashboard = ({ user, logout, setUser }) => {
                 </Button>
               )}
               <Button 
-                variant="outline" 
                 onClick={logout}
-                className="bg-white text-black border-gray-300 hover:bg-gray-100"
+                className="bg-white text-black border border-gray-300 hover:bg-gray-100 hover:text-black px-3 py-2 rounded-md text-sm font-medium"
               >
                 <LogOut className="h-4 w-4 mr-2" />
                 Logout
