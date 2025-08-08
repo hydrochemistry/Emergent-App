@@ -102,7 +102,7 @@
 # Testing Data - Main Agent and testing sub agent both should log testing data below this section
 #====================================================================================================
 
-user_problem_statement: "Multiple UI/UX issues reported: 1) Dialog windows appear at bottom instead of center, 2) Task creation shows 'Error creating task: [object Object]', 3) Schedule Meeting button not active/clickable, 4) Grant creation button not working, 5) News approval/preview functionality missing, 6) Copyright text needs formatting fix, 7) Add profile headshot image functionality"
+user_problem_statement: "ENHANCED REQUIREMENTS (2025-01-15): 1) Student research log status tracking - Add array list showing all submitted research logs with approval status (approved/pending/revision/rejected), submission dates, and supervisor feedback. 2) Enhanced grants synchronization - All grants created by supervisors must be visible to students, fix data retrieval issues, ensure true synchronization across all user roles. 3) Active grants dashboard enhancement - Show list of all active grants to all users, display cumulative balance of active grants on dashboard with accurate calculations. 4) Student data visibility fix - Investigate and fix why student pages show empty data, ensure students can see all lab-wide data (news, publications, grants) at their user level, fix data retrieval and synchronization issues. 5) Maintain supervisor-student hierarchy where supervisor is superior and students are automatically under supervisor supervision."
 
 backend:
   - task: "User Authentication System"
