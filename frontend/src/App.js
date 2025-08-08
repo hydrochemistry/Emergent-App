@@ -2023,12 +2023,20 @@ const ResearchLogCard = ({ log, user, onLogUpdated }) => {
                 {new Date(log.date || log.created_at).toLocaleDateString()} • {log.activity_type.replace('_', ' ')}
                 {log.duration_hours && ` • ${log.duration_hours}h`}
               </p>
-              {/* Show student name for supervisors */}
-              {user.role !== 'student' && log.student_name && (
-                <p className="text-blue-600 font-medium">
-                  <User className="h-4 w-4 inline mr-1" />
-                  {log.student_name}
-                </p>
+              {/* Show student info for supervisors */}
+              {user.role !== 'student' && (
+                <div className="mt-1">
+                  <p className="text-blue-600 font-medium">
+                    <User className="h-4 w-4 inline mr-1" />
+                    {log.student_name || 'Unknown Student'} 
+                    <span className="text-gray-500 ml-2">ID: {log.student_id}</span>
+                  </p>
+                  {log.student_email && (
+                    <p className="text-gray-500 text-xs">
+                      {log.student_email}
+                    </p>
+                  )}
+                </div>
               )}
             </div>
           </div>
