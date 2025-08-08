@@ -862,7 +862,7 @@ const Dashboard = ({ user, logout, setUser }) => {
                       <div>
                         <p className="font-medium text-sm line-clamp-2">{publication.title}</p>
                         <p className="text-xs text-gray-600 mt-1">
-                          {publication.authors} • {publication.journal || publication.conference}
+                          {Array.isArray(publication.authors) ? publication.authors.join(', ') : publication.authors} • {publication.journal || publication.conference}
                         </p>
                         <p className="text-xs text-gray-500 mt-1">
                           {publication.publication_year || new Date(publication.created_at).getFullYear()}
