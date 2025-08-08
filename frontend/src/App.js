@@ -1299,6 +1299,8 @@ const ComprehensiveStudentProfile = ({ user, setUser, meetings, reminders, notes
               loading={loading}
               onSave={updateProfile}
               onCancel={() => setIsEditing(false)}
+              user={user}
+              setUser={setUser}
             />
           ) : (
             <ProfileDisplayView userProfile={userProfile} />
