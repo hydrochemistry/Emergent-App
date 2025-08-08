@@ -1686,6 +1686,15 @@ async def get_students(current_user: User = Depends(get_current_user)):
 # Include the router in the main app
 app.include_router(api_router)
 
+# Add a health check endpoint at the root level
+@app.get("/health")
+async def health_check():
+    return {"status": "healthy", "message": "Research Lab Management System API is running"}
+
+@app.get("/api/health")
+async def api_health_check():
+    return {"status": "healthy", "message": "API endpoints are accessible"}
+
 app.add_middleware(
     CORSMiddleware,
     allow_credentials=True,
