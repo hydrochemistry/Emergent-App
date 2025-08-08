@@ -1314,19 +1314,19 @@ const Dashboard = ({ user, logout, setUser }) => {
                 <div className="flex gap-4 mr-6">
                   <div className="text-center">
                     <p className="text-2xl font-bold text-green-600">{grants.filter(g => g.status === 'active').length}</p>
-                    <p className="text-xs text-gray-500">Active</p>
+                    <p className="text-xs text-gray-500">Active Grants</p>
                   </div>
                   <div className="text-center">
                     <p className="text-2xl font-bold text-blue-600">
-                      ${grants.reduce((sum, g) => sum + (g.total_amount || 0), 0).toLocaleString()}
+                      ${grants.filter(g => g.status === 'active').reduce((sum, g) => sum + (g.total_amount || 0), 0).toLocaleString()}
                     </p>
-                    <p className="text-xs text-gray-500">Total Value</p>
+                    <p className="text-xs text-gray-500">Active Value</p>
                   </div>
                   <div className="text-center">
                     <p className="text-2xl font-bold text-orange-600">
-                      ${grants.reduce((sum, g) => sum + (g.remaining_balance || 0), 0).toLocaleString()}
+                      ${grants.filter(g => g.status === 'active').reduce((sum, g) => sum + (g.remaining_balance || g.current_balance || 0), 0).toLocaleString()}
                     </p>
-                    <p className="text-xs text-gray-500">Remaining</p>
+                    <p className="text-xs text-gray-500">Active Balance</p>
                   </div>
                 </div>
                 {(user.role === 'supervisor' || user.role === 'lab_manager' || user.role === 'admin') && (
