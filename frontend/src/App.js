@@ -3016,17 +3016,92 @@ const ReminderCard = ({ reminder, user, onReminderUpdated }) => (
   </Card>
 );
 
-const BulletinCard = ({ bulletin, user, onBulletinUpdated }) => (
-  <Card>
-    <CardContent className="p-6">
-      <h3 className="font-semibold">{bulletin.title}</h3>
-      <p className="text-gray-600 mt-2">{bulletin.content}</p>
-      <Badge className={getStatusColor(bulletin.status)} size="sm">
-        {bulletin.status}
-      </Badge>
-    </CardContent>
-  </Card>
-);
+const BulletinCard = ({ bulletin, user, onBulletinUpdated }) => {
+  const [isApproving, setIsApproving] = useState(false);
+  
+  const handleApprove = async (approved) => {
+    setIsApproving(true);
+    try {
+      await axios.post(`${API}/bulletins/${bulletin.id}/approve`, { approved });
+      alert(`Bulletin ${approved ? 'approved' : 'rejected'} successfully!`);
+      onBulletinUpdated();
+    } catch (error) {
+      console.error('Error updating bulletin status:', error);
+      alert('Error updating bulletin status: ' + (error.response?.data?.detail || error.message || 'Unknown error occurred'));
+    } finally {
+      setIsApproving(false);
+    }
+  };
+
+  const canApprove = user.role === 'supervisor' || user.role === 'lab_manager' || user.role === 'admin';
+  const isPending = bulletin.status === 'pending';
+
+  return (
+    <Card className={`${bulletin.is_highlight && bulletin.status === 'approved' ? 'border-yellow-400 bg-yellow-50' : ''}`}>
+      <CardContent className="p-6">
+        <div className="flex items-start justify-between">
+          <div className="flex-1">
+            {bulletin.is_highlight && bulletin.status === 'approved' && (
+              <div className="flex items-center mb-2">
+                <Star className="h-4 w-4 text-yellow-500 mr-1" />
+                <Badge className="bg-yellow-100 text-yellow-800 text-xs">Highlight</Badge>
+              </div>
+            )}
+            <h3 className="font-semibold text-lg">{bulletin.title}</h3>
+            <p className="text-gray-600 mt-2">{bulletin.content}</p>
+            <p className="text-xs text-gray-500 mt-2">
+              Category: {bulletin.category} | Posted by: {bulletin.author_name || 'Unknown'}
+            </p>
+          </div>
+          <div className="flex flex-col items-end gap-2">
+            <Badge className={getStatusColor(bulletin.status)} size="sm">
+              {bulletin.status}
+            </Badge>
+            {canApprove && isPending && (
+              <div className="flex gap-2">
+                <Button
+                  size="sm"
+                  variant="outline"
+                  className="text-green-600 border-green-600 hover:bg-green-50"
+                  onClick={() => handleApprove(true)}
+                  disabled={isApproving}
+                >
+                  <Check className="h-3 w-3 mr-1" />
+                  Approve
+                </Button>
+                <Button
+                  size="sm"
+                  variant="outline"
+                  className="text-red-600 border-red-600 hover:bg-red-50"
+                  onClick={() => handleApprove(false)}
+                  disabled={isApproving}
+                >
+                  <X className="h-3 w-3 mr-1" />
+                  Reject
+                </Button>
+              </div>
+            )}
+          </div>
+        </div>
+        
+        {bulletin.status === 'approved' && (
+          <div className="mt-4 pt-4 border-t">
+            <p className="text-sm text-green-600 font-medium">
+              ✅ This announcement is live and visible to all users
+            </p>
+          </div>
+        )}
+        {bulletin.status === 'rejected' && (
+          <div className="mt-4 pt-4 border-t">
+            <p className="text-sm text-red-600 font-medium">
+              ❌ This announcement has been rejected and is not visible to users
+            </p>
+          </div>
+        )}
+      </CardContent>
+    </Card>
+  );
+};
 
 const GrantCard = ({ grant, user, onGrantUpdated }) => {
   const [isRegistering, setIsRegistering] = useState(false);
