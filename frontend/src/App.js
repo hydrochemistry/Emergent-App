@@ -1965,43 +1965,128 @@ const TaskCard = ({ task, user, onTaskUpdated }) => (
 );
 
 // Research Log Card Component
-const ResearchLogCard = ({ log, user, onLogUpdated }) => (
-  <Card>
-    <CardContent className="p-6">
-      <div className="flex justify-between items-start mb-4">
-        <div>
-          <h3 className="font-semibold text-lg">{log.title}</h3>
-          <p className="text-sm text-gray-600">
-            {new Date(log.date).toLocaleDateString()} • {log.activity_type.replace('_', ' ')}
-            {log.duration_hours && ` • ${log.duration_hours}h`}
-          </p>
-        </div>
-        <Badge>{log.activity_type.replace('_', ' ')}</Badge>
-      </div>
-      
-      <p className="text-gray-700 mb-4">{log.description}</p>
-      
-      {log.findings && (
-        <div className="mb-3">
-          <h4 className="font-medium text-green-700 mb-1">Key Findings:</h4>
-          <p className="text-sm text-gray-700">{log.findings}</p>
-        </div>
-      )}
-      
-      {log.supervisor_endorsement !== null && (
-        <div className={`p-3 rounded-lg ${log.supervisor_endorsement ? 'bg-green-50' : 'bg-red-50'}`}>
-          <div className="flex items-center gap-2">
-            <UserCheck className={`h-4 w-4 ${log.supervisor_endorsement ? 'text-green-600' : 'text-red-600'}`} />
-            <span className="font-medium">
-              {log.supervisor_endorsement ? 'Endorsed' : 'Needs Revision'}
-              {log.supervisor_rating && ` (${log.supervisor_rating}/5)`}
-            </span>
+const ResearchLogCard = ({ log, user, onLogUpdated }) => {
+  const [showAttachments, setShowAttachments] = useState(false);
+  
+  return (
+    <Card>
+      <CardContent className="p-6">
+        <div className="flex justify-between items-start mb-4">
+          <div>
+            <h3 className="font-semibold text-lg">{log.title}</h3>
+            <div className="text-sm text-gray-600">
+              <p>
+                {new Date(log.date || log.created_at).toLocaleDateString()} • {log.activity_type.replace('_', ' ')}
+                {log.duration_hours && ` • ${log.duration_hours}h`}
+              </p>
+              {/* Show student name for supervisors */}
+              {user.role !== 'student' && log.student_name && (
+                <p className="text-blue-600 font-medium">
+                  <User className="h-4 w-4 inline mr-1" />
+                  {log.student_name}
+                </p>
+              )}
+            </div>
           </div>
+          <Badge>{log.activity_type.replace('_', ' ')}</Badge>
         </div>
-      )}
-    </CardContent>
-  </Card>
-);
+        
+        <p className="text-gray-700 mb-4">{log.description}</p>
+        
+        {log.findings && (
+          <div className="mb-3">
+            <h4 className="font-medium text-green-700 mb-1">Key Findings:</h4>
+            <p className="text-sm text-gray-700">{log.findings}</p>
+          </div>
+        )}
+        
+        {log.challenges && (
+          <div className="mb-3">
+            <h4 className="font-medium text-orange-700 mb-1">Challenges:</h4>
+            <p className="text-sm text-gray-700">{log.challenges}</p>
+          </div>
+        )}
+        
+        {log.next_steps && (
+          <div className="mb-3">
+            <h4 className="font-medium text-blue-700 mb-1">Next Steps:</h4>
+            <p className="text-sm text-gray-700">{log.next_steps}</p>
+          </div>
+        )}
+        
+        {log.tags && log.tags.length > 0 && (
+          <div className="mb-3">
+            <div className="flex flex-wrap gap-2">
+              {log.tags.map((tag, index) => (
+                <Badge key={index} variant="outline" className="text-xs">
+                  #{tag}
+                </Badge>
+              ))}
+            </div>
+          </div>
+        )}
+        
+        {/* Attachments Section */}
+        {log.attachments && log.attachments.length > 0 && (
+          <div className="mb-4 p-3 bg-gray-50 rounded-lg">
+            <div className="flex items-center justify-between mb-2">
+              <h4 className="font-medium text-gray-700">Attachments ({log.attachments.length})</h4>
+              <Button 
+                variant="outline" 
+                size="sm"
+                onClick={() => setShowAttachments(!showAttachments)}
+              >
+                <Paperclip className="h-4 w-4 mr-1" />
+                {showAttachments ? 'Hide' : 'Show'}
+              </Button>
+            </div>
+            {showAttachments && (
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-2">
+                {log.attachments.map((attachment, index) => (
+                  <div key={index} className="flex items-center gap-2 p-2 bg-white rounded border">
+                    <FileText className="h-4 w-4 text-gray-500" />
+                    <span className="text-sm truncate">{attachment.filename}</span>
+                    <Button 
+                      variant="ghost" 
+                      size="sm" 
+                      onClick={() => window.open(attachment.url, '_blank')}
+                    >
+                      <Download className="h-4 w-4" />
+                    </Button>
+                  </div>
+                ))}
+              </div>
+            )}
+          </div>
+        )}
+        
+        {log.supervisor_endorsement !== null && (
+          <div className={`p-3 rounded-lg ${log.supervisor_endorsement ? 'bg-green-50' : 'bg-red-50'}`}>
+            <div className="flex items-center gap-2">
+              <UserCheck className={`h-4 w-4 ${log.supervisor_endorsement ? 'text-green-600' : 'text-red-600'}`} />
+              <span className="font-medium">
+                {log.supervisor_endorsement ? 'Endorsed' : 'Needs Revision'}
+                {log.supervisor_rating && ` (${log.supervisor_rating}/5)`}
+              </span>
+            </div>
+          </div>
+        )}
+        
+        {/* PDF Download Button */}
+        <div className="flex justify-end mt-4 pt-4 border-t">
+          <Button 
+            variant="outline" 
+            size="sm"
+            onClick={() => window.open(`${API}/research-logs/${log.id}/pdf`, '_blank')}
+          >
+            <FileText className="h-4 w-4 mr-2" />
+            Download PDF
+          </Button>
+        </div>
+      </CardContent>
+    </Card>
+  );
+};
 
 // Placeholder components for dialogs and other functionality
 const CreateTaskDialog = ({ students, onTaskCreated, user }) => {
