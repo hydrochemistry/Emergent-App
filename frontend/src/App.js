@@ -654,9 +654,8 @@ const Dashboard = ({ user, logout, setUser }) => {
               </div>
               {(user.role === 'supervisor' || user.role === 'lab_manager' || user.role === 'admin') && (
                 <Button 
-                  variant="outline" 
                   onClick={() => setActiveTab('admin')}
-                  className="bg-white text-black border-gray-300 hover:bg-gray-100"
+                  className="bg-white text-black border border-gray-300 hover:bg-gray-100 hover:text-black px-3 py-2 rounded-md text-sm font-medium"
                 >
                   <Settings className="h-4 w-4 mr-2" />
                   Admin
