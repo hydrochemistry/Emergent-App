@@ -1159,7 +1159,9 @@ const Dashboard = ({ user, logout, setUser }) => {
                     <p className="text-xs text-gray-500">Remaining</p>
                   </div>
                 </div>
-                <CreateGrantDialog students={students} onGrantCreated={fetchDashboardData} />
+                {(user.role === 'supervisor' || user.role === 'lab_manager' || user.role === 'admin') && (
+                  <CreateGrantDialog students={students} onGrantCreated={fetchDashboardData} />
+                )}
               </div>
             </div>
 
@@ -1174,12 +1176,9 @@ const Dashboard = ({ user, logout, setUser }) => {
                     <DollarSign className="h-12 w-12 text-gray-400 mx-auto mb-4" />
                     <h3 className="text-lg font-medium text-gray-900 mb-2">No Grants Found</h3>
                     <p className="text-gray-500 mb-4">
-                      {user.role === 'supervisor' || user.role === 'lab_manager' 
-                        ? 'Create your first grant to start tracking funding opportunities.'
-                        : 'No grants are currently available for registration.'
-                      }
+                      No grants are currently available. Check back later for funding opportunities.
                     </p>
-                    {(user.role === 'supervisor' || user.role === 'lab_manager') && (
+                    {(user.role === 'supervisor' || user.role === 'lab_manager' || user.role === 'admin') && (
                       <CreateGrantDialog students={students} onGrantCreated={fetchDashboardData} />
                     )}
                   </CardContent>
