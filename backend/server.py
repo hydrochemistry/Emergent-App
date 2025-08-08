@@ -224,6 +224,7 @@ class LabSettingsUpdate(BaseModel):
     address: Optional[str] = None
     website: Optional[str] = None
     contact_email: Optional[str] = None
+    lab_scopus_id: Optional[str] = None  # Added lab-wide Scopus ID
 
 class SupervisorMeeting(BaseModel):
     id: str = Field(default_factory=lambda: str(uuid.uuid4()))
