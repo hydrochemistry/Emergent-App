@@ -4388,9 +4388,10 @@ const AdminPanel = ({ user, labSettings, onSettingsUpdated, menuSettings, onMenu
       </div>
 
       <Tabs value={activeAdminTab} onValueChange={setActiveAdminTab}>
-        <TabsList className="grid w-full grid-cols-3">
+        <TabsList className="grid w-full grid-cols-4">
           <TabsTrigger value="lab-settings">Lab Settings</TabsTrigger>
           <TabsTrigger value="user-management">User Management</TabsTrigger>
+          <TabsTrigger value="menu-settings">Menu Settings</TabsTrigger>
           <TabsTrigger value="security">Security</TabsTrigger>
         </TabsList>
 
