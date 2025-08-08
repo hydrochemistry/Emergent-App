@@ -1657,11 +1657,27 @@ async def create_grant(grant_data: GrantCreate, current_user: User = Depends(get
 
 @api_router.get("/grants", response_model=List[Grant])
 async def get_grants(current_user: User = Depends(get_current_user)):
-    """Get grants - all users can see all grants for proper synchronization"""
-    # All users see all grants for full lab visibility and synchronization
-    grants = await db.grants.find({}).to_list(1000)
+    """Get grants - ensure proper synchronization for all users under supervisor hierarchy"""
+    # Determine supervisor ID for proper lab-wide synchronization
+    if current_user.role == UserRole.STUDENT:
+        supervisor_id = current_user.supervisor_id
+        if not supervisor_id:
+            print(f"Warning: Student {current_user.id} has no supervisor assigned")
+            # Return empty grants if no supervisor is assigned
+            return []
+    else:
+        supervisor_id = current_user.id
     
-    # Add enhanced balance calculations for dashboard display
+    # Get all grants in the lab (created by supervisor or lab members)
+    # Students automatically see grants from their supervisor's lab
+    grants = await db.grants.find({
+        "$or": [
+            {"principal_investigator": supervisor_id},
+            {"principal_investigator": {"$in": await get_lab_member_ids(supervisor_id)}}
+        ]
+    }).to_list(1000)
+    
+    # Enhanced balance calculations for dashboard display
     for grant in grants:
         if "total_amount" in grant and "spent_amount" in grant:
             grant["remaining_balance"] = grant["total_amount"] - grant.get("spent_amount", 0)
@@ -1670,11 +1686,19 @@ async def get_grants(current_user: User = Depends(get_current_user)):
         else:
             grant["remaining_balance"] = grant.get("total_amount", 0)
         
-        # Ensure current_balance field is populated for consistency
-        if "current_balance" not in grant:
-            grant["current_balance"] = grant.get("remaining_balance", grant.get("total_amount", 0))
+        # Ensure balance field exists
+        if "balance" not in grant:
+            grant["balance"] = grant["remaining_balance"]
     
+    print(f"Found {len(grants)} grants for user {current_user.id} (supervisor: {supervisor_id})")
     return [Grant(**grant) for grant in grants]
+
+async def get_lab_member_ids(supervisor_id: str) -> List[str]:
+    """Helper function to get all lab member IDs under a supervisor"""
+    students = await db.users.find({"supervisor_id": supervisor_id}).to_list(1000)
+    lab_member_ids = [student["id"] for student in students]
+    lab_member_ids.append(supervisor_id)  # Include supervisor
+    return lab_member_ids
 
 @api_router.put("/grants/{grant_id}")
 async def update_grant(grant_id: str, grant_update: dict, current_user: User = Depends(get_current_user)):
