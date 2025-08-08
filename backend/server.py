@@ -615,6 +615,42 @@ async def fetch_scopus_publications(scopus_id: str):
             }
         ]
 
+async def sync_lab_publications_from_scopus(lab_scopus_id: str, supervisor_id: str):
+    """Sync publications from Scopus API for the entire lab using lab Scopus ID"""
+    try:
+        # Fetch publications from Scopus
+        publications_data = await fetch_scopus_publications(lab_scopus_id)
+        
+        # Process and store publications
+        for pub_data in publications_data:
+            # Check if publication already exists
+            existing_pub = await db.publications.find_one({
+                "scopus_id": pub_data.get("scopus_id"),
+                "supervisor_id": supervisor_id
+            })
+            
+            if not existing_pub:
+                # Create new publication record
+                publication = Publication(
+                    title=pub_data["title"],
+                    authors=pub_data["authors"],
+                    journal=pub_data.get("journal"),
+                    publication_year=pub_data["publication_year"],
+                    doi=pub_data.get("doi"),
+                    scopus_id=pub_data.get("scopus_id"),
+                    citation_count=pub_data.get("citation_count", 0),
+                    supervisor_id=supervisor_id,
+                    retrieved_at=datetime.utcnow()
+                )
+                
+                await db.publications.insert_one(publication.dict())
+        
+        print(f"Successfully synced {len(publications_data)} publications for lab Scopus ID: {lab_scopus_id}")
+        
+    except Exception as e:
+        print(f"Error syncing lab publications: {str(e)}")
+        raise e
+
 # Auth Routes
 @api_router.post("/auth/register", response_model=Token)
 async def register(user_data: UserCreate):
