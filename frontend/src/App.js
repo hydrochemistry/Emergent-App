@@ -3045,7 +3045,7 @@ const CreateReminderDialog = ({ students, onReminderCreated, user }) => {
             <Button type="button" variant="outline" onClick={() => setIsOpen(false)}>
               Cancel
             </Button>
-            <Button type="submit" disabled={loading || !formData.title}>
+            <Button type="submit" disabled={loading}>
               {loading ? 'Creating...' : 'Create Reminder'}
             </Button>
           </div>
