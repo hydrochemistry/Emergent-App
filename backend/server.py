@@ -1469,37 +1469,27 @@ async def download_research_log_pdf(log_id: str, current_user: User = Depends(ge
 @api_router.get("/research-logs", response_model=List[ResearchLog])
 async def get_research_logs(current_user: User = Depends(get_current_user)):
     """Get lab-wide research logs - synchronized data for all users in same lab"""
-    # Get supervisor ID for lab-wide data synchronization
+    # Determine supervisor ID for proper lab-wide synchronization
     if current_user.role == UserRole.STUDENT:
-        # For students, use their supervisor_id
         supervisor_id = current_user.supervisor_id
         if not supervisor_id:
-            # If no supervisor assigned, show all logs (temporary fallback for broken assignments)
             print(f"Warning: Student {current_user.id} has no supervisor_id assigned")
+            # Show student's own logs only if no supervisor is assigned
             logs = await db.research_logs.find({"user_id": current_user.id}).sort("date", -1).to_list(1000)
             return [ResearchLog(**log) for log in logs]
     else:
-        # For supervisors/admins, use their own ID as supervisor
         supervisor_id = current_user.id
     
-    # Get all students under this supervisor
+    # Get all students under this supervisor for lab-wide data synchronization
     students = await db.users.find({"supervisor_id": supervisor_id}).to_list(1000)
     student_ids = [student["id"] for student in students]
+    student_ids.append(supervisor_id)  # Include supervisor's logs
     
-    # Include supervisor's own ID for their research logs (for lab-wide synchronization)
-    student_ids.append(supervisor_id)
-    
-    print(f"Fetching logs for supervisor {supervisor_id}, student_ids: {student_ids}")
-    
-    # Fetch all lab research logs for synchronization
+    # Fetch all research logs in the lab
     logs = await db.research_logs.find({"user_id": {"$in": student_ids}}).sort("date", -1).to_list(1000)
     
-    print(f"Found {len(logs)} research logs")
-    
-    # Add student information for all users to see
+    # Create student info mapping
     student_map = {student["id"]: student for student in students}
-    
-    # Add supervisor information to the map for lab-wide visibility
     supervisor_user = await db.users.find_one({"id": supervisor_id})
     if supervisor_user:
         student_map[supervisor_id] = {
@@ -1508,13 +1498,79 @@ async def get_research_logs(current_user: User = Depends(get_current_user)):
             "email": supervisor_user.get("email", "")
         }
     
+    # Enhance logs with student information and review status
     for log in logs:
         student_info = student_map.get(log["user_id"], {})
         log["student_name"] = student_info.get("full_name", "Unknown Student")
         log["student_id"] = student_info.get("student_id", log["user_id"])
         log["student_email"] = student_info.get("email", "")
+        
+        # Ensure review status fields are present
+        if "review_status" not in log:
+            log["review_status"] = None
+        if "review_feedback" not in log:
+            log["review_feedback"] = None
+        if "reviewer_name" not in log:
+            log["reviewer_name"] = None
+        if "reviewed_at" not in log:
+            log["reviewed_at"] = None
     
     return [ResearchLog(**log) for log in logs]
+
+@api_router.get("/research-logs/student/status")
+async def get_student_research_log_status(current_user: User = Depends(get_current_user)):
+    """Get student's own research logs with approval status - for status tracking array"""
+    if current_user.role != UserRole.STUDENT:
+        raise HTTPException(status_code=403, detail="This endpoint is for students only")
+    
+    # Get all logs submitted by the current student
+    logs = await db.research_logs.find({"user_id": current_user.id}).sort("date", -1).to_list(1000)
+    
+    # Format logs for status tracking display
+    status_logs = []
+    for log in logs:
+        # Determine display status
+        review_status = log.get("review_status", "pending")
+        if review_status == "accepted":
+            display_status = "approved"
+        elif review_status == "revision":
+            display_status = "needs revision"
+        elif review_status == "rejected":
+            display_status = "not accepted"
+        else:
+            display_status = "pending"
+        
+        status_logs.append({
+            "id": log["id"],
+            "title": log["title"],
+            "activity_type": log["activity_type"],
+            "submission_date": log["date"],
+            "status": display_status,
+            "review_feedback": log.get("review_feedback", ""),
+            "reviewer_name": log.get("reviewer_name", ""),
+            "reviewed_at": log.get("reviewed_at", "")
+        })
+    
+    return {"logs": status_logs, "total_count": len(status_logs)}
+
+@api_router.get("/grants/active")
+async def get_active_grants(current_user: User = Depends(get_current_user)):
+    """Get only active grants with balance information for dashboard display"""
+    # Get active grants only
+    grants = await db.grants.find({"status": "active"}).to_list(1000)
+    
+    # Calculate remaining balances and cumulative balance
+    total_cumulative_balance = 0
+    for grant in grants:
+        remaining_balance = grant.get("total_amount", 0) - grant.get("spent_amount", 0)
+        grant["remaining_balance"] = remaining_balance
+        total_cumulative_balance += remaining_balance
+    
+    return {
+        "active_grants": grants,
+        "total_active_grants": len(grants),
+        "cumulative_balance": total_cumulative_balance
+    }
 
 # Enhanced Bulletin/News Routes with Highlight Feature
 @api_router.post("/bulletins", response_model=Bulletin)
