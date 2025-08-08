@@ -3054,7 +3054,10 @@ const BulletinCard = ({ bulletin, user, onBulletinUpdated }) => {
   const handleApprove = async (approved) => {
     setIsApproving(true);
     try {
-      await axios.post(`${API}/bulletins/${bulletin.id}/approve`, { approved });
+      await axios.post(`${API}/bulletins/${bulletin.id}/approve`, { 
+        bulletin_id: bulletin.id,
+        approved 
+      });
       alert(`Bulletin ${approved ? 'approved' : 'rejected'} successfully!`);
       onBulletinUpdated();
     } catch (error) {
