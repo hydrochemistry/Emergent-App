@@ -2605,7 +2605,7 @@ const CreateReminderDialog = ({ students, onReminderCreated, user }) => {
     title: '',
     description: '',
     reminder_date: '',
-    reminder_time: '',
+    reminder_time: '09:00', // Default to 9:00 AM
     priority: 'medium',
     assigned_to: ''
   });
