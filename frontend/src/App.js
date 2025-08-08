@@ -4587,6 +4587,245 @@ const AdminPanel = ({ user, labSettings, onSettingsUpdated }) => {
   );
 };
 
+const CreateMilestoneDialog = ({ onMilestoneCreated }) => {
+  const [isOpen, setIsOpen] = useState(false);
+  const [formData, setFormData] = useState({
+    project_title: '',
+    milestone_title: '',
+    description: '',
+    start_date: new Date().toISOString().split('T')[0],
+    target_end_date: '',
+    progress_percentage: 0,
+    deliverables: '',
+    challenges: '',
+    next_steps: ''
+  });
+  const [loading, setLoading] = useState(false);
+
+  const handleSubmit = async (e) => {
+    e.preventDefault();
+    setLoading(true);
+    
+    try {
+      const submitData = {
+        ...formData,
+        deliverables: formData.deliverables ? formData.deliverables.split(',').map(d => d.trim()) : [],
+        start_date: new Date(formData.start_date).toISOString(),
+        target_end_date: new Date(formData.target_end_date).toISOString()
+      };
+      
+      await axios.post(`${API}/milestones`, submitData);
+      
+      alert('Milestone created successfully!');
+      setFormData({
+        project_title: '',
+        milestone_title: '',
+        description: '',
+        start_date: new Date().toISOString().split('T')[0],
+        target_end_date: '',
+        progress_percentage: 0,
+        deliverables: '',
+        challenges: '',
+        next_steps: ''
+      });
+      setIsOpen(false);
+      onMilestoneCreated();
+    } catch (error) {
+      console.error('Error creating milestone:', error);
+      alert('Error creating milestone: ' + (error.response?.data?.detail || error.message || 'Unknown error'));
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  return (
+    <Dialog open={isOpen} onOpenChange={setIsOpen}>
+      <DialogTrigger asChild>
+        <Button>
+          <Plus className="h-4 w-4 mr-2" />
+          Add Milestone
+        </Button>
+      </DialogTrigger>
+      <DialogContent className="w-[95vw] max-w-2xl mx-4 max-h-[90vh] overflow-y-auto">
+        <DialogHeader>
+          <DialogTitle>Create New Milestone</DialogTitle>
+        </DialogHeader>
+        <form onSubmit={handleSubmit} className="space-y-4">
+          <div>
+            <Label htmlFor="project_title">Project Title *</Label>
+            <Input
+              id="project_title"
+              value={formData.project_title}
+              onChange={(e) => setFormData({...formData, project_title: e.target.value})}
+              placeholder="Enter project name"
+              required
+            />
+          </div>
+          
+          <div>
+            <Label htmlFor="milestone_title">Milestone Title *</Label>
+            <Input
+              id="milestone_title"
+              value={formData.milestone_title}
+              onChange={(e) => setFormData({...formData, milestone_title: e.target.value})}
+              placeholder="Enter milestone name"
+              required
+            />
+          </div>
+          
+          <div>
+            <Label htmlFor="description">Description *</Label>
+            <Textarea
+              id="description"
+              value={formData.description}
+              onChange={(e) => setFormData({...formData, description: e.target.value})}
+              placeholder="Describe the milestone objectives and scope"
+              required
+              rows={3}
+            />
+          </div>
+          
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div>
+              <Label htmlFor="start_date">Start Date *</Label>
+              <Input
+                id="start_date"
+                type="date"
+                value={formData.start_date}
+                onChange={(e) => setFormData({...formData, start_date: e.target.value})}
+                required
+              />
+            </div>
+            
+            <div>
+              <Label htmlFor="target_end_date">Target End Date *</Label>
+              <Input
+                id="target_end_date"
+                type="date"
+                value={formData.target_end_date}
+                onChange={(e) => setFormData({...formData, target_end_date: e.target.value})}
+                required
+              />
+            </div>
+          </div>
+          
+          <div>
+            <Label htmlFor="deliverables">Expected Deliverables</Label>
+            <Input
+              id="deliverables"
+              value={formData.deliverables}
+              onChange={(e) => setFormData({...formData, deliverables: e.target.value})}
+              placeholder="Deliverable 1, Deliverable 2, Deliverable 3"
+            />
+            <p className="text-xs text-gray-500 mt-1">Separate multiple deliverables with commas</p>
+          </div>
+          
+          <div className="flex justify-end gap-2 pt-4 border-t">
+            <Button type="button" variant="outline" onClick={() => setIsOpen(false)} disabled={loading}>
+              Cancel
+            </Button>
+            <Button type="submit" disabled={loading || !formData.project_title || !formData.milestone_title}>
+              {loading ? 'Creating...' : 'Create Milestone'}
+            </Button>
+          </div>
+        </form>
+      </DialogContent>
+    </Dialog>
+  );
+};
+
+const MilestoneCard = ({ milestone, user, onMilestoneUpdated }) => {
+  const [isEditing, setIsEditing] = useState(false);
+  const [progress, setProgress] = useState(milestone.progress_percentage || 0);
+
+  const updateProgress = async () => {
+    try {
+      await axios.put(`${API}/milestones/${milestone.id}`, {
+        progress_percentage: progress,
+        status: progress >= 100 ? 'completed' : 'in_progress'
+      });
+      alert('Progress updated successfully!');
+      setIsEditing(false);
+      onMilestoneUpdated();
+    } catch (error) {
+      alert('Error updating progress: ' + (error.response?.data?.detail || error.message));
+    }
+  };
+
+  return (
+    <Card>
+      <CardContent className="p-6">
+        <div className="flex justify-between items-start mb-4">
+          <div>
+            <h3 className="font-semibold text-lg">{milestone.milestone_title}</h3>
+            <p className="text-blue-600 font-medium">{milestone.project_title}</p>
+            <p className="text-sm text-gray-600">
+              {new Date(milestone.start_date).toLocaleDateString()} - {new Date(milestone.target_end_date).toLocaleDateString()}
+            </p>
+            {user.role !== 'student' && milestone.student_name && (
+              <p className="text-sm text-purple-600">Student: {milestone.student_name}</p>
+            )}
+          </div>
+          <Badge className={milestone.status === 'completed' ? 'bg-green-100 text-green-800' : milestone.status === 'delayed' ? 'bg-red-100 text-red-800' : 'bg-blue-100 text-blue-800'}>
+            {milestone.status.replace('_', ' ')}
+          </Badge>
+        </div>
+        
+        <p className="text-gray-700 mb-4">{milestone.description}</p>
+        
+        <div className="mb-4">
+          <div className="flex items-center justify-between mb-2">
+            <span className="text-sm font-medium">Progress</span>
+            <span className="text-sm text-gray-600">{progress}%</span>
+          </div>
+          <div className="w-full bg-gray-200 rounded-full h-2.5">
+            <div 
+              className="bg-blue-600 h-2.5 rounded-full transition-all duration-300" 
+              style={{width: `${progress}%`}}
+            ></div>
+          </div>
+        </div>
+        
+        {milestone.deliverables && milestone.deliverables.length > 0 && (
+          <div className="mb-4">
+            <h4 className="font-medium text-sm mb-2">Deliverables:</h4>
+            <div className="flex flex-wrap gap-2">
+              {milestone.deliverables.map((deliverable, index) => (
+                <Badge key={index} variant="outline" className="text-xs">
+                  {deliverable}
+                </Badge>
+              ))}
+            </div>
+          </div>
+        )}
+        
+        {user.role === 'student' && milestone.student_id === user.id && (
+          <div className="flex justify-end gap-2 pt-4 border-t">
+            {isEditing ? (
+              <>
+                <input 
+                  type="range" 
+                  min="0" 
+                  max="100" 
+                  value={progress}
+                  onChange={(e) => setProgress(parseInt(e.target.value))}
+                  className="flex-1"
+                />
+                <Button size="sm" onClick={updateProgress}>Save</Button>
+                <Button size="sm" variant="outline" onClick={() => setIsEditing(false)}>Cancel</Button>
+              </>
+            ) : (
+              <Button size="sm" onClick={() => setIsEditing(true)}>
+                Update Progress
+              </Button>
+            )}
+          </div>
+        )}
+      </CardContent>
+    </Card>
+  );
+};
+
 function App() {
   return (
     <div className="App">
