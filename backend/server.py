@@ -1061,6 +1061,51 @@ async def complete_reminder(reminder_id: str, current_user: User = Depends(get_c
     await db.reminders.update_one({"id": reminder_id}, {"$set": {"is_completed": True}})
     return {"message": "Reminder marked as completed"}
 
+@api_router.put("/reminders/{reminder_id}")
+async def update_reminder(reminder_id: str, update_data: dict, current_user: User = Depends(get_current_user)):
+    """Update reminder details (edit functionality)"""
+    reminder = await db.reminders.find_one({"id": reminder_id})
+    if not reminder:
+        raise HTTPException(status_code=404, detail="Reminder not found")
+    
+    # Check permissions
+    if reminder["user_id"] != current_user.id and current_user.role not in [UserRole.SUPERVISOR, UserRole.LAB_MANAGER]:
+        raise HTTPException(status_code=403, detail="Not authorized")
+    
+    # Prepare update data
+    allowed_fields = ["title", "description", "reminder_date", "priority", "reminder_type"]
+    update_dict = {}
+    
+    for field in allowed_fields:
+        if field in update_data:
+            if field == "reminder_date" and update_data[field]:
+                # Parse datetime string
+                try:
+                    update_dict[field] = datetime.fromisoformat(update_data[field].replace('Z', '+00:00'))
+                except:
+                    update_dict[field] = datetime.fromisoformat(update_data[field])
+            else:
+                update_dict[field] = update_data[field]
+    
+    if update_dict:
+        await db.reminders.update_one({"id": reminder_id}, {"$set": update_dict})
+    
+    return {"message": "Reminder updated successfully"}
+
+@api_router.delete("/reminders/{reminder_id}")
+async def delete_reminder(reminder_id: str, current_user: User = Depends(get_current_user)):
+    """Delete a reminder"""
+    reminder = await db.reminders.find_one({"id": reminder_id})
+    if not reminder:
+        raise HTTPException(status_code=404, detail="Reminder not found")
+    
+    # Check permissions
+    if reminder["user_id"] != current_user.id and current_user.role not in [UserRole.SUPERVISOR, UserRole.LAB_MANAGER]:
+        raise HTTPException(status_code=403, detail="Not authorized")
+    
+    await db.reminders.delete_one({"id": reminder_id})
+    return {"message": "Reminder deleted successfully"}
+
 # Supervisor Notes Routes
 @api_router.post("/notes", response_model=SupervisorNote)
 async def create_note(note_data: NoteCreate, current_user: User = Depends(get_current_user)):
