@@ -823,7 +823,7 @@ const Dashboard = ({ user, logout, setUser }) => {
             <div className="flex justify-between items-center mb-6">
               <h2 className="text-2xl font-bold">Tasks Management</h2>
               {(user.role === 'supervisor' || user.role === 'lab_manager') && (
-                <CreateTaskDialog students={students} onTaskCreated={fetchDashboardData} />
+                <CreateTaskDialog students={students} onTaskCreated={fetchDashboardData} user={user} />
               )}
             </div>
 
