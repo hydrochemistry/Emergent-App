@@ -507,6 +507,18 @@ const Dashboard = ({ user, logout, setUser }) => {
   const [meetings, setMeetings] = useState([]);
   const [reminders, setReminders] = useState([]);
   const [milestones, setMilestones] = useState([]);
+  const [menuSettings, setMenuSettings] = useState({
+    tasks: true,
+    research: true,
+    meetings: true,
+    publications: true,
+    milestones: true,
+    reminders: true,
+    news: true,
+    grants: true,
+    students: true,
+    admin: true
+  });
   const [notes, setNotes] = useState([]);
   const [loading, setLoading] = useState(true);
 
