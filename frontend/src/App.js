@@ -3271,6 +3271,7 @@ const ReminderCard = ({ reminder, user, onReminderUpdated }) => (
 
 const BulletinCard = ({ bulletin, user, onBulletinUpdated }) => {
   const [isApproving, setIsApproving] = useState(false);
+  const [isDeleting, setIsDeleting] = useState(false);
   
   const handleApprove = async (approved) => {
     setIsApproving(true);
@@ -3305,7 +3306,42 @@ const BulletinCard = ({ bulletin, user, onBulletinUpdated }) => {
     }
   };
 
+  const handleDelete = async () => {
+    if (!window.confirm('Are you sure you want to delete this announcement? This action cannot be undone.')) {
+      return;
+    }
+    
+    setIsDeleting(true);
+    try {
+      await axios.delete(`${API}/bulletins/${bulletin.id}`);
+      alert('Announcement deleted successfully!');
+      onBulletinUpdated();
+    } catch (error) {
+      console.error('Error deleting bulletin:', error);
+      let errorMessage = 'Error deleting announcement: ';
+      
+      if (error.response?.data?.detail) {
+        if (typeof error.response.data.detail === 'string') {
+          errorMessage += error.response.data.detail;
+        } else {
+          errorMessage += JSON.stringify(error.response.data.detail);
+        }
+      } else if (error.response?.data?.message) {
+        errorMessage += error.response.data.message;
+      } else if (error.message) {
+        errorMessage += error.message;
+      } else {
+        errorMessage += 'Unknown error occurred';
+      }
+      
+      alert(errorMessage);
+    } finally {
+      setIsDeleting(false);
+    }
+  };
+
   const canApprove = user.role === 'supervisor' || user.role === 'lab_manager' || user.role === 'admin';
+  const canDelete = user.role === 'supervisor' || user.role === 'lab_manager' || user.role === 'admin' || bulletin.author_id === user.id;
   const isPending = bulletin.status === 'pending';
 
   return (
