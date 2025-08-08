@@ -297,8 +297,10 @@ class EnhancedGrantsResearchTester:
             return False
             
         # Find our created log and check review status
+        student_log_found = False
         for log in student_logs:
             if log['id'] == self.created_log_id:
+                student_log_found = True
                 required_fields = ['review_status', 'review_feedback', 'reviewed_by', 'reviewed_at', 'reviewer_name']
                 missing_fields = [field for field in required_fields if field not in log or log[field] is None]
                 
@@ -309,13 +311,14 @@ class EnhancedGrantsResearchTester:
                     print(f"   - Reviewed By: {log['reviewed_by']}")
                     print(f"   - Reviewed At: {log['reviewed_at']}")
                     print(f"   - Reviewer Name: {log['reviewer_name']}")
-                    return True
                 else:
                     print(f"❌ Missing review status fields: {missing_fields}")
                     return False
+                break
         
-        print("❌ Created research log not found in student's logs")
-        return False
+        if not student_log_found:
+            print("❌ Created research log not found in student's logs")
+            return False
         
         # Test supervisor can see student information in logs
         success, supervisor_logs = self.run_test(
@@ -330,8 +333,10 @@ class EnhancedGrantsResearchTester:
             return False
             
         # Find our created log and check student information
+        supervisor_log_found = False
         for log in supervisor_logs:
             if log['id'] == self.created_log_id:
+                supervisor_log_found = True
                 student_fields = ['student_name', 'student_id', 'student_email']
                 missing_fields = [field for field in student_fields if field not in log or log[field] is None]
                 
@@ -340,13 +345,16 @@ class EnhancedGrantsResearchTester:
                     print(f"   - Student Name: {log['student_name']}")
                     print(f"   - Student ID: {log['student_id']}")
                     print(f"   - Student Email: {log['student_email']}")
-                    return True
                 else:
                     print(f"❌ Missing student information fields: {missing_fields}")
                     return False
+                break
         
-        print("❌ Created research log not found in supervisor's logs")
-        return False
+        if not supervisor_log_found:
+            print("❌ Created research log not found in supervisor's logs")
+            return False
+            
+        return True
 
     def test_active_grants_balance_calculation(self):
         """Test active grants balance calculation"""
