@@ -3630,7 +3630,7 @@ const CreateGrantDialog = ({ students, onGrantCreated }) => {
   );
 };
 
-const EditGrantDialog = ({ grant, onGrantUpdated }) => {
+const EditGrantDialog = ({ grant, onGrantUpdated, isPIC = false }) => {
   const [isOpen, setIsOpen] = useState(false);
   const [formData, setFormData] = useState({
     title: grant.title || '',
