@@ -2393,7 +2393,6 @@ const CreateResearchLogDialog = ({ onLogCreated }) => {
                 value={formData.title}
                 onChange={(e) => setFormData({...formData, title: e.target.value})}
                 placeholder="Research activity title"
-                required
               />
             </div>
             
