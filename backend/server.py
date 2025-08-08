@@ -373,6 +373,35 @@ class BulletinCreate(BaseModel):
     category: str
     is_highlight: bool = False
 
+class MilestoneCreate(BaseModel):
+    project_title: str
+    milestone_title: str
+    description: str
+    start_date: datetime
+    target_end_date: datetime
+    progress_percentage: int = Field(ge=0, le=100, default=0)
+    status: str = "in_progress"
+    deliverables: Optional[List[str]] = []
+    challenges: Optional[str] = None
+    next_steps: Optional[str] = None
+
+class Milestone(BaseModel):
+    id: str = Field(default_factory=lambda: str(uuid.uuid4()))
+    student_id: str
+    project_title: str
+    milestone_title: str
+    description: str
+    start_date: datetime
+    target_end_date: datetime
+    actual_end_date: Optional[datetime] = None
+    progress_percentage: int = 0
+    status: str = "in_progress"  # in_progress, completed, delayed, cancelled
+    deliverables: List[str] = []
+    challenges: Optional[str] = None
+    next_steps: Optional[str] = None
+    created_at: datetime = Field(default_factory=datetime.utcnow)
+    updated_at: datetime = Field(default_factory=datetime.utcnow)
+
 class BulletinApproval(BaseModel):
     bulletin_id: str
     approved: bool
