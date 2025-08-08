@@ -2,7 +2,7 @@ import requests
 import json
 
 # Test login endpoint to see exact user data returned
-url = "https://4eb13147-e91e-42cc-a844-96b5f230bc59.preview.emergentagent.com/api/auth/login"
+url = "https://271c89aa-8749-475f-8a8f-92c118c46442.preview.emergentagent.com/api/auth/login"
 
 # Test student login
 student_login = {
