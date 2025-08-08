@@ -836,24 +836,36 @@ const Dashboard = ({ user, logout, setUser }) => {
               <Card>
                 <CardHeader>
                   <CardTitle className="flex items-center gap-2">
-                    <Calendar className="h-5 w-5" />
-                    Upcoming Meetings
+                    <BookOpen className="h-5 w-5" />
+                    Latest Publications
                   </CardTitle>
                 </CardHeader>
                 <CardContent>
-                  {meetings.slice(0, 3).map((meeting) => (
-                    <div key={meeting.id} className="flex items-center justify-between py-2 border-b last:border-b-0">
+                  {publications.slice(0, 1).map((publication) => (
+                    <div key={publication.id} className="py-2">
                       <div>
-                        <p className="font-medium text-sm">{meeting.agenda}</p>
-                        <p className="text-xs text-gray-600">{new Date(meeting.meeting_date).toLocaleDateString()}</p>
+                        <p className="font-medium text-sm line-clamp-2">{publication.title}</p>
+                        <p className="text-xs text-gray-600 mt-1">
+                          {publication.authors} • {publication.journal || publication.conference}
+                        </p>
+                        <p className="text-xs text-gray-500 mt-1">
+                          {publication.publication_year || new Date(publication.created_at).getFullYear()}
+                        </p>
+                        {publication.doi && (
+                          <p className="text-xs text-blue-600 mt-1 truncate">
+                            DOI: {publication.doi}
+                          </p>
+                        )}
                       </div>
-                      <Badge className={getStatusColor(meeting.meeting_type)} size="sm">
-                        {meeting.meeting_type.replace('_', ' ')}
-                      </Badge>
                     </div>
                   ))}
-                  {meetings.length === 0 && (
-                    <p className="text-gray-500 text-sm">No upcoming meetings</p>
+                  {publications.length === 0 && (
+                    <p className="text-gray-500 text-sm">No publications yet</p>
+                  )}
+                  {publications.length > 1 && (
+                    <p className="text-xs text-gray-500 mt-2 pt-2 border-t">
+                      +{publications.length - 1} more publications
+                    </p>
                   )}
                 </CardContent>
               </Card>
