@@ -522,7 +522,7 @@ const Dashboard = ({ user, logout, setUser }) => {
       
       const [
         tasksRes, logsRes, statsRes, bulletinsRes, grantsRes, 
-        pubsRes, labRes, meetingsRes, remindersRes, notesRes
+        pubsRes, labRes, meetingsRes, remindersRes, milestonesRes, notesRes
       ] = await Promise.all([
         axios.get(`${API}/tasks`).catch((error) => {
           console.error('Tasks API error:', error);
@@ -543,6 +543,7 @@ const Dashboard = ({ user, logout, setUser }) => {
           console.error('❌ Error fetching reminders:', error.response?.data || error.message);
           return {data: []};
         }),
+        axios.get(`${API}/milestones`).catch(() => ({data: []})),
         axios.get(`${API}/notes`).catch(() => ({data: []}))
       ]);
 
