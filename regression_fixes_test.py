@@ -207,7 +207,7 @@ class RegressionFixesTester:
                 
                 if response.status_code == 200:
                     profile = response.json()
-                    if profile.get("full_name") == "Prof. Test Enum Fix":
+                    if profile.get("full_name") == "Prof. Test Enum Fix Empty":
                         self.log_result("Profile Update Verification", True, "Profile update persisted correctly")
                     else:
                         self.log_result("Profile Update Verification", False, "Profile update did not persist")
