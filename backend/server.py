@@ -1441,14 +1441,20 @@ async def get_grants(current_user: User = Depends(get_current_user)):
 @api_router.put("/grants/{grant_id}")
 async def update_grant(grant_id: str, grant_update: dict, current_user: User = Depends(get_current_user)):
     """Update grant information"""
-    # Check if user has permission to update grants
-    if current_user.role not in [UserRole.SUPERVISOR, UserRole.LAB_MANAGER, UserRole.ADMIN]:
-        raise HTTPException(status_code=403, detail="Not authorized to update grants")
-    
-    # Find the grant
+    # Find the grant first
     grant = await db.grants.find_one({"id": grant_id})
     if not grant:
         raise HTTPException(status_code=404, detail="Grant not found")
+    
+    # Check if user has permission to update grants
+    # Allow supervisors, lab managers, admins, OR students assigned as PIC (person_in_charge)
+    is_authorized = (
+        current_user.role in [UserRole.SUPERVISOR, UserRole.LAB_MANAGER, UserRole.ADMIN] or
+        (current_user.role == UserRole.STUDENT and grant.get("person_in_charge") == current_user.id)
+    )
+    
+    if not is_authorized:
+        raise HTTPException(status_code=403, detail="Not authorized to update grants")
     
     # Prepare update data
     update_data = {}
