@@ -4676,6 +4676,11 @@ const StudentManagementCard = ({ student, user, onStudentUpdated }) => {
   const [messageData, setMessageData] = useState({ subject: '', content: '' });
   const [promoteData, setPromoteData] = useState({ new_role: 'lab_manager' });
   const [loading, setLoading] = useState(false);
+  
+  // New state for additional user management actions
+  const [isRevoking, setIsRevoking] = useState(false);
+  const [isFreezing, setIsFreezing] = useState(false);
+  const [isDeleting, setIsDeleting] = useState(false);
 
   const handleSendMessage = async (e) => {
     e.preventDefault();
@@ -4736,6 +4741,69 @@ const StudentManagementCard = ({ student, user, onStudentUpdated }) => {
       alert('Error demoting user: ' + (error.response?.data?.detail || error.message || 'Unknown error occurred'));
     } finally {
       setLoading(false);
+    }
+  };
+
+  // New handler functions for user management
+  const handleRevokeAccess = async () => {
+    if (!window.confirm(`Are you sure you want to revoke access for ${student.full_name}? This will prevent them from logging into the system.`)) {
+      return;
+    }
+
+    setIsRevoking(true);
+    try {
+      await axios.post(`${API}/users/${student.id}/freeze`);
+      alert('User access revoked successfully!');
+      onStudentUpdated();
+    } catch (error) {
+      console.error('Error revoking access:', error);
+      alert('Error revoking access: ' + (error.response?.data?.detail || error.message));
+    } finally {
+      setIsRevoking(false);
+    }
+  };
+
+  const handleFreezeAccess = async () => {
+    const isCurrentlyFrozen = student.study_status === 'suspended' || !student.is_active;
+    const action = isCurrentlyFrozen ? 'unfreeze' : 'freeze';
+    const actionText = isCurrentlyFrozen ? 'restore' : 'freeze';
+    
+    if (!window.confirm(`Are you sure you want to ${actionText} access for ${student.full_name}?`)) {
+      return;
+    }
+
+    setIsFreezing(true);
+    try {
+      await axios.post(`${API}/users/${student.id}/${action}`);
+      alert(`User access ${actionText}d successfully!`);
+      onStudentUpdated();
+    } catch (error) {
+      console.error(`Error ${actionText}ing access:`, error);
+      alert(`Error ${actionText}ing access: ` + (error.response?.data?.detail || error.message));
+    } finally {
+      setIsFreezing(false);
+    }
+  };
+
+  const handleDeleteProfile = async () => {
+    if (!window.confirm(`⚠️ PERMANENT DELETE: Are you sure you want to completely delete ${student.full_name}'s profile? This will permanently remove all their data including research logs, reminders, and cannot be undone.`)) {
+      return;
+    }
+
+    if (!window.confirm(`FINAL CONFIRMATION: Type "DELETE" to confirm you want to permanently delete ${student.full_name}'s profile and all associated data.`)) {
+      return;
+    }
+
+    setIsDeleting(true);
+    try {
+      await axios.delete(`${API}/users/${student.id}`);
+      alert('User profile and all associated data deleted successfully!');
+      onStudentUpdated();
+    } catch (error) {
+      console.error('Error deleting profile:', error);
+      alert('Error deleting profile: ' + (error.response?.data?.detail || error.message));
+    } finally {
+      setIsDeleting(false);
     }
   };
 
