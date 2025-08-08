@@ -2630,24 +2630,6 @@ const CreateMeetingDialog = ({ students, onMeetingCreated, user }) => {
     setLoading(true);
     
     try {
-      // Validate required fields
-      if (!formData.agenda) {
-        alert('Please enter a meeting agenda');
-        setLoading(false);
-        return;
-      }
-      
-      if (!formData.meeting_date) {
-        alert('Please select a meeting date');
-        setLoading(false);
-        return;
-      }
-      
-      if (!formData.meeting_time) {
-        alert('Please select a meeting time');
-        setLoading(false);
-        return;
-      }
       
       // Create proper ISO datetime string
       const meetingDateTime = new Date(`${formData.meeting_date}T${formData.meeting_time}:00`);
