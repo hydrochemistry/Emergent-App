@@ -721,6 +721,7 @@ const Dashboard = ({ user, logout, setUser }) => {
                   </CardTitle>
                 </CardHeader>
                 <CardContent>
+                  {console.log('Dashboard meetings state:', meetings) || null}
                   {meetings.slice(0, 3).map((meeting) => (
                     <div key={meeting.id} className="flex items-center justify-between py-2 border-b last:border-b-0">
                       <div>
