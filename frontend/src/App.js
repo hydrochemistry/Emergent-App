@@ -83,12 +83,10 @@ const AuthContext = ({ children }) => {
     const token = localStorage.getItem('token');
     const userData = localStorage.getItem('userData');
     console.log('🔍 Auth initialization - Token exists:', !!token);
-    console.log('🔍 Auth initialization - UserData:', userData ? JSON.parse(userData) : null);
     
     if (token && userData) {
       setUser(JSON.parse(userData));
-      axios.defaults.headers.common['Authorization'] = `Bearer ${token}`;
-      console.log('✅ Authorization header set:', axios.defaults.headers.common['Authorization']);
+      console.log('✅ User restored from localStorage');
     } else {
       console.log('❌ No token or userData found in localStorage');
     }
