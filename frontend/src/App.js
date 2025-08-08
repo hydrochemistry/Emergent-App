@@ -2264,7 +2264,7 @@ const ResearchLogCard = ({ log, user, onLogUpdated }) => {
                   Return for Revision
                 </Button>
                 <Button
-                  onClick={() => handleReviewAction('rejected', 'This research log does not meet the required standards.')}
+                  onClick={() => setReviewState('rejection')}
                   disabled={reviewLoading}
                   variant="destructive"
                   size="sm"
@@ -2273,7 +2273,7 @@ const ResearchLogCard = ({ log, user, onLogUpdated }) => {
                   Not Accept
                 </Button>
               </div>
-            ) : (
+            ) : reviewState === 'revision' ? (
               <div className="space-y-3">
                 <Textarea
                   placeholder="Provide feedback for revision..."
@@ -2284,10 +2284,37 @@ const ResearchLogCard = ({ log, user, onLogUpdated }) => {
                 <div className="flex gap-2">
                   <Button
                     onClick={() => handleReviewAction('revision', reviewFeedback)}
-                    disabled={reviewLoading}
+                    disabled={reviewLoading || !reviewFeedback.trim()}
                     size="sm"
                   >
                     {reviewLoading ? 'Submitting...' : 'Submit Revision Request'}
+                  </Button>
+                  <Button
+                    onClick={() => setReviewState('none')}
+                    disabled={reviewLoading}
+                    variant="outline"
+                    size="sm"
+                  >
+                    Cancel
+                  </Button>
+                </div>
+              </div>
+            ) : (
+              <div className="space-y-3">
+                <Textarea
+                  placeholder="Provide reason for not accepting this research log..."
+                  rows={3}
+                  value={reviewFeedback}
+                  onChange={(e) => setReviewFeedback(e.target.value)}
+                />
+                <div className="flex gap-2">
+                  <Button
+                    onClick={() => handleReviewAction('rejected', reviewFeedback)}
+                    disabled={reviewLoading || !reviewFeedback.trim()}
+                    variant="destructive"
+                    size="sm"
+                  >
+                    {reviewLoading ? 'Submitting...' : 'Submit Rejection'}
                   </Button>
                   <Button
                     onClick={() => setReviewState('none')}
