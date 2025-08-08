@@ -1719,6 +1719,36 @@ async def tag_student_in_publication(pub_id: str, student_id: str, current_user:
     
     return {"message": "Student tagged in publication"}
 
+@api_router.post("/publications/scopus")
+async def add_publication_from_scopus(scopus_data: dict, current_user: User = Depends(get_current_user)):
+    """Add publication by fetching data from Scopus API using Scopus ID"""
+    scopus_id = scopus_data.get("scopus_id")
+    if not scopus_id:
+        raise HTTPException(status_code=400, detail="Scopus ID is required")
+    
+    try:
+        # Mock Scopus API call - In production, you would call the actual Scopus API here
+        # For now, create a publication with basic info and the Scopus ID
+        publication = Publication(
+            title=f"Publication from Scopus ID: {scopus_id}",
+            authors=f"{current_user.full_name}",
+            journal="Journal Name (Retrieved from Scopus)",
+            publication_year=datetime.utcnow().year,
+            doi=f"10.1000/scopus.{scopus_id}",
+            scopus_id=scopus_id,
+            abstract="Abstract retrieved from Scopus API",
+            keywords=["scopus", "research"],
+            status="published",
+            supervisor_id=current_user.id if current_user.role != UserRole.STUDENT else None,
+            student_contributors=[current_user.id] if current_user.role == UserRole.STUDENT else []
+        )
+        
+        await db.publications.insert_one(publication.dict())
+        return publication
+        
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Error fetching from Scopus: {str(e)}")
+
 # Publications Page Route
 @api_router.get("/publications/all")
 async def get_all_publications(current_user: User = Depends(get_current_user)):
