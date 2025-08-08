@@ -738,10 +738,10 @@ const Dashboard = ({ user, logout, setUser }) => {
               <AlertTriangle className="h-4 w-4 sm:mr-2" />
               <span className="hidden sm:inline">Reminders</span>
             </TabsTrigger>}
-            <TabsTrigger value="bulletins" className="inline-flex items-center justify-center whitespace-nowrap rounded-lg px-3 py-2 text-sm ring-offset-white transition-all focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-slate-950 focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50 data-[state=active]:bg-blue-600 data-[state=active]:text-white data-[state=active]:shadow-sm min-w-fit">
+{menuSettings.news && <TabsTrigger value="bulletins" className="inline-flex items-center justify-center whitespace-nowrap rounded-lg px-3 py-2 text-sm ring-offset-white transition-all focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-slate-950 focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50 data-[state=active]:bg-blue-600 data-[state=active]:text-white data-[state=active]:shadow-sm min-w-fit">
               <Bell className="h-4 w-4 sm:mr-2" />
               <span className="hidden sm:inline">News</span>
-            </TabsTrigger>
+            </TabsTrigger>}
             <TabsTrigger value="grants" className="inline-flex items-center justify-center whitespace-nowrap rounded-lg px-3 py-2 text-sm ring-offset-white transition-all focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-slate-950 focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50 data-[state=active]:bg-blue-600 data-[state=active]:text-white data-[state=active]:shadow-sm min-w-fit">
               <DollarSign className="h-4 w-4 sm:mr-2" />
               <span className="hidden sm:inline">Grants</span>
