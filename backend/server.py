@@ -1865,6 +1865,12 @@ async def get_all_publications(current_user: User = Depends(get_current_user)):
         if "year" in pub and "publication_year" not in pub:
             pub["publication_year"] = pub.pop("year")
         
+        # Handle authors field migration from string to List[str]
+        if "authors" in pub and isinstance(pub["authors"], str):
+            pub["authors"] = [pub["authors"]]  # Convert string to list
+        elif "authors" not in pub:
+            pub["authors"] = []  # Default empty list if missing
+        
         if pub.get("student_contributors"):
             student_names = []
             for student_id in pub["student_contributors"]:
