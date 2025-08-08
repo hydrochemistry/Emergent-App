@@ -1692,6 +1692,9 @@ async def get_grants(current_user: User = Depends(get_current_user)):
         # Ensure balance field exists
         if "balance" not in grant:
             grant["balance"] = grant["remaining_balance"]
+        
+        # Remove MongoDB ObjectId to prevent serialization issues
+        grant.pop("_id", None)
     
     print(f"Found {len(grants)} grants for user {current_user.id} (supervisor: {supervisor_id})")
     return [Grant(**grant) for grant in grants]
