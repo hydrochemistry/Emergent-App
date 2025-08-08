@@ -1765,11 +1765,19 @@ async def get_publications(current_user: User = Depends(get_current_user)):
     # Publications are synchronized across all users - everyone can see all publications
     publications = await db.publications.find({}).to_list(1000)
     
-    # Handle field migration from 'year' to 'publication_year'
+    # Handle field migration and data format fixes
     for pub in publications:
         pub.pop("_id", None)  # Remove MongoDB ObjectId
+        
+        # Handle field migration from 'year' to 'publication_year'
         if "year" in pub and "publication_year" not in pub:
             pub["publication_year"] = pub.pop("year")
+        
+        # Handle authors field migration from string to List[str]
+        if "authors" in pub and isinstance(pub["authors"], str):
+            pub["authors"] = [pub["authors"]]  # Convert string to list
+        elif "authors" not in pub:
+            pub["authors"] = []  # Default empty list if missing
     
     return [Publication(**pub) for pub in publications]
 
