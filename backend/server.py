@@ -1189,11 +1189,26 @@ async def update_task(task_id: str, update_data: TaskUpdate, current_user: User 
 # Enhanced Research Log Routes with File Upload and Endorsement
 @api_router.post("/research-logs", response_model=ResearchLog)
 async def create_research_log(log_data: ResearchLogCreate, current_user: User = Depends(get_current_user)):
+    # Handle date/time from frontend
+    research_date = datetime.utcnow()  # Default to current time
+    if log_data.log_date:
+        try:
+            if log_data.log_time:
+                # Combine date and time
+                research_date = datetime.fromisoformat(f"{log_data.log_date}T{log_data.log_time}")
+            else:
+                # Just date, set time to current
+                research_date = datetime.fromisoformat(f"{log_data.log_date}T{datetime.utcnow().strftime('%H:%M:%S')}")
+        except ValueError:
+            # If parsing fails, use current time
+            research_date = datetime.utcnow()
+    
     research_log = ResearchLog(
         user_id=current_user.id,
         activity_type=log_data.activity_type,
         title=log_data.title,
         description=log_data.description,
+        date=research_date,  # Use parsed date
         duration_hours=log_data.duration_hours,
         findings=log_data.findings,
         challenges=log_data.challenges,
