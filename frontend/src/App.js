@@ -2941,7 +2941,6 @@ const CreateReminderDialog = ({ students, onReminderCreated, user }) => {
               value={formData.title}
               onChange={(e) => setFormData({...formData, title: e.target.value})}
               placeholder="Enter reminder title"
-              required
             />
           </div>
           
