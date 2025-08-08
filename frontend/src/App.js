@@ -4160,6 +4160,22 @@ const GrantCard = ({ grant, user, onGrantUpdated }) => {
           </div>
         )}
 
+        {/* PIC Edit Section for Students */}
+        {user.role === 'student' && grant.person_in_charge === user.id && (
+          <div className="mt-4 pt-4 border-t">
+            <div className="bg-blue-50 p-3 rounded-lg">
+              <div className="flex items-center justify-between mb-3">
+                <div>
+                  <p className="text-sm font-medium text-blue-900">Grant Management (PIC)</p>
+                  <p className="text-xs text-blue-700">You are the Person in Charge for this grant</p>
+                </div>
+                <Badge className="bg-blue-100 text-blue-800">PIC Access</Badge>
+              </div>
+              <EditGrantDialog grant={grant} onGrantUpdated={onGrantUpdated} isPIC={true} />
+            </div>
+          </div>
+        )}
+
         {/* Registration Section for Students */}
         {user.role === 'student' && grant.status === 'active' && (
           <div className="mt-4 pt-4 border-t">
