@@ -1001,6 +1001,65 @@ const Dashboard = ({ user, logout, setUser }) => {
               )}
             </div>
 
+            {/* Student Submission Status Tracking */}
+            {user.role === 'student' && (
+              <Card className="mb-6">
+                <CardHeader>
+                  <CardTitle className="flex items-center gap-2">
+                    <ClipboardCheck className="h-5 w-5" />
+                    My Research Log Submissions Status
+                  </CardTitle>
+                </CardHeader>
+                <CardContent>
+                  <div className="space-y-3">
+                    {researchLogs
+                      .filter(log => log.student_id === user.id)
+                      .map((log) => (
+                        <div key={log.id} className="flex items-center justify-between p-3 border rounded-lg hover:bg-gray-50">
+                          <div className="flex-1">
+                            <h4 className="font-medium text-sm">{log.title}</h4>
+                            <p className="text-xs text-gray-600">
+                              Submitted: {new Date(log.date || log.created_at).toLocaleDateString()} • 
+                              Type: {log.activity_type.replace('_', ' ')}
+                            </p>
+                          </div>
+                          <div className="flex items-center gap-3">
+                            {log.review_status ? (
+                              <>
+                                <Badge className={`${
+                                  log.review_status === 'accepted' ? 'bg-green-100 text-green-800' :
+                                  log.review_status === 'revision' ? 'bg-yellow-100 text-yellow-800' :
+                                  'bg-red-100 text-red-800'
+                                }`}>
+                                  {log.review_status === 'accepted' ? '✓ Approved' :
+                                   log.review_status === 'revision' ? '↻ Needs Revision' :
+                                   '✗ Not Accepted'}
+                                </Badge>
+                                {log.review_feedback && (
+                                  <div className="text-xs text-gray-500 max-w-xs truncate">
+                                    "{log.review_feedback}"
+                                  </div>
+                                )}
+                              </>
+                            ) : (
+                              <Badge className="bg-gray-100 text-gray-600">
+                                ⏳ Pending Review
+                              </Badge>
+                            )}
+                          </div>
+                        </div>
+                      ))}
+                    {researchLogs.filter(log => log.student_id === user.id).length === 0 && (
+                      <div className="text-center py-8">
+                        <ClipboardCheck className="h-8 w-8 text-gray-300 mx-auto mb-2" />
+                        <p className="text-gray-500 text-sm">No research logs submitted yet</p>
+                      </div>
+                    )}
+                  </div>
+                </CardContent>
+              </Card>
+            )}
+
             <div className="grid gap-6">
               {researchLogs
                 .filter(log => {
