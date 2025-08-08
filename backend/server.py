@@ -1556,7 +1556,7 @@ async def update_grant(grant_id: str, grant_update: dict, current_user: User = D
 
 @api_router.delete("/grants/{grant_id}")
 async def delete_grant(grant_id: str, current_user: User = Depends(get_current_user)):
-    """Delete a grant - only supervisors, lab managers, and admins can delete"""
+    """Delete a grant - supervisors have ultimate power to delete any grant"""
     if current_user.role not in [UserRole.SUPERVISOR, UserRole.LAB_MANAGER, UserRole.ADMIN]:
         raise HTTPException(status_code=403, detail="Only supervisors and administrators can delete grants")
     
@@ -1564,9 +1564,8 @@ async def delete_grant(grant_id: str, current_user: User = Depends(get_current_u
     if not grant:
         raise HTTPException(status_code=404, detail="Grant not found")
     
-    # Check if user is authorized to delete this grant
-    if grant.get("principal_investigator") != current_user.id and current_user.role not in [UserRole.LAB_MANAGER, UserRole.ADMIN]:
-        raise HTTPException(status_code=403, detail="You can only delete grants you created")
+    # Supervisors have ultimate power - they can delete ANY grant
+    # No additional authorization checks needed for supervisors
     
     await db.grants.delete_one({"id": grant_id})
     return {"message": "Grant deleted successfully"}
