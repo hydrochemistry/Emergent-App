@@ -97,6 +97,10 @@ class CriticalFixesTester:
                 self.student_token = data["access_token"]
                 self.student_id = data["user_data"]["id"]
                 self.log_result("Student Setup", True, "Test student user created and authenticated")
+                
+                # Approve the student user if needed
+                await self.approve_student_if_needed()
+                
             elif response.status_code == 400 and "already registered" in response.text:
                 # Try to login instead
                 login_data = {
@@ -109,6 +113,9 @@ class CriticalFixesTester:
                     self.student_token = data["access_token"]
                     self.student_id = data["user_data"]["id"]
                     self.log_result("Student Setup", True, "Logged in with existing test student user")
+                    
+                    # Approve the student user if needed
+                    await self.approve_student_if_needed()
                 else:
                     self.log_result("Student Setup", False, f"Failed to login student: {response.status_code}")
                     return False
@@ -121,6 +128,32 @@ class CriticalFixesTester:
         except Exception as e:
             self.log_result("User Setup", False, f"Exception during user setup: {str(e)}")
             return False
+    
+    async def approve_student_if_needed(self):
+        """Approve student user if they are not approved yet"""
+        try:
+            # Test if student can access system
+            response = await self.client.get(
+                f"{API_BASE}/research-logs",
+                headers=self.get_student_headers()
+            )
+            
+            if response.status_code == 403 and "pending approval" in response.text:
+                # Student needs approval, approve them
+                response = await self.client.post(
+                    f"{API_BASE}/users/{self.student_id}/approve",
+                    headers=self.get_supervisor_headers()
+                )
+                
+                if response.status_code == 200:
+                    self.log_result("Student Auto-Approval", True, "Student user approved for testing")
+                else:
+                    self.log_result("Student Auto-Approval", False, f"Failed to approve student: {response.status_code}")
+            elif response.status_code == 200:
+                self.log_result("Student Already Approved", True, "Student user already approved")
+                
+        except Exception as e:
+            self.log_result("Student Approval Check", False, f"Exception: {str(e)}")
     
     def get_supervisor_headers(self):
         """Get supervisor authorization headers"""
