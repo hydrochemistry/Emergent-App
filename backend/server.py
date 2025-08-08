@@ -1767,6 +1767,12 @@ async def get_publications(current_user: User = Depends(get_current_user)):
     else:
         publications = await db.publications.find({"supervisor_id": current_user.id}).to_list(1000)
     
+    # Handle field migration from 'year' to 'publication_year'
+    for pub in publications:
+        pub.pop("_id", None)  # Remove MongoDB ObjectId
+        if "year" in pub and "publication_year" not in pub:
+            pub["publication_year"] = pub.pop("year")
+    
     return [Publication(**pub) for pub in publications]
 
 @api_router.post("/publications/{pub_id}/tag-student")
