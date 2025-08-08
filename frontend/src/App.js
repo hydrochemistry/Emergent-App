@@ -1920,8 +1920,12 @@ const CreateTaskDialog = ({ students, onTaskCreated }) => {
     
     try {
       await axios.post(`${API}/tasks`, {
-        ...formData,
-        due_date: formData.due_date ? new Date(formData.due_date).toISOString() : null
+        title: formData.title,
+        description: formData.description,
+        assigned_to: formData.assigned_to || user.id, // Use selected student or current user
+        priority: formData.priority,
+        due_date: formData.due_date ? new Date(formData.due_date).toISOString() : new Date(Date.now() + 7*24*60*60*1000).toISOString(), // Default to 7 days from now if not set
+        tags: formData.tags ? formData.tags.split(',').map(tag => tag.trim()) : []
       });
       
       alert('Task created successfully!');
