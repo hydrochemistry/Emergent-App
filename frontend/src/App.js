@@ -3928,6 +3928,8 @@ const EditGrantDialog = ({ grant, onGrantUpdated, isPIC = false }) => {
               {loading ? 'Updating...' : 'Update Grant'}
             </Button>
           </div>
+          </>
+          )}
         </form>
       </DialogContent>
     </Dialog>
