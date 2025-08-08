@@ -2170,15 +2170,34 @@ const CreateResearchLogDialog = ({ onLogCreated }) => {
     setLoading(true);
     
     try {
-      // First create the research log
-      const logResponse = await axios.post(`${API}/research-logs`, {
-        ...formData,
+      console.log('🔍 Creating research log with data:', formData);
+      console.log('🔑 Current auth token:', axios.defaults.headers.common['Authorization']);
+      console.log('🌐 API endpoint:', `${API}/research-logs`);
+      
+      // Prepare the data for submission
+      const submitData = {
+        title: formData.title,
+        activity_type: formData.activity_type,
+        description: formData.description,
+        findings: formData.findings,
+        challenges: formData.challenges,
+        next_steps: formData.next_steps,
         duration_hours: formData.duration_hours ? parseFloat(formData.duration_hours) : null,
-        tags: formData.tags ? formData.tags.split(',').map(tag => tag.trim()) : []
-      });
+        tags: formData.tags ? formData.tags.split(',').map(tag => tag.trim()) : [],
+        log_date: formData.log_date,
+        log_time: formData.log_time
+      };
+      
+      console.log('📤 Submitting data:', submitData);
+      
+      // First create the research log
+      const logResponse = await axios.post(`${API}/research-logs`, submitData);
+      
+      console.log('✅ Research log created successfully:', logResponse.data);
 
       // Then upload attachments if any
       if (attachments.length > 0) {
+        console.log('📎 Uploading attachments...');
         const uploadPromises = attachments.map(async (file) => {
           const fileFormData = new FormData();
           fileFormData.append('file', file);
@@ -2190,6 +2209,7 @@ const CreateResearchLogDialog = ({ onLogCreated }) => {
         });
 
         await Promise.all(uploadPromises);
+        console.log('✅ All attachments uploaded successfully');
       }
       
       alert('Research log created successfully!');
@@ -2203,14 +2223,38 @@ const CreateResearchLogDialog = ({ onLogCreated }) => {
         duration_hours: '',
         tags: '',
         log_date: new Date().toISOString().split('T')[0],
-        log_time: new Date().toTimeString().split(' ')[0].substring(0, 5)
+        log_time: '09:00'
       });
       setAttachments([]);
       setIsOpen(false);
       onLogCreated();
     } catch (error) {
-      console.error('Error creating research log:', error);
-      alert('Error creating research log: ' + (error.response?.data?.detail || error.message || 'Unknown error occurred'));
+      console.error('❌ Error creating research log:', error);
+      console.error('❌ Error response:', error.response?.data);
+      console.error('❌ Error message:', error.message);
+      console.error('❌ Error code:', error.code);
+      
+      let errorMessage = 'Error creating research log: ';
+      
+      if (error.code === 'ERR_NETWORK') {
+        errorMessage += 'Network connection failed. Please check your internet connection and try again.';
+      } else if (error.response?.status === 401) {
+        errorMessage += 'Authentication failed. Please log out and log back in.';
+      } else if (error.response?.status === 403) {
+        errorMessage += 'Permission denied. You may not have access to create research logs.';
+      } else if (error.response?.data?.detail) {
+        if (typeof error.response.data.detail === 'string') {
+          errorMessage += error.response.data.detail;
+        } else {
+          errorMessage += JSON.stringify(error.response.data.detail);
+        }
+      } else if (error.message) {
+        errorMessage += error.message;
+      } else {
+        errorMessage += 'Unknown error occurred. Please try again.';
+      }
+      
+      alert(errorMessage);
     } finally {
       setLoading(false);
     }
