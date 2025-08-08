@@ -863,6 +863,82 @@ const Dashboard = ({ user, logout, setUser }) => {
               </div>
             )}
 
+            {/* Student Research Log Status Tracking */}
+            {user.role === 'student' && (
+              <div className="mb-6">
+                <Card className="border-l-4 border-l-green-500">
+                  <CardHeader>
+                    <CardTitle className="flex items-center gap-2">
+                      <ClipboardCheck className="h-5 w-5" />
+                      My Research Log Submissions Status
+                    </CardTitle>
+                  </CardHeader>
+                  <CardContent>
+                    <div className="space-y-3">
+                      {studentLogStatus.length > 0 ? (
+                        studentLogStatus.slice(0, 5).map((log) => (
+                          <div key={log.id} className={`p-3 rounded-lg border ${
+                            log.status === 'approved' ? 'bg-green-50 border-green-200' :
+                            log.status === 'needs revision' ? 'bg-yellow-50 border-yellow-200' :
+                            log.status === 'not accepted' ? 'bg-red-50 border-red-200' :
+                            'bg-gray-50 border-gray-200'
+                          }`}>
+                            <div className="flex items-start justify-between">
+                              <div className="flex-1">
+                                <div className="flex items-center gap-2 mb-2">
+                                  {log.status === 'approved' && <CheckCircle className="h-4 w-4 text-green-600" />}
+                                  {log.status === 'needs revision' && <Clock className="h-4 w-4 text-yellow-600" />}
+                                  {log.status === 'not accepted' && <X className="h-4 w-4 text-red-600" />}
+                                  {log.status === 'pending' && <Clock className="h-4 w-4 text-gray-600" />}
+                                  <p className="font-medium text-sm">{log.title}</p>
+                                </div>
+                                <div className="text-xs text-gray-600 mb-1">
+                                  <span className="inline-block mr-3">Activity: {log.activity_type}</span>
+                                  <span className="inline-block mr-3">
+                                    Submitted: {new Date(log.submission_date).toLocaleDateString()}
+                                  </span>
+                                </div>
+                                {log.review_feedback && (
+                                  <p className="text-xs text-gray-700 bg-white/50 p-2 rounded mb-1">
+                                    <strong>Feedback:</strong> {log.review_feedback}
+                                  </p>
+                                )}
+                                {log.reviewed_at && (
+                                  <p className="text-xs text-gray-500">
+                                    Reviewed by {log.reviewer_name} on {new Date(log.reviewed_at).toLocaleDateString()}
+                                  </p>
+                                )}
+                              </div>
+                              <Badge className={
+                                log.status === 'approved' ? 'bg-green-100 text-green-800' :
+                                log.status === 'needs revision' ? 'bg-yellow-100 text-yellow-800' :
+                                log.status === 'not accepted' ? 'bg-red-100 text-red-800' :
+                                'bg-gray-100 text-gray-800'
+                              }>
+                                {log.status.charAt(0).toUpperCase() + log.status.slice(1)}
+                              </Badge>
+                            </div>
+                          </div>
+                        ))
+                      ) : (
+                        <div className="text-center py-4">
+                          <ClipboardCheck className="h-8 w-8 text-gray-300 mx-auto mb-2" />
+                          <p className="text-gray-500 text-sm">No research logs submitted yet</p>
+                        </div>
+                      )}
+                      {studentLogStatus.length > 5 && (
+                        <div className="text-center pt-2 border-t">
+                          <p className="text-xs text-gray-500">
+                            Showing 5 of {studentLogStatus.length} research logs
+                          </p>
+                        </div>
+                      )}
+                    </div>
+                  </CardContent>
+                </Card>
+              </div>
+            )}
+
             {/* Quick Actions */}
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-6 mb-6 sm:mb-8">
               <Card>
