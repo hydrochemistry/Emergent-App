@@ -408,13 +408,17 @@ class CriticalFixesTester:
         print("\n🔍 TESTING: User Registration Approval System")
         
         try:
+            # Generate unique email for this test run
+            import time
+            timestamp = str(int(time.time()))
+            
             # Test 1: Create unapproved user
             unapproved_user_data = {
-                "email": "unapproved.student@research.lab",
+                "email": f"unapproved.student.{timestamp}@research.lab",
                 "password": "TestPassword123!",
                 "full_name": "Unapproved Test Student",
                 "role": "student",
-                "student_id": "CS2024003",
+                "student_id": f"CS2024{timestamp[-3:]}",
                 "department": "Computer Science",
                 "program_type": "msc_research",
                 "supervisor_email": "supervisor.test@research.lab"
@@ -489,11 +493,11 @@ class CriticalFixesTester:
                 
                 # Test 6: Create another unapproved user for rejection test
                 reject_user_data = {
-                    "email": "reject.student@research.lab",
+                    "email": f"reject.student.{timestamp}@research.lab",
                     "password": "TestPassword123!",
                     "full_name": "Reject Test Student",
                     "role": "student",
-                    "student_id": "CS2024004",
+                    "student_id": f"CS2024{timestamp[-2:]}R",
                     "department": "Computer Science",
                     "program_type": "msc_research",
                     "supervisor_email": "supervisor.test@research.lab"
@@ -521,7 +525,7 @@ class CriticalFixesTester:
                     self.log_result("Reject User Creation", False, "Failed to create user for rejection test")
                     
             else:
-                self.log_result("Unapproved User Creation", False, f"Failed to create unapproved user: {response.status_code}")
+                self.log_result("Unapproved User Creation", False, f"Failed to create unapproved user: {response.status_code} - {response.text}")
                 
         except Exception as e:
             self.log_result("User Approval System Test", False, f"Exception: {str(e)}")
