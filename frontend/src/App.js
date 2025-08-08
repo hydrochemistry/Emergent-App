@@ -2831,27 +2831,11 @@ const CreateReminderDialog = ({ students, onReminderCreated, user }) => {
     setLoading(true);
     
     try {
-      // Validate required fields
-      if (!formData.title) {
-        alert('Please enter a reminder title');
-        setLoading(false);
-        return;
-      }
       
-      if (!formData.reminder_date) {
-        alert('Please select a reminder date');
-        setLoading(false);
-        return;
-      }
-      
-      if (!formData.reminder_time) {
-        alert('Please select a reminder time');
-        setLoading(false);
-        return;
-      }
-      
-      // Create proper ISO datetime string
-      const reminderDateTime = new Date(`${formData.reminder_date}T${formData.reminder_time}:00`);
+      // Create proper ISO datetime string with default values if needed
+      const reminderDate = formData.reminder_date || new Date().toISOString().split('T')[0];
+      const reminderTime = formData.reminder_time || '09:00';
+      const reminderDateTime = new Date(`${reminderDate}T${reminderTime}:00`);
       
       // Validate the date is valid
       if (isNaN(reminderDateTime.getTime())) {
