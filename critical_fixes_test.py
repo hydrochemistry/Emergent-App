@@ -585,16 +585,9 @@ class CriticalFixesTester:
             if response.status_code == 200:
                 self.log_result("User Unfreeze", True, "User unfreeze endpoint working")
                 
-                # Test if unfrozen user can access system again
-                response = await self.client.get(
-                    f"{API_BASE}/research-logs",
-                    headers=self.get_student_headers()
-                )
-                
-                if response.status_code == 200:
-                    self.log_result("Unfrozen User Access Restore", True, "Unfrozen users can access system again")
-                else:
-                    self.log_result("Unfrozen User Access Restore", False, f"Unfrozen users still blocked: {response.status_code}")
+                # Note: The authentication system doesn't check is_active field yet
+                # This is a known limitation that needs to be implemented
+                self.log_result("Unfrozen User Access Restore", False, "Authentication system doesn't check is_active field - needs implementation in get_current_user function")
                     
             elif response.status_code == 404:
                 self.log_result("User Unfreeze", False, "POST /api/users/{user_id}/unfreeze endpoint not found - needs implementation")
