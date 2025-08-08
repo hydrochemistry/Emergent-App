@@ -518,10 +518,7 @@ const Dashboard = ({ user, logout, setUser }) => {
 
   const fetchDashboardData = async () => {
     try {
-      const [
-        tasksRes, logsRes, statsRes, bulletinsRes, grantsRes, 
-        pubsRes, labRes, meetingsRes, remindersRes, milestonesRes, notesRes
-      ] = await Promise.all([
+      const apiCalls = [
         axios.get(`${API}/tasks`).catch(() => ({data: []})),
         axios.get(`${API}/research-logs`).catch(() => ({data: []})),
         axios.get(`${API}/dashboard/stats`).catch(() => ({data: {}})),
@@ -532,8 +529,19 @@ const Dashboard = ({ user, logout, setUser }) => {
         axios.get(`${API}/meetings`).catch(() => ({data: []})),
         axios.get(`${API}/reminders`).catch(() => ({data: []})),
         axios.get(`${API}/milestones`).catch(() => ({data: []})),
-        axios.get(`${API}/notes`).catch(() => ({data: []}))
-      ]);
+        axios.get(`${API}/notes`).catch(() => ({data: []})),
+        axios.get(`${API}/grants/active`).catch(() => ({data: {active_grants: [], cumulative_balance: 0}}))
+      ];
+
+      // Add student-specific API call for research log status tracking
+      if (user.role === 'student') {
+        apiCalls.push(axios.get(`${API}/research-logs/student/status`).catch(() => ({data: {logs: []}})));
+      }
+
+      const [
+        tasksRes, logsRes, statsRes, bulletinsRes, grantsRes, 
+        pubsRes, labRes, meetingsRes, remindersRes, milestonesRes, notesRes, activeGrantsRes, studentLogStatusRes
+      ] = await Promise.all(apiCalls);
 
       setTasks(tasksRes.data || []);
       setResearchLogs(logsRes.data || []);
@@ -543,6 +551,12 @@ const Dashboard = ({ user, logout, setUser }) => {
       setPublications(pubsRes.data || []);
       setLabSettings(labRes.data || {});
       setMilestones(milestonesRes.data || []);
+      setActiveGrants(activeGrantsRes.data?.active_grants || []);
+      
+      // Set student log status if user is a student
+      if (user.role === 'student' && studentLogStatusRes) {
+        setStudentLogStatus(studentLogStatusRes.data?.logs || []);
+      }
       
       // Auto-cleanup completed/past items
       const now = new Date();
