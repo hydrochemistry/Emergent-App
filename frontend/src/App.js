@@ -748,6 +748,89 @@ const Dashboard = ({ user, logout, setUser }) => {
               )}
             </div>
 
+            {/* Student Notifications */}
+            {user.role === 'student' && (
+              <div className="mb-6">
+                <Card className="border-l-4 border-l-blue-500">
+                  <CardHeader>
+                    <CardTitle className="flex items-center gap-2">
+                      <Bell className="h-5 w-5" />
+                      Notifications
+                    </CardTitle>
+                  </CardHeader>
+                  <CardContent>
+                    <div className="space-y-3">
+                      {/* Research Log Review Notifications */}
+                      {researchLogs
+                        .filter(log => log.student_id === user.id && log.review_status)
+                        .slice(0, 3)
+                        .map((log) => (
+                          <div key={log.id} className={`p-3 rounded-lg ${
+                            log.review_status === 'accepted' ? 'bg-green-50 border-green-200' :
+                            log.review_status === 'revision' ? 'bg-yellow-50 border-yellow-200' :
+                            'bg-red-50 border-red-200'
+                          } border`}>
+                            <div className="flex items-start gap-2">
+                              {log.review_status === 'accepted' && <CheckCircle className="h-4 w-4 text-green-600 mt-0.5" />}
+                              {log.review_status === 'revision' && <Clock className="h-4 w-4 text-yellow-600 mt-0.5" />}
+                              {log.review_status === 'rejected' && <X className="h-4 w-4 text-red-600 mt-0.5" />}
+                              <div className="flex-1">
+                                <p className="font-medium text-sm">
+                                  Research Log Review: "{log.title}"
+                                </p>
+                                <p className="text-xs text-gray-600 mb-1">
+                                  {log.review_status === 'accepted' ? 'Your research log has been accepted!' :
+                                   log.review_status === 'revision' ? 'Your research log needs revision' :
+                                   'Your research log was not accepted'}
+                                </p>
+                                {log.review_feedback && (
+                                  <p className="text-xs text-gray-700 bg-white/50 p-2 rounded">
+                                    <strong>Feedback:</strong> {log.review_feedback}
+                                  </p>
+                                )}
+                                <p className="text-xs text-gray-500 mt-1">
+                                  Reviewed on {new Date(log.reviewed_at).toLocaleDateString()}
+                                </p>
+                              </div>
+                            </div>
+                          </div>
+                        ))}
+                      
+                      {/* Upcoming Reminders */}
+                      {reminders
+                        .filter(r => !r.is_completed && r.user_id === user.id)
+                        .slice(0, 2)
+                        .map((reminder) => (
+                          <div key={reminder.id} className="p-3 rounded-lg bg-blue-50 border border-blue-200">
+                            <div className="flex items-start gap-2">
+                              <AlertTriangle className="h-4 w-4 text-blue-600 mt-0.5" />
+                              <div className="flex-1">
+                                <p className="font-medium text-sm">{reminder.title}</p>
+                                <p className="text-xs text-gray-600">
+                                  Due: {new Date(reminder.reminder_date).toLocaleDateString()}
+                                </p>
+                                {reminder.description && (
+                                  <p className="text-xs text-gray-700 mt-1">{reminder.description}</p>
+                                )}
+                              </div>
+                            </div>
+                          </div>
+                        ))}
+                      
+                      {/* No notifications message */}
+                      {researchLogs.filter(log => log.student_id === user.id && log.review_status).length === 0 &&
+                       reminders.filter(r => !r.is_completed && r.user_id === user.id).length === 0 && (
+                        <div className="text-center py-4">
+                          <Bell className="h-8 w-8 text-gray-300 mx-auto mb-2" />
+                          <p className="text-gray-500 text-sm">No new notifications</p>
+                        </div>
+                      )}
+                    </div>
+                  </CardContent>
+                </Card>
+              </div>
+            )}
+
             {/* Quick Actions */}
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-6 mb-6 sm:mb-8">
               <Card>
