@@ -2822,7 +2822,7 @@ const CreateMeetingDialog = ({ students, onMeetingCreated, user }) => {
             <Button type="button" variant="outline" onClick={() => setIsOpen(false)}>
               Cancel
             </Button>
-            <Button type="submit" disabled={loading || !formData.agenda}>
+            <Button type="submit" disabled={loading}>
               {loading ? 'Scheduling...' : 'Schedule Meeting'}
             </Button>
           </div>
