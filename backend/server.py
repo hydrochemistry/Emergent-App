@@ -689,6 +689,34 @@ async def update_profile(user_update: UserUpdate, current_user: User = Depends(g
         await db.users.update_one({"id": current_user.id}, {"$set": update_data})
     return {"message": "Profile updated successfully"}
 
+@api_router.post("/users/profile/photo")
+async def upload_profile_photo(photo: UploadFile = File(...), current_user: User = Depends(get_current_user)):
+    # Validate file type
+    if not photo.content_type.startswith('image/'):
+        raise HTTPException(status_code=400, detail="File must be an image")
+    
+    # Validate file size (2MB limit)
+    content = await photo.read()
+    if len(content) > 2 * 1024 * 1024:
+        raise HTTPException(status_code=400, detail="Image size must be less than 2MB")
+    
+    # Reset file pointer
+    await photo.seek(0)
+    
+    # Save the file
+    file_path = await save_uploaded_file(photo, "profile_photos")
+    
+    # Construct the full URL for the uploaded image
+    profile_picture_url = f"{BACKEND_URL}/uploads/{file_path}"
+    
+    # Update user's profile picture in database
+    await db.users.update_one(
+        {"id": current_user.id}, 
+        {"$set": {"profile_picture": profile_picture_url, "updated_at": datetime.utcnow()}}
+    )
+    
+    return {"message": "Profile photo updated successfully", "profile_picture": profile_picture_url}
+
 @api_router.get("/users/profile")
 async def get_user_profile(user_id: Optional[str] = None, current_user: User = Depends(get_current_user)):
     """Get user profile - if user_id provided and user has permission, return that user's profile"""
