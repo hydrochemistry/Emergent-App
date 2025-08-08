@@ -1235,6 +1235,23 @@ async def endorse_research_log(log_id: str, endorsement: ResearchLogEndorsement,
     
     return {"message": "Research log endorsed successfully"}
 
+@api_router.get("/research-logs/{log_id}/pdf")
+async def download_research_log_pdf(log_id: str, current_user: User = Depends(get_current_user)):
+    """Generate and download research log as PDF"""
+    
+    # Find the research log
+    log = await db.research_logs.find_one({"id": log_id})
+    if not log:
+        raise HTTPException(status_code=404, detail="Research log not found")
+    
+    # Check permissions - students can only download their own, supervisors can download any
+    if current_user.role == UserRole.STUDENT and log["student_id"] != current_user.id:
+        raise HTTPException(status_code=403, detail="Not authorized to access this research log")
+    
+    # For now, return a simple response indicating PDF generation is not implemented
+    # In a full implementation, you would generate an actual PDF using libraries like reportlab or weasyprint
+    return {"message": "PDF generation feature - Coming Soon!", "log_title": log["title"]}
+
 @api_router.get("/research-logs", response_model=List[ResearchLog])
 async def get_research_logs(current_user: User = Depends(get_current_user)):
     if current_user.role == UserRole.STUDENT:
