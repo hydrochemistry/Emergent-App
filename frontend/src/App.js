@@ -751,14 +751,11 @@ const Dashboard = ({ user, logout, setUser }) => {
                 <>
                   <StatCard icon={CheckCircle} title="Tasks" value={stats.total_tasks || 0} color="blue" />
                   <StatCard icon={Award} title="Completed" value={stats.completed_tasks || 0} color="green" />
-                  <StatCard icon={Clock} title="In Progress" value={stats.in_progress_tasks || 0} color="yellow" />
+                  <StatCard icon={Clock} title="Research Logs" value={stats.total_research_logs || 0} color="yellow" />
                   <StatCard 
                     icon={DollarSign} 
                     title="Active Grants Balance" 
-                    value={`$${grants
-                      .filter(g => g.status === 'active')
-                      .reduce((sum, g) => sum + (g.remaining_balance || g.current_balance || 0), 0)
-                      .toLocaleString()}`} 
+                    value={`$${(stats.active_grants_balance || 0).toLocaleString()}`} 
                     color="purple" 
                   />
                 </>
@@ -770,10 +767,7 @@ const Dashboard = ({ user, logout, setUser }) => {
                   <StatCard 
                     icon={DollarSign} 
                     title="Active Grants Balance" 
-                    value={`$${grants
-                      .filter(g => g.status === 'active')
-                      .reduce((sum, g) => sum + (g.remaining_balance || g.current_balance || 0), 0)
-                      .toLocaleString()}`} 
+                    value={`$${(stats.active_grants_balance || 0).toLocaleString()}`} 
                     color="yellow" 
                   />
                 </>
