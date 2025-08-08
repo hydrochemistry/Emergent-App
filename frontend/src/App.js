@@ -4051,21 +4051,192 @@ const MeetingCard = ({ meeting, user, onMeetingUpdated }) => (
   </Card>
 );
 
-const ReminderCard = ({ reminder, user, onReminderUpdated }) => (
-  <Card>
-    <CardContent className="p-6">
-      <div className="flex items-center justify-between">
-        <div>
-          <h3 className="font-semibold">{reminder.title}</h3>
-          <p className="text-sm text-gray-600">{reminder.description}</p>
-        </div>
-        <Badge className={getPriorityColor(reminder.priority)}>
-          {reminder.priority}
-        </Badge>
-      </div>
-    </CardContent>
-  </Card>
-);
+const ReminderCard = ({ reminder, user, onReminderUpdated }) => {
+  const [isSnoozing, setIsSnoozing] = useState(false);
+  const [isDeleting, setIsDeleting] = useState(false);
+  const [showEditDialog, setShowEditDialog] = useState(false);
+  const [editFormData, setEditFormData] = useState({
+    title: reminder.title || '',
+    description: reminder.description || '',
+    reminder_date: reminder.reminder_date ? reminder.reminder_date.split('T')[0] : '',
+    reminder_time: reminder.reminder_time || '09:00',
+    priority: reminder.priority || 'medium'
+  });
+
+  const handleSnooze = async (hours = 24) => {
+    setIsSnoozing(true);
+    try {
+      const newDate = new Date(reminder.reminder_date);
+      newDate.setHours(newDate.getHours() + hours);
+      
+      await axios.put(`${API}/reminders/${reminder.id}`, {
+        reminder_date: newDate.toISOString()
+      });
+      alert(`Reminder snoozed for ${hours} hours`);
+      onReminderUpdated();
+    } catch (error) {
+      alert('Error snoozing reminder: ' + (error.response?.data?.detail || error.message));
+    } finally {
+      setIsSnoozing(false);
+    }
+  };
+
+  const handleEdit = async () => {
+    try {
+      const reminderDateTime = new Date(`${editFormData.reminder_date}T${editFormData.reminder_time}:00`);
+      
+      await axios.put(`${API}/reminders/${reminder.id}`, {
+        title: editFormData.title,
+        description: editFormData.description,
+        reminder_date: reminderDateTime.toISOString(),
+        priority: editFormData.priority
+      });
+      alert('Reminder updated successfully!');
+      setShowEditDialog(false);
+      onReminderUpdated();
+    } catch (error) {
+      alert('Error updating reminder: ' + (error.response?.data?.detail || error.message));
+    }
+  };
+
+  const handleDelete = async () => {
+    if (!window.confirm('Are you sure you want to delete this reminder?')) return;
+    
+    setIsDeleting(true);
+    try {
+      await axios.delete(`${API}/reminders/${reminder.id}`);
+      alert('Reminder deleted successfully!');
+      onReminderUpdated();
+    } catch (error) {
+      alert('Error deleting reminder: ' + (error.response?.data?.detail || error.message));
+    } finally {
+      setIsDeleting(false);
+    }
+  };
+
+  return (
+    <>
+      <Card className="hover:shadow-md transition-shadow">
+        <CardContent className="p-6">
+          <div className="flex items-start justify-between">
+            <div className="flex-1">
+              <h3 className="font-semibold">{reminder.title}</h3>
+              <p className="text-sm text-gray-600 mb-2">{reminder.description}</p>
+              <p className="text-xs text-gray-500">
+                Due: {new Date(reminder.reminder_date).toLocaleString()}
+              </p>
+            </div>
+            <Badge className={getPriorityColor(reminder.priority)}>
+              {reminder.priority}
+            </Badge>
+          </div>
+          
+          {/* Action Buttons */}
+          <div className="flex gap-2 mt-4 pt-3 border-t">
+            <Button
+              size="sm"
+              variant="outline"
+              onClick={() => handleSnooze(24)}
+              disabled={isSnoozing}
+              className="text-blue-600 border-blue-600 hover:bg-blue-50"
+            >
+              <Clock className="h-3 w-3 mr-1" />
+              {isSnoozing ? 'Snoozing...' : 'Snooze 24h'}
+            </Button>
+            
+            <Button
+              size="sm"
+              variant="outline"
+              onClick={() => setShowEditDialog(true)}
+              className="text-green-600 border-green-600 hover:bg-green-50"
+            >
+              <Edit className="h-3 w-3 mr-1" />
+              Edit
+            </Button>
+            
+            <Button
+              size="sm"
+              variant="outline"
+              onClick={handleDelete}
+              disabled={isDeleting}
+              className="text-red-600 border-red-600 hover:bg-red-50"
+            >
+              <Trash2 className="h-3 w-3 mr-1" />
+              {isDeleting ? 'Deleting...' : 'Delete'}
+            </Button>
+          </div>
+        </CardContent>
+      </Card>
+
+      {/* Edit Dialog */}
+      <Dialog open={showEditDialog} onOpenChange={setShowEditDialog}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Edit Reminder</DialogTitle>
+          </DialogHeader>
+          <div className="space-y-4">
+            <div>
+              <Label>Title</Label>
+              <Input
+                value={editFormData.title}
+                onChange={(e) => setEditFormData({...editFormData, title: e.target.value})}
+                placeholder="Reminder title"
+              />
+            </div>
+            <div>
+              <Label>Description</Label>
+              <Textarea
+                value={editFormData.description}
+                onChange={(e) => setEditFormData({...editFormData, description: e.target.value})}
+                placeholder="Reminder description"
+                rows={3}
+              />
+            </div>
+            <div className="grid grid-cols-2 gap-4">
+              <div>
+                <Label>Date</Label>
+                <Input
+                  type="date"
+                  value={editFormData.reminder_date}
+                  onChange={(e) => setEditFormData({...editFormData, reminder_date: e.target.value})}
+                />
+              </div>
+              <div>
+                <Label>Time</Label>
+                <Input
+                  type="time"
+                  value={editFormData.reminder_time}
+                  onChange={(e) => setEditFormData({...editFormData, reminder_time: e.target.value})}
+                />
+              </div>
+            </div>
+            <div>
+              <Label>Priority</Label>
+              <Select value={editFormData.priority} onValueChange={(value) => setEditFormData({...editFormData, priority: value})}>
+                <SelectTrigger>
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="low">Low</SelectItem>
+                  <SelectItem value="medium">Medium</SelectItem>
+                  <SelectItem value="high">High</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+            <div className="flex gap-2 justify-end">
+              <Button variant="outline" onClick={() => setShowEditDialog(false)}>
+                Cancel
+              </Button>
+              <Button onClick={handleEdit}>
+                Update Reminder
+              </Button>
+            </div>
+          </div>
+        </DialogContent>
+      </Dialog>
+    </>
+  );
+};
 
 const BulletinCard = ({ bulletin, user, onBulletinUpdated }) => {
   const [isApproving, setIsApproving] = useState(false);
