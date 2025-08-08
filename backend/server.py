@@ -1806,8 +1806,8 @@ async def get_publications(current_user: User = Depends(get_current_user)):
     # Get supervisor ID to fetch lab publications
     supervisor_id = current_user.supervisor_id or current_user.id
     
-    # Fetch publications for the lab (tied to supervisor)
-    publications = await db.publications.find({"supervisor_id": supervisor_id}).sort("created_at", -1).to_list(1000)
+    # Fetch publications for the lab (tied to supervisor) - sorted by publication year (newest first)
+    publications = await db.publications.find({"supervisor_id": supervisor_id}).sort("publication_year", -1).to_list(1000)
     
     # Handle field migration and data format fixes
     for pub in publications:
