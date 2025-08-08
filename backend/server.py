@@ -26,6 +26,9 @@ mongo_url = os.environ['MONGO_URL']
 client = AsyncIOMotorClient(mongo_url)
 db = client[os.environ['DB_NAME']]
 
+# Backend URL for file URLs
+BACKEND_URL = os.environ.get('BACKEND_URL', 'http://localhost:8000')
+
 # Create uploads directory
 UPLOAD_DIR = ROOT_DIR / "uploads"
 UPLOAD_DIR.mkdir(exist_ok=True)
