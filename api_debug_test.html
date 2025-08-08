@@ -1,0 +1,332 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>API Test Page - Debug Authentication Issues</title>
+    <style>
+        body { font-family: Arial, sans-serif; margin: 20px; }
+        .container { max-width: 800px; margin: 0 auto; }
+        .test-section { border: 1px solid #ddd; padding: 15px; margin: 10px 0; border-radius: 5px; }
+        .success { background-color: #d4edda; border-color: #c3e6cb; }
+        .error { background-color: #f8d7da; border-color: #f5c6cb; }
+        button { padding: 10px 20px; margin: 5px; background: #007bff; color: white; border: none; border-radius: 3px; cursor: pointer; }
+        button:disabled { background: #6c757d; cursor: not-allowed; }
+        pre { background: #f8f9fa; padding: 10px; border-radius: 3px; overflow-x: auto; }
+        input { padding: 8px; margin: 5px; width: 200px; }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🔍 API Debug Test Page</h1>
+        <p>This page will help diagnose the network errors students are experiencing.</p>
+        
+        <div class="test-section">
+            <h3>🔑 Authentication Test</h3>
+            <div>
+                <input type="email" id="email" placeholder="Enter email" value="teststudent123@example.com">
+                <input type="password" id="password" placeholder="Enter password" value="testpassword123">
+                <button onclick="testLogin()">Test Login</button>
+            </div>
+            <div id="auth-result"></div>
+        </div>
+        
+        <div class="test-section">
+            <h3>📝 Research Log Creation Test</h3>
+            <button onclick="testResearchLogCreation()" id="research-btn" disabled>Test Research Log Creation</button>
+            <div id="research-result"></div>
+        </div>
+        
+        <div class="test-section">
+            <h3>📅 Meeting Creation Test</h3>
+            <button onclick="testMeetingCreation()" id="meeting-btn" disabled>Test Meeting Creation</button>
+            <div id="meeting-result"></div>
+        </div>
+        
+        <div class="test-section">
+            <h3>⏰ Reminder Creation Test</h3>
+            <button onclick="testReminderCreation()" id="reminder-btn" disabled>Test Reminder Creation</button>
+            <div id="reminder-result"></div>
+        </div>
+        
+        <div class="test-section">
+            <h3>📢 Announcement Creation Test</h3>
+            <button onclick="testAnnouncementCreation()" id="announcement-btn" disabled>Test Announcement Creation</button>
+            <div id="announcement-result"></div>
+        </div>
+        
+        <div class="test-section">
+            <h3>💰 Grant Update Test</h3>
+            <button onclick="testGrantUpdate()" id="grant-btn" disabled>Test Grant Update</button>
+            <div id="grant-result"></div>
+        </div>
+    </div>
+
+    <script>
+        const API_URL = 'https://4eb13147-e91e-42cc-a844-96b5f230bc59.preview.emergentagent.com/api';
+        let authToken = null;
+        let userId = null;
+        
+        function log(elementId, message, isError = false) {
+            const element = document.getElementById(elementId);
+            element.innerHTML = `<pre style="color: ${isError ? 'red' : 'green'}">${message}</pre>`;
+            element.className = isError ? 'error' : 'success';
+        }
+        
+        async function testLogin() {
+            const email = document.getElementById('email').value;
+            const password = document.getElementById('password').value;
+            
+            try {
+                log('auth-result', 'Attempting login...', false);
+                
+                const response = await fetch(`${API_URL}/auth/login`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({ email, password })
+                });
+                
+                const data = await response.json();
+                
+                if (response.ok) {
+                    authToken = data.access_token;
+                    userId = data.user_data.id;
+                    log('auth-result', `✅ Login successful!\nToken: ${authToken.substring(0, 50)}...\nUser ID: ${userId}\nRole: ${data.user_data.role}`, false);
+                    
+                    // Enable test buttons
+                    document.getElementById('research-btn').disabled = false;
+                    document.getElementById('meeting-btn').disabled = false;
+                    document.getElementById('reminder-btn').disabled = false;
+                    document.getElementById('announcement-btn').disabled = false;
+                    document.getElementById('grant-btn').disabled = false;
+                } else {
+                    log('auth-result', `❌ Login failed: ${JSON.stringify(data, null, 2)}`, true);
+                }
+            } catch (error) {
+                log('auth-result', `❌ Network error during login: ${error.message}`, true);
+            }
+        }
+        
+        async function testResearchLogCreation() {
+            if (!authToken) {
+                log('research-result', '❌ Please login first', true);
+                return;
+            }
+            
+            try {
+                log('research-result', 'Testing research log creation...', false);
+                
+                const data = {
+                    title: "API Test Research Log",
+                    activity_type: "experiment",
+                    description: "Testing research log creation via debug page",
+                    findings: "API test successful",
+                    challenges: "None identified",
+                    next_steps: "Continue with other tests",
+                    duration_hours: 2.5,
+                    tags: ["api-test", "debugging"],
+                    log_date: new Date().toISOString().split('T')[0],
+                    log_time: "14:00"
+                };
+                
+                const response = await fetch(`${API_URL}/research-logs`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Authorization': `Bearer ${authToken}`
+                    },
+                    body: JSON.stringify(data)
+                });
+                
+                const result = await response.json();
+                
+                if (response.ok) {
+                    log('research-result', `✅ Research log created successfully!\n${JSON.stringify(result, null, 2)}`, false);
+                } else {
+                    log('research-result', `❌ Research log creation failed: ${response.status}\n${JSON.stringify(result, null, 2)}`, true);
+                }
+            } catch (error) {
+                log('research-result', `❌ Network error during research log creation: ${error.message}`, true);
+            }
+        }
+        
+        async function testMeetingCreation() {
+            if (!authToken) {
+                log('meeting-result', '❌ Please login first', true);
+                return;
+            }
+            
+            try {
+                log('meeting-result', 'Testing meeting creation...', false);
+                
+                const data = {
+                    student_id: userId,
+                    meeting_type: "supervision",
+                    meeting_date: new Date(Date.now() + 24*60*60*1000).toISOString(),
+                    agenda: "API Test Meeting",
+                    duration_minutes: 60,
+                    location: "Virtual"
+                };
+                
+                const response = await fetch(`${API_URL}/meetings`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Authorization': `Bearer ${authToken}`
+                    },
+                    body: JSON.stringify(data)
+                });
+                
+                const result = await response.json();
+                
+                if (response.ok) {
+                    log('meeting-result', `✅ Meeting created successfully!\n${JSON.stringify(result, null, 2)}`, false);
+                } else {
+                    log('meeting-result', `❌ Meeting creation failed: ${response.status}\n${JSON.stringify(result, null, 2)}`, true);
+                }
+            } catch (error) {
+                log('meeting-result', `❌ Network error during meeting creation: ${error.message}`, true);
+            }
+        }
+        
+        async function testReminderCreation() {
+            if (!authToken) {
+                log('reminder-result', '❌ Please login first', true);
+                return;
+            }
+            
+            try {
+                log('reminder-result', 'Testing reminder creation...', false);
+                
+                const data = {
+                    user_id: userId,
+                    title: "API Test Reminder",
+                    description: "Testing reminder creation via debug page",
+                    reminder_date: new Date(Date.now() + 24*60*60*1000).toISOString(),
+                    priority: "medium",
+                    reminder_type: "general"
+                };
+                
+                const response = await fetch(`${API_URL}/reminders`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Authorization': `Bearer ${authToken}`
+                    },
+                    body: JSON.stringify(data)
+                });
+                
+                const result = await response.json();
+                
+                if (response.ok) {
+                    log('reminder-result', `✅ Reminder created successfully!\n${JSON.stringify(result, null, 2)}`, false);
+                } else {
+                    log('reminder-result', `❌ Reminder creation failed: ${response.status}\n${JSON.stringify(result, null, 2)}`, true);
+                }
+            } catch (error) {
+                log('reminder-result', `❌ Network error during reminder creation: ${error.message}`, true);
+            }
+        }
+        
+        async function testAnnouncementCreation() {
+            if (!authToken) {
+                log('announcement-result', '❌ Please login first', true);
+                return;
+            }
+            
+            try {
+                log('announcement-result', 'Testing announcement creation...', false);
+                
+                const data = {
+                    title: "API Test Announcement",
+                    content: "Testing announcement creation via debug page",
+                    category: "general",
+                    is_highlight: false
+                };
+                
+                const response = await fetch(`${API_URL}/bulletins`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Authorization': `Bearer ${authToken}`
+                    },
+                    body: JSON.stringify(data)
+                });
+                
+                const result = await response.json();
+                
+                if (response.ok) {
+                    log('announcement-result', `✅ Announcement created successfully!\n${JSON.stringify(result, null, 2)}`, false);
+                } else {
+                    log('announcement-result', `❌ Announcement creation failed: ${response.status}\n${JSON.stringify(result, null, 2)}`, true);
+                }
+            } catch (error) {
+                log('announcement-result', `❌ Network error during announcement creation: ${error.message}`, true);
+            }
+        }
+        
+        async function testGrantUpdate() {
+            if (!authToken) {
+                log('grant-result', '❌ Please login first', true);
+                return;
+            }
+            
+            try {
+                log('grant-result', 'Testing grant update...', false);
+                
+                // First, get a list of grants to find one to update
+                const grantsResponse = await fetch(`${API_URL}/grants`, {
+                    headers: {
+                        'Authorization': `Bearer ${authToken}`
+                    }
+                });
+                
+                if (!grantsResponse.ok) {
+                    throw new Error('Failed to fetch grants');
+                }
+                
+                const grants = await grantsResponse.json();
+                
+                if (grants.length === 0) {
+                    log('grant-result', '❌ No grants available to update', true);
+                    return;
+                }
+                
+                const grantId = grants[0].id;
+                const updateData = {
+                    current_balance: 45000,
+                    status: "active",
+                    description: "Updated via API test page"
+                };
+                
+                const response = await fetch(`${API_URL}/grants/${grantId}`, {
+                    method: 'PUT',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Authorization': `Bearer ${authToken}`
+                    },
+                    body: JSON.stringify(updateData)
+                });
+                
+                const result = await response.json();
+                
+                if (response.ok) {
+                    log('grant-result', `✅ Grant updated successfully!\n${JSON.stringify(result, null, 2)}`, false);
+                } else {
+                    log('grant-result', `❌ Grant update failed: ${response.status}\n${JSON.stringify(result, null, 2)}`, true);
+                }
+            } catch (error) {
+                log('grant-result', `❌ Network error during grant update: ${error.message}`, true);
+            }
+        }
+        
+        // Auto-login on page load if credentials are available
+        window.onload = function() {
+            console.log('API Debug Test Page loaded');
+            console.log('Backend API URL:', API_URL);
+        };
+    </script>
+</body>
+</html>
