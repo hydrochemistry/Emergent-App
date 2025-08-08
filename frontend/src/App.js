@@ -2478,7 +2478,6 @@ const CreateResearchLogDialog = ({ onLogCreated }) => {
                 type="date"
                 value={formData.log_date}
                 onChange={(e) => setFormData({...formData, log_date: e.target.value})}
-                required
               />
             </div>
             
