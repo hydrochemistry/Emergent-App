@@ -1026,6 +1026,28 @@ const Dashboard = ({ user, logout, setUser }) => {
                 .map((bulletin) => (
                   <BulletinCard key={bulletin.id} bulletin={bulletin} user={user} onBulletinUpdated={fetchDashboardData} />
                 ))}
+                
+              {/* Empty state for students when no approved bulletins */}
+              {user.role === 'student' && bulletins.filter(b => b.status === 'approved').length === 0 && (
+                <Card>
+                  <CardContent className="text-center py-12">
+                    <Bell className="h-12 w-12 text-gray-300 mx-auto mb-4" />
+                    <p className="text-gray-500">No approved announcements available</p>
+                    <p className="text-sm text-gray-400 mt-2">Check back later for new updates</p>
+                  </CardContent>
+                </Card>
+              )}
+              
+              {/* Empty state for supervisors when no bulletins exist */}
+              {user.role !== 'student' && bulletins.length === 0 && (
+                <Card>
+                  <CardContent className="text-center py-12">
+                    <Bell className="h-12 w-12 text-gray-300 mx-auto mb-4" />
+                    <p className="text-gray-500">No announcements posted yet</p>
+                    <p className="text-sm text-gray-400 mt-2">Create your first announcement using the button above</p>
+                  </CardContent>
+                </Card>
+              )}
             </div>
           </TabsContent>
 
