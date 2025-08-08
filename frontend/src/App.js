@@ -1857,6 +1857,7 @@ const ProfileEditForm = ({ formData, setFormData, loading, onSave, onCancel, use
     </div>
   </div>
 );
+}
 
 const AllPublicationsView = ({ user, students, publications }) => (
   <div className="space-y-4">
