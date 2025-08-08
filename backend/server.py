@@ -1454,9 +1454,8 @@ async def get_research_logs(current_user: User = Depends(get_current_user)):
     students = await db.users.find({"supervisor_id": supervisor_id}).to_list(1000)
     student_ids = [student["id"] for student in students]
     
-    # Include supervisor's own ID for their research logs
-    if current_user.role != UserRole.STUDENT:
-        student_ids.append(current_user.id)
+    # Include supervisor's own ID for their research logs (for lab-wide synchronization)
+    student_ids.append(supervisor_id)
     
     # Fetch all lab research logs for synchronization
     logs = await db.research_logs.find({"user_id": {"$in": student_ids}}).sort("date", -1).to_list(1000)
