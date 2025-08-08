@@ -1026,6 +1026,34 @@ const Dashboard = ({ user, logout, setUser }) => {
             </div>
           </TabsContent>
 
+          {/* Milestones Tab */}
+          <TabsContent value="milestones" className="mt-6">
+            <div className="flex justify-between items-center mb-6">
+              <h2 className="text-2xl font-bold">Project Milestones</h2>
+              {user.role === 'student' && (
+                <CreateMilestoneDialog onMilestoneCreated={fetchDashboardData} />
+              )}
+            </div>
+
+            <div className="grid gap-6">
+              {milestones.map((milestone) => (
+                <MilestoneCard key={milestone.id} milestone={milestone} user={user} onMilestoneUpdated={fetchDashboardData} />
+              ))}
+              {milestones.length === 0 && (
+                <Card>
+                  <CardContent className="text-center py-12">
+                    <Target className="h-12 w-12 text-gray-400 mx-auto mb-4" />
+                    <p className="text-gray-600">
+                      {user.role === 'student' 
+                        ? 'No milestones created yet. Start tracking your project progress.' 
+                        : 'No student milestones to review yet.'}
+                    </p>
+                  </CardContent>
+                </Card>
+              )}
+            </div>
+          </TabsContent>
+
           {/* Students Tab */}
           {(user.role === 'supervisor' || user.role === 'lab_manager') && (
             <TabsContent value="students" className="mt-6">
