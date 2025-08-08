@@ -2236,7 +2236,7 @@ const CreateTaskDialog = ({ students, onTaskCreated, user }) => {
             <Button type="button" variant="outline" onClick={() => setIsOpen(false)}>
               Cancel
             </Button>
-            <Button type="submit" disabled={loading || !formData.title}>
+            <Button type="submit" disabled={loading}>
               {loading ? 'Creating...' : 'Create Task'}
             </Button>
           </div>
