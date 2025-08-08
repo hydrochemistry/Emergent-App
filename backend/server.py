@@ -1431,10 +1431,21 @@ async def create_grant(grant_data: GrantCreate, current_user: User = Depends(get
 
 @api_router.get("/grants", response_model=List[Grant])
 async def get_grants(current_user: User = Depends(get_current_user)):
+    """Get grants - enhanced visibility for all users while maintaining creation restrictions"""
+    # All users can view grants, but with different filtering based on role
     if current_user.role == UserRole.STUDENT:
-        grants = await db.grants.find({"student_manager_id": current_user.id}).to_list(1000)
+        # Students can see all grants (enhanced visibility) but with focus on their involvement
+        grants = await db.grants.find({}).to_list(1000)
     else:
+        # Supervisors see grants they created
         grants = await db.grants.find({"principal_investigator": current_user.id}).to_list(1000)
+    
+    # Add cumulative value calculation for dashboard display
+    for grant in grants:
+        if "total_amount" in grant and "spent_amount" in grant:
+            grant["remaining_balance"] = grant["total_amount"] - grant.get("spent_amount", 0)
+        else:
+            grant["remaining_balance"] = grant.get("total_amount", 0)
     
     return [Grant(**grant) for grant in grants]
 
