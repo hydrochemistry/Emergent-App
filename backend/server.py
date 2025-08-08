@@ -2123,11 +2123,12 @@ async def get_dashboard_stats(current_user: User = Depends(get_current_user)):
         "status": "active"
     }).to_list(1000)
     
-    # Calculate cumulative active grants balance
-    total_active_grants_balance = sum(
-        grant.get("total_amount", 0) - grant.get("spent_amount", 0) 
-        for grant in active_grants
-    )
+    # Calculate cumulative active grants balance and clean grants data
+    total_active_grants_balance = 0
+    for grant in active_grants:
+        total_active_grants_balance += grant.get("total_amount", 0) - grant.get("spent_amount", 0)
+        # Remove MongoDB ObjectId to prevent serialization issues
+        grant.pop("_id", None)
     
     if current_user.role == UserRole.STUDENT:
         total_tasks = await db.tasks.count_documents({"assigned_to": current_user.id})
