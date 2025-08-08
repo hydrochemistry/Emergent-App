@@ -1695,11 +1695,12 @@ async def health_check():
 async def api_health_check():
     return {"status": "healthy", "message": "API endpoints are accessible"}
 
+# CORS middleware should be configured earlier, but since it's here, ensure it's properly configured
 app.add_middleware(
     CORSMiddleware,
+    allow_origins=["*"],  # Allow all origins for debugging
     allow_credentials=True,
-    allow_origins=["*"],
-    allow_methods=["*"],
+    allow_methods=["GET", "POST", "PUT", "DELETE", "OPTIONS"],
     allow_headers=["*"],
 )
 
