@@ -486,6 +486,8 @@ const Dashboard = ({ user, logout, setUser }) => {
   const [activeTab, setActiveTab] = useState('dashboard');
   const [tasks, setTasks] = useState([]);
   const [researchLogs, setResearchLogs] = useState([]);
+  const [studentLogStatus, setStudentLogStatus] = useState([]); // New state for student log status tracking
+  const [activeGrants, setActiveGrants] = useState([]); // New state for active grants
   const [students, setStudents] = useState([]);
   const [stats, setStats] = useState({});
   const [bulletins, setBulletins] = useState([]);
