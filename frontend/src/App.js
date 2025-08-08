@@ -3647,10 +3647,7 @@ const GrantCard = ({ grant, user, onGrantUpdated }) => {
                 <Eye className="h-4 w-4 mr-2" />
                 View Registrations
               </Button>
-              <Button variant="outline" size="sm" onClick={() => alert('Edit Grant functionality - Coming Soon!')}>
-                <Edit className="h-4 w-4 mr-2" />
-                Edit Grant
-              </Button>
+              <EditGrantDialog grant={grant} onGrantUpdated={onGrantUpdated} />
               {grant.status === 'active' && (
                 <Button variant="outline" size="sm" onClick={() => alert('Generate Report functionality - Coming Soon!')}>
                   <FileBarChart className="h-4 w-4 mr-2" />
