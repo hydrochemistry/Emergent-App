@@ -4478,6 +4478,7 @@ const BulletinCard = ({ bulletin, user, onBulletinUpdated }) => {
 const GrantCard = ({ grant, user, onGrantUpdated }) => {
   const [isRegistering, setIsRegistering] = useState(false);
   const [showDetails, setShowDetails] = useState(false);
+  const [isDeleting, setIsDeleting] = useState(false);
   
   const handleRegisterForGrant = async () => {
     setIsRegistering(true);
@@ -4490,6 +4491,24 @@ const GrantCard = ({ grant, user, onGrantUpdated }) => {
       alert(error.response?.data?.detail || 'Error registering for grant');
     } finally {
       setIsRegistering(false);
+    }
+  };
+
+  const handleDeleteGrant = async () => {
+    if (!window.confirm(`Are you sure you want to delete the grant "${grant.title}"? This action cannot be undone.`)) {
+      return;
+    }
+
+    setIsDeleting(true);
+    try {
+      await axios.delete(`${API}/grants/${grant.id}`);
+      alert('Grant deleted successfully!');
+      onGrantUpdated();
+    } catch (error) {
+      console.error('Error deleting grant:', error);
+      alert(error.response?.data?.detail || 'Error deleting grant');
+    } finally {
+      setIsDeleting(false);
     }
   };
 
