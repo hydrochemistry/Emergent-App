@@ -5077,6 +5077,27 @@ const AdminPanel = ({ user, labSettings, onSettingsUpdated, menuSettings, onMenu
                 </div>
               </div>
 
+              {/* Lab Scopus ID Section - Critical for Publications Sync */}
+              <div className="border-t pt-6">
+                <div className="space-y-4">
+                  <div>
+                    <Label htmlFor="lab_scopus_id" className="text-base font-semibold">Lab Scopus ID</Label>
+                    <p className="text-sm text-gray-600 mb-2">
+                      Enter your lab's Scopus ID to automatically sync and display publications across all users
+                    </p>
+                    <Input
+                      id="lab_scopus_id"
+                      value={labData.lab_scopus_id || ''}
+                      onChange={(e) => setLabData({...labData, lab_scopus_id: e.target.value})}
+                      placeholder="e.g., 55208373700, 7004212771"
+                    />
+                    <p className="text-xs text-blue-600 mt-1">
+                      ⚠️ When updated, this will sync ALL lab publications from Scopus and make them visible to all users
+                    </p>
+                  </div>
+                </div>
+              </div>
+
               <div className="border-t pt-6">
                 <Label>Lab Logo</Label>
                 <div className="flex items-center space-x-4 mt-2">
