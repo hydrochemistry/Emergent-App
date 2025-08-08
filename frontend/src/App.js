@@ -736,14 +736,14 @@ const Dashboard = ({ user, logout, setUser }) => {
                   <StatCard icon={CheckCircle} title="Tasks" value={stats.total_tasks || 0} color="blue" />
                   <StatCard icon={Award} title="Completed" value={stats.completed_tasks || 0} color="green" />
                   <StatCard icon={Clock} title="In Progress" value={stats.in_progress_tasks || 0} color="yellow" />
-                  <StatCard icon={FlaskConical} title="Research" value={stats.total_research_logs || 0} color="purple" />
+                  <StatCard icon={DollarSign} title="Grant Value" value={`$${grants.reduce((sum, g) => sum + (g.total_amount || 0), 0).toLocaleString()}`} color="purple" />
                 </>
               ) : (
                 <>
                   <StatCard icon={Users} title="Students" value={stats.total_students || 0} color="blue" />
                   <StatCard icon={CheckCircle} title="Tasks" value={stats.total_assigned_tasks || 0} color="purple" />
                   <StatCard icon={Award} title="Publications" value={stats.total_publications || 0} color="green" />
-                  <StatCard icon={DollarSign} title="Grants" value={stats.active_grants || 0} color="yellow" />
+                  <StatCard icon={DollarSign} title="Grant Value" value={`$${grants.reduce((sum, g) => sum + (g.total_amount || 0), 0).toLocaleString()}`} color="yellow" />
                 </>
               )}
             </div>
