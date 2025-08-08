@@ -764,7 +764,10 @@ const Dashboard = ({ user, logout, setUser }) => {
                   </CardTitle>
                 </CardHeader>
                 <CardContent className="p-0">
-                  {bulletins.slice(0, 3).map((bulletin, index) => (
+                  {bulletins
+                    .filter(bulletin => bulletin.status === 'approved') // Only show approved announcements
+                    .slice(0, 3)
+                    .map((bulletin, index) => (
                     <div key={bulletin.id} className={`
                       flex items-start space-x-3 p-4 
                       ${index < bulletins.length - 1 ? 'border-b' : ''}
