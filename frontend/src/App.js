@@ -1902,7 +1902,7 @@ const ResearchLogCard = ({ log, user, onLogUpdated }) => (
 );
 
 // Placeholder components for dialogs and other functionality
-const CreateTaskDialog = ({ students, onTaskCreated }) => {
+const CreateTaskDialog = ({ students, onTaskCreated, user }) => {
   const [isOpen, setIsOpen] = useState(false);
   const [formData, setFormData] = useState({
     title: '',
