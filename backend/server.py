@@ -188,18 +188,19 @@ class UserUpdate(BaseModel):
     contact_number: Optional[str] = None
     nationality: Optional[str] = None
     citizenship: Optional[str] = None
-    program_type: Optional[ProgramType] = None
+    program_type: Optional[Union[ProgramType, str]] = None  # Allow string to handle empty values
     field_of_study: Optional[str] = None
     department: Optional[str] = None
     faculty: Optional[str] = None
     institute: Optional[str] = None
     enrollment_date: Optional[str] = None
     expected_graduation_date: Optional[str] = None
-    study_status: Optional[StudyStatus] = None
+    study_status: Optional[Union[StudyStatus, str]] = None  # Allow string to handle empty values
     research_area: Optional[str] = None
     lab_name: Optional[str] = None
     scopus_id: Optional[str] = None
     orcid_id: Optional[str] = None
+    salutation: Optional[str] = None  # Added salutation field
 
 class PasswordChange(BaseModel):
     current_password: str
