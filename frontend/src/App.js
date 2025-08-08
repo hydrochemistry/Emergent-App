@@ -2136,7 +2136,7 @@ const CreateResearchLogDialog = ({ onLogCreated }) => {
     duration_hours: '',
     tags: '',
     log_date: new Date().toISOString().split('T')[0],
-    log_time: new Date().toTimeString().split(' ')[0].substring(0, 5)
+    log_time: '09:00'
   });
   const [attachments, setAttachments] = useState([]);
   const [loading, setLoading] = useState(false);
