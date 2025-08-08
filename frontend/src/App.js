@@ -881,22 +881,7 @@ const Dashboard = ({ user, logout, setUser }) => {
                     </div>
                   ))}
                   {publications.length === 0 && (
-                    <div className="text-center py-4">
-                      <p className="text-gray-500 text-sm mb-2">No publications yet</p>
-                      {(user.role === 'supervisor' || user.role === 'lab_manager' || user.role === 'admin') && (
-                        <ScopusPublicationDialog onPublicationAdded={fetchDashboardData} />
-                      )}
-                    </div>
-                  )}
-                  {publications.length > 1 && (
-                    <p className="text-xs text-gray-500 mt-2 pt-2 border-t">
-                      +{publications.length - 1} more publications
-                    </p>
-                  )}
-                  {publications.length > 0 && (user.role === 'supervisor' || user.role === 'lab_manager' || user.role === 'admin') && (
-                    <div className="mt-3 pt-2 border-t">
-                      <ScopusPublicationDialog onPublicationAdded={fetchDashboardData} />
-                    </div>
+                    <p className="text-gray-500 text-sm">No publications yet</p>
                   )}
                 </CardContent>
               </Card>
