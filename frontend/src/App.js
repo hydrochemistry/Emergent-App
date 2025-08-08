@@ -2243,7 +2243,7 @@ const ResearchLogCard = ({ log, user, onLogUpdated }) => {
          user.id !== log.student_id && !log.review_status && (
           <div className="border-t pt-4 mb-4">
             <h4 className="font-medium text-gray-700 mb-3">Supervisor Review</h4>
-            {!isReviewing ? (
+            {reviewState === 'none' ? (
               <div className="flex gap-2">
                 <Button
                   onClick={() => handleReviewAction('accepted')}
@@ -2255,7 +2255,7 @@ const ResearchLogCard = ({ log, user, onLogUpdated }) => {
                   Accept
                 </Button>
                 <Button
-                  onClick={() => setIsReviewing(true)}
+                  onClick={() => setReviewState('revision')}
                   disabled={reviewLoading}
                   variant="outline"
                   size="sm"
@@ -2278,18 +2278,19 @@ const ResearchLogCard = ({ log, user, onLogUpdated }) => {
                 <Textarea
                   placeholder="Provide feedback for revision..."
                   rows={3}
-                  onChange={(e) => setIsReviewing(e.target.value)}
+                  value={reviewFeedback}
+                  onChange={(e) => setReviewFeedback(e.target.value)}
                 />
                 <div className="flex gap-2">
                   <Button
-                    onClick={() => handleReviewAction('revision', isReviewing)}
+                    onClick={() => handleReviewAction('revision', reviewFeedback)}
                     disabled={reviewLoading}
                     size="sm"
                   >
                     {reviewLoading ? 'Submitting...' : 'Submit Revision Request'}
                   </Button>
                   <Button
-                    onClick={() => setIsReviewing(false)}
+                    onClick={() => setReviewState('none')}
                     disabled={reviewLoading}
                     variant="outline"
                     size="sm"
