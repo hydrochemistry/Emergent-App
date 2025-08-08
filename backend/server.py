@@ -1279,35 +1279,44 @@ async def update_task(task_id: str, update_data: TaskUpdate, current_user: User 
 # Enhanced Research Log Routes with File Upload and Endorsement
 @api_router.post("/research-logs", response_model=ResearchLog)
 async def create_research_log(log_data: ResearchLogCreate, current_user: User = Depends(get_current_user)):
-    # Handle date/time from frontend
-    research_date = datetime.utcnow()  # Default to current time
-    if log_data.log_date:
-        try:
-            if log_data.log_time:
-                # Combine date and time
-                research_date = datetime.fromisoformat(f"{log_data.log_date}T{log_data.log_time}")
-            else:
-                # Just date, set time to current
-                research_date = datetime.fromisoformat(f"{log_data.log_date}T{datetime.utcnow().strftime('%H:%M:%S')}")
-        except ValueError:
-            # If parsing fails, use current time
-            research_date = datetime.utcnow()
-    
-    research_log = ResearchLog(
-        user_id=current_user.id,
-        activity_type=log_data.activity_type,
-        title=log_data.title,
-        description=log_data.description,
-        date=research_date,  # Use parsed date
-        duration_hours=log_data.duration_hours,
-        findings=log_data.findings,
-        challenges=log_data.challenges,
-        next_steps=log_data.next_steps,
-        tags=log_data.tags or []
-    )
-    
-    await db.research_logs.insert_one(research_log.dict())
-    return research_log
+    """Create research log with enhanced error handling"""
+    try:
+        # Handle date/time from frontend
+        research_date = datetime.utcnow()  # Default to current time
+        if log_data.log_date:
+            try:
+                if log_data.log_time:
+                    # Combine date and time
+                    research_date = datetime.fromisoformat(f"{log_data.log_date}T{log_data.log_time}")
+                else:
+                    # Just date, set time to current
+                    research_date = datetime.fromisoformat(f"{log_data.log_date}T{datetime.utcnow().strftime('%H:%M:%S')}")
+            except ValueError as e:
+                print(f"Date parsing error: {e}")
+                # If parsing fails, use current time
+                research_date = datetime.utcnow()
+        
+        research_log = ResearchLog(
+            user_id=current_user.id,
+            activity_type=log_data.activity_type,
+            title=log_data.title,
+            description=log_data.description,
+            date=research_date,  # Use parsed date
+            duration_hours=log_data.duration_hours,
+            findings=log_data.findings,
+            challenges=log_data.challenges,
+            next_steps=log_data.next_steps,
+            tags=log_data.tags or []
+        )
+        
+        await db.research_logs.insert_one(research_log.dict())
+        print(f"Research log created successfully: {research_log.title}")
+        return research_log
+        
+    except Exception as e:
+        print(f"Error creating research log: {str(e)}")
+        print(f"Log data: {log_data}")
+        raise HTTPException(status_code=500, detail=f"Error creating research log: {str(e)}")
 
 @api_router.post("/research-logs/{log_id}/files")
 async def upload_research_log_files(log_id: str, files: List[UploadFile] = File(...), current_user: User = Depends(get_current_user)):
