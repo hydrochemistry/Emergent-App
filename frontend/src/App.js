@@ -3480,16 +3480,16 @@ const GrantCard = ({ grant, user, onGrantUpdated }) => {
                   </Button>
                 </>
               )}
-              <Button variant="outline" size="sm">
+              <Button variant="outline" size="sm" onClick={() => alert('View Registrations functionality - Coming Soon!')}>
                 <Eye className="h-4 w-4 mr-2" />
                 View Registrations
               </Button>
-              <Button variant="outline" size="sm">
+              <Button variant="outline" size="sm" onClick={() => alert('Edit Grant functionality - Coming Soon!')}>
                 <Edit className="h-4 w-4 mr-2" />
                 Edit Grant
               </Button>
               {grant.status === 'active' && (
-                <Button variant="outline" size="sm">
+                <Button variant="outline" size="sm" onClick={() => alert('Generate Report functionality - Coming Soon!')}>
                   <FileBarChart className="h-4 w-4 mr-2" />
                   Generate Report
                 </Button>
