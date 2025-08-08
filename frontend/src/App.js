@@ -546,8 +546,10 @@ const Dashboard = ({ user, logout, setUser }) => {
       const now = new Date();
       
       const filteredMeetings = (meetingsRes.data || []).filter(meeting => {
-        // Show all meetings (past and future)
-        return true;
+        const meetingDate = new Date(meeting.meeting_date);
+        // Show upcoming meetings and meetings from the last 7 days
+        const diffDays = (now - meetingDate) / (1000 * 60 * 60 * 24);
+        return diffDays < 7; // Show meetings from last 7 days and future meetings
       });
       
       const filteredReminders = (remindersRes.data || []).filter(reminder => {
