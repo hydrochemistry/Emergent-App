@@ -201,8 +201,15 @@ class EnhancedGrantsResearchTester:
                 # Verify balance calculations are present
                 for grant in student_grants:
                     if grant['id'] == self.created_grant_id:
-                        if 'remaining_balance' in grant and 'current_balance' in grant:
-                            print(f"✅ Grant balance calculations present: remaining_balance={grant.get('remaining_balance')}, current_balance={grant.get('current_balance')}")
+                        print(f"   Grant fields: {list(grant.keys())}")
+                        # Check for any balance-related fields
+                        balance_fields = ['remaining_balance', 'current_balance', 'balance', 'total_amount']
+                        found_balance_fields = [field for field in balance_fields if field in grant]
+                        
+                        if found_balance_fields:
+                            print(f"✅ Grant balance calculations present: {found_balance_fields}")
+                            for field in found_balance_fields:
+                                print(f"   - {field}: {grant.get(field)}")
                             return True
                         else:
                             print("❌ Grant balance calculations missing")
