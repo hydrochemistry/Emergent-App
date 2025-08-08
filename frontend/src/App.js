@@ -913,10 +913,19 @@ const Dashboard = ({ user, logout, setUser }) => {
             </div>
 
             <div className="grid gap-6">
-              {researchLogs.map((log) => (
-                <ResearchLogCard key={log.id} log={log} user={user} onLogUpdated={fetchDashboardData} />
-              ))}
-              {researchLogs.length === 0 && (
+              {researchLogs
+                .filter(log => {
+                  // Students see only their own logs
+                  if (user.role === 'student') {
+                    return log.student_id === user.id;
+                  }
+                  // Supervisors, lab managers, and admins see all logs
+                  return true;
+                })
+                .map((log) => (
+                  <ResearchLogCard key={log.id} log={log} user={user} onLogUpdated={fetchDashboardData} />
+                ))}
+              {researchLogs.filter(log => user.role === 'student' ? log.student_id === user.id : true).length === 0 && (
                 <Card>
                   <CardContent className="text-center py-12">
                     <FlaskConical className="h-12 w-12 text-gray-400 mx-auto mb-4" />
