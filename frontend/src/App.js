@@ -1014,9 +1014,18 @@ const Dashboard = ({ user, logout, setUser }) => {
             </div>
 
             <div className="grid gap-6">
-              {bulletins.map((bulletin) => (
-                <BulletinCard key={bulletin.id} bulletin={bulletin} user={user} onBulletinUpdated={fetchDashboardData} />
-              ))}
+              {bulletins
+                .filter(bulletin => {
+                  // Students only see approved bulletins
+                  if (user.role === 'student') {
+                    return bulletin.status === 'approved';
+                  }
+                  // Supervisors, lab_managers, and admins see all bulletins
+                  return true;
+                })
+                .map((bulletin) => (
+                  <BulletinCard key={bulletin.id} bulletin={bulletin} user={user} onBulletinUpdated={fetchDashboardData} />
+                ))}
             </div>
           </TabsContent>
 
