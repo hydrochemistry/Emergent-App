@@ -1594,86 +1594,8 @@ const ProfileDisplayView = ({ userProfile }) => (
 
 // Profile Edit Form Component
 const ProfileEditForm = ({ formData, setFormData, loading, onSave, onCancel, user, setUser }) => {
-  const [isUploadingPhoto, setIsUploadingPhoto] = useState(false);
-  const fileInputRef = useRef(null);
-
-  const handlePhotoUpload = async (e) => {
-    const file = e.target.files[0];
-    if (!file) return;
-
-    // Validate file type and size
-    if (!file.type.startsWith('image/')) {
-      alert('Please select an image file (JPG, PNG, etc.)');
-      return;
-    }
-    
-    if (file.size > 2 * 1024 * 1024) { // 2MB limit
-      alert('Image size should be less than 2MB');
-      return;
-    }
-
-    setIsUploadingPhoto(true);
-    try {
-      const photoFormData = new FormData();
-      photoFormData.append('photo', file);
-      
-      const response = await axios.post(`${API}/users/profile/photo`, photoFormData, {
-        headers: { 'Content-Type': 'multipart/form-data' }
-      });
-      
-      // Update user profile with new photo URL
-      const updatedUser = { ...user, profile_picture: response.data.profile_picture };
-      setUser(updatedUser);
-      setFormData({ ...formData, profile_picture: response.data.profile_picture });
-      
-      alert('Profile photo updated successfully!');
-    } catch (error) {
-      console.error('Error uploading photo:', error);
-      alert('Error uploading photo: ' + (error.response?.data?.detail || error.message || 'Unknown error occurred'));
-    } finally {
-      setIsUploadingPhoto(false);
-    }
-  };
-
   return (
     <div className="space-y-6">
-      {/* Profile Photo Section */}
-      <div className="flex flex-col items-center space-y-4">
-        <div className="relative">
-          <Avatar className="w-24 h-24">
-            {user.profile_picture ? (
-              <img src={user.profile_picture} alt="Profile" className="w-full h-full object-cover rounded-full" />
-            ) : (
-              <AvatarFallback className="text-2xl">
-                {user.full_name?.split(' ').map(n => n[0]).join('').toUpperCase() || 'U'}
-              </AvatarFallback>
-            )}
-          </Avatar>
-          <button
-            type="button"
-            className="absolute bottom-0 right-0 p-1 bg-blue-600 text-white rounded-full hover:bg-blue-700 transition-colors"
-            onClick={() => fileInputRef.current?.click()}
-            disabled={isUploadingPhoto}
-          >
-            <Camera className="w-4 h-4" />
-          </button>
-        </div>
-        <input
-          ref={fileInputRef}
-          type="file"
-          accept="image/*"
-          onChange={handlePhotoUpload}
-          className="hidden"
-        />
-        <p className="text-sm text-gray-500 text-center">
-          Click the camera icon to upload a profile photo<br />
-          (Max size: 2MB, formats: JPG, PNG, GIF)
-        </p>
-        {isUploadingPhoto && (
-          <p className="text-sm text-blue-600">Uploading photo...</p>
-        )}
-      </div>
-      
       {/* Basic Information */}
     <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
       <div>
