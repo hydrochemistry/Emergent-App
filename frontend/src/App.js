@@ -4727,7 +4727,7 @@ const CreateMilestoneDialog = ({ onMilestoneCreated }) => {
             <Button type="button" variant="outline" onClick={() => setIsOpen(false)} disabled={loading}>
               Cancel
             </Button>
-            <Button type="submit" disabled={loading || !formData.project_title || !formData.milestone_title}>
+            <Button type="submit" disabled={loading}>
               {loading ? 'Creating...' : 'Create Milestone'}
             </Button>
           </div>
