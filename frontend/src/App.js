@@ -3141,7 +3141,23 @@ const BulletinCard = ({ bulletin, user, onBulletinUpdated }) => {
       onBulletinUpdated();
     } catch (error) {
       console.error('Error updating bulletin status:', error);
-      alert('Error updating bulletin status: ' + (error.response?.data?.detail || error.message || 'Unknown error occurred'));
+      let errorMessage = 'Error updating bulletin status: ';
+      
+      if (error.response?.data?.detail) {
+        if (typeof error.response.data.detail === 'string') {
+          errorMessage += error.response.data.detail;
+        } else {
+          errorMessage += JSON.stringify(error.response.data.detail);
+        }
+      } else if (error.response?.data?.message) {
+        errorMessage += error.response.data.message;
+      } else if (error.message) {
+        errorMessage += error.message;
+      } else {
+        errorMessage += 'Unknown error occurred';
+      }
+      
+      alert(errorMessage);
     } finally {
       setIsApproving(false);
     }
