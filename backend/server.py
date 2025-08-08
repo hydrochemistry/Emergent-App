@@ -1448,9 +1448,17 @@ async def download_research_log_pdf(log_id: str, current_user: User = Depends(ge
 async def get_research_logs(current_user: User = Depends(get_current_user)):
     """Get lab-wide research logs - synchronized data for all users in same lab"""
     # Get supervisor ID for lab-wide data synchronization
-    supervisor_id = current_user.supervisor_id or current_user.id
+    if current_user.role == UserRole.STUDENT:
+        # For students, use their supervisor_id
+        supervisor_id = current_user.supervisor_id
+        if not supervisor_id:
+            # If no supervisor assigned, return empty list
+            return []
+    else:
+        # For supervisors/admins, use their own ID as supervisor
+        supervisor_id = current_user.id
     
-    # Get all students under this supervisor (including the supervisor if they have logs)
+    # Get all students under this supervisor
     students = await db.users.find({"supervisor_id": supervisor_id}).to_list(1000)
     student_ids = [student["id"] for student in students]
     
