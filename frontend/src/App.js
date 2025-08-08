@@ -2696,7 +2696,25 @@ const CreateBulletinDialog = ({ onBulletinCreated }) => {
       onBulletinCreated();
     } catch (error) {
       console.error('Error creating bulletin:', error);
-      alert('Error posting announcement: ' + (error.response?.data?.detail || error.message || 'Unknown error occurred'));
+      let errorMessage = 'Error posting announcement: ';
+      
+      if (error.code === 'ERR_NETWORK') {
+        errorMessage += 'Network connection failed. Please check your internet connection and try again.';
+      } else if (error.response?.data?.detail) {
+        if (typeof error.response.data.detail === 'string') {
+          errorMessage += error.response.data.detail;
+        } else {
+          errorMessage += JSON.stringify(error.response.data.detail);
+        }
+      } else if (error.response?.data?.message) {
+        errorMessage += error.response.data.message;
+      } else if (error.message) {
+        errorMessage += error.message;
+      } else {
+        errorMessage += 'Unknown error occurred. Please try again.';
+      }
+      
+      alert(errorMessage);
     } finally {
       setLoading(false);
     }
