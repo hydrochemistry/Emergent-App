@@ -517,80 +517,53 @@ const Dashboard = ({ user, logout, setUser }) => {
 
   const fetchDashboardData = async () => {
     try {
-      console.log('🔍 Starting fetchDashboardData...');
-      console.log('🔑 Current auth token:', axios.defaults.headers.common['Authorization']);
-      console.log('🌐 API URL:', API);
-      
       const [
         tasksRes, logsRes, statsRes, bulletinsRes, grantsRes, 
         pubsRes, labRes, meetingsRes, remindersRes, milestonesRes, notesRes
       ] = await Promise.all([
-        axios.get(`${API}/tasks`).catch((error) => {
-          console.error('Tasks API error:', error);
-          return {data: []};
-        }),
+        axios.get(`${API}/tasks`).catch(() => ({data: []})),
         axios.get(`${API}/research-logs`).catch(() => ({data: []})),
         axios.get(`${API}/dashboard/stats`).catch(() => ({data: {}})),
         axios.get(`${API}/bulletins`).catch(() => ({data: []})),
         axios.get(`${API}/grants`).catch(() => ({data: []})),
         axios.get(`${API}/publications`).catch(() => ({data: []})),
         axios.get(`${API}/lab/settings`).catch(() => ({data: {}})),
-        axios.get(`${API}/meetings`).catch((error) => {
-          console.error('❌ Error fetching meetings:', error.response?.data || error.message);
-          console.error('❌ Full error object:', error);
-          return {data: []};
-        }),
-        axios.get(`${API}/reminders`).catch((error) => {
-          console.error('❌ Error fetching reminders:', error.response?.data || error.message);
-          return {data: []};
-        }),
+        axios.get(`${API}/meetings`).catch(() => ({data: []})),
+        axios.get(`${API}/reminders`).catch(() => ({data: []})),
         axios.get(`${API}/milestones`).catch(() => ({data: []})),
         axios.get(`${API}/notes`).catch(() => ({data: []}))
       ]);
 
-      console.log('✅ API calls completed');
-      console.log('📊 Raw meetings response:', meetingsRes);
-      console.log('📊 Meetings data:', meetingsRes.data);
-      
+      setTasks(tasksRes.data || []);
       setResearchLogs(logsRes.data || []);
       setStats(statsRes.data || {});
       setBulletins(bulletinsRes.data || []);
       setGrants(grantsRes.data || []);
       setPublications(pubsRes.data || []);
       setLabSettings(labRes.data || {});
+      setMilestones(milestonesRes.data || []);
       
       // Auto-cleanup completed/past items
       const now = new Date();
       
-      // Filter out past meetings (older than 24 hours)
       const filteredMeetings = (meetingsRes.data || []).filter(meeting => {
         const meetingDate = new Date(meeting.meeting_date);
         const diffHours = (now - meetingDate) / (1000 * 60 * 60);
-        return diffHours < 24; // Keep meetings from last 24 hours
+        return diffHours < 24;
       });
       
-      // Filter out completed/past reminders
       const filteredReminders = (remindersRes.data || []).filter(reminder => {
         if (reminder.is_completed) return false;
         const reminderDate = new Date(reminder.reminder_date);
-        return reminderDate >= now; // Keep future reminders only
+        return reminderDate >= now;
       });
       
-      // Filter out completed tasks
       const filteredTasks = (tasksRes.data || []).filter(task => {
         return task.status !== 'completed';
       });
 
-      console.log('🔄 Setting cleaned meetings state with:', filteredMeetings);
       setMeetings(filteredMeetings);
-      
-      console.log('🔄 Setting cleaned reminders state with:', filteredReminders);
       setReminders(filteredReminders);
-      
-      console.log('🔄 Setting milestones state with:', milestonesRes.data);
-      setMilestones(milestonesRes.data || []);
-      
-      console.log('🔄 Setting cleaned tasks state with:', filteredTasks);
       setTasks(filteredTasks);
       setNotes(notesRes.data || []);
 
