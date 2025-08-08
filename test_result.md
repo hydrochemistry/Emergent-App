@@ -582,10 +582,11 @@ metadata:
 
 test_plan:
   current_focus:
-    - "Profile Update API" 
-    - "Research Log Status Tracking System"
-    - "Enhanced Grants Synchronization System"
-    - "Publications Integration System"
+    - "Student Research Log Status Tracking Implementation"
+    - "Enhanced Grants Synchronization System" 
+    - "Active Grants Dashboard Enhancement"
+    - "Student Data Visibility Fix"
+    - "Supervisor-Student Hierarchy Enforcement"
   stuck_tasks: []
   test_all: false
   test_priority: "high_first"
