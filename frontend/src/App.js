@@ -4913,6 +4913,48 @@ const StudentManagementCard = ({ student, user, onStudentUpdated }) => {
               </DialogContent>
             </Dialog>
 
+            {/* Revoke Access Button */}
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={handleRevokeAccess}
+              disabled={isRevoking}
+              className="text-red-600 border-red-600 hover:bg-red-50"
+            >
+              <X className="h-4 w-4 mr-2" />
+              {isRevoking ? 'Revoking...' : 'Revoke'}
+            </Button>
+
+            {/* Freeze/Unfreeze Access Button */}
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={handleFreezeAccess}
+              disabled={isFreezing}
+              className={`${
+                student.study_status === 'suspended' || !student.is_active
+                  ? 'text-blue-600 border-blue-600 hover:bg-blue-50'
+                  : 'text-yellow-600 border-yellow-600 hover:bg-yellow-50'
+              }`}
+            >
+              <Clock className="h-4 w-4 mr-2" />
+              {isFreezing ? 'Processing...' : (
+                student.study_status === 'suspended' || !student.is_active ? 'Unfreeze' : 'Freeze'
+              )}
+            </Button>
+
+            {/* Delete Profile Button */}
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={handleDeleteProfile}
+              disabled={isDeleting}
+              className="text-red-700 border-red-700 hover:bg-red-100"
+            >
+              <Trash2 className="h-4 w-4 mr-2" />
+              {isDeleting ? 'Deleting...' : 'Delete'}
+            </Button>
+
             {/* Demote Dialog */}
             {student.role !== 'student' && (
               <Dialog open={isDemoteOpen} onOpenChange={setIsDemoteOpen}>
