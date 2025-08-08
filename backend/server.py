@@ -760,7 +760,18 @@ async def login(login_data: UserLogin):
 # Enhanced User Routes
 @api_router.put("/users/profile")
 async def update_profile(user_update: UserUpdate, current_user: User = Depends(get_current_user)):
-    update_data = {k: v for k, v in user_update.dict().items() if v is not None}
+    update_data = {k: v for k, v in user_update.dict().items() if v is not None and v != ""}
+    
+    # For supervisors, remove student-specific fields that might be empty
+    if current_user.role in [UserRole.SUPERVISOR, UserRole.ADMIN, UserRole.LAB_MANAGER]:
+        supervisor_irrelevant_fields = [
+            "student_id", "program_type", "study_status", "field_of_study", 
+            "enrollment_date", "expected_graduation_date", "nationality", 
+            "citizenship", "research_area", "lab_name", "scopus_id", "orcid_id"
+        ]
+        for field in supervisor_irrelevant_fields:
+            if field in update_data and (update_data[field] == "" or update_data[field] is None):
+                del update_data[field]
     
     # Convert date strings to datetime objects
     if 'enrollment_date' in update_data and update_data['enrollment_date']:
