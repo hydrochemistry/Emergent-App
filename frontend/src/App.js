@@ -2112,6 +2112,100 @@ const ResearchLogCard = ({ log, user, onLogUpdated }) => {
           </div>
         )}
         
+        {/* Supervisor Review Status */}
+        {log.review_status && (
+          <div className={`p-3 rounded-lg mb-4 ${
+            log.review_status === 'accepted' ? 'bg-green-50' : 
+            log.review_status === 'revision' ? 'bg-yellow-50' : 
+            'bg-red-50'
+          }`}>
+            <div className="flex items-center gap-2">
+              {log.review_status === 'accepted' && <CheckCircle className="h-4 w-4 text-green-600" />}
+              {log.review_status === 'revision' && <Clock className="h-4 w-4 text-yellow-600" />}
+              {log.review_status === 'rejected' && <X className="h-4 w-4 text-red-600" />}
+              <span className="font-medium">
+                Status: {log.review_status === 'accepted' ? 'Accepted' : 
+                         log.review_status === 'revision' ? 'Needs Revision' : 
+                         'Not Accepted'}
+              </span>
+            </div>
+            {log.review_feedback && (
+              <p className="text-sm text-gray-700 mt-2">
+                <strong>Feedback:</strong> {log.review_feedback}
+              </p>
+            )}
+            {log.reviewed_by && log.reviewed_at && (
+              <p className="text-xs text-gray-500 mt-1">
+                Reviewed by {log.reviewer_name || 'Supervisor'} on {new Date(log.reviewed_at).toLocaleDateString()}
+              </p>
+            )}
+          </div>
+        )}
+        
+        {/* Supervisor Review Actions */}
+        {(user.role === 'supervisor' || user.role === 'lab_manager' || user.role === 'admin') && 
+         user.id !== log.student_id && !log.review_status && (
+          <div className="border-t pt-4 mb-4">
+            <h4 className="font-medium text-gray-700 mb-3">Supervisor Review</h4>
+            {!isReviewing ? (
+              <div className="flex gap-2">
+                <Button
+                  onClick={() => handleReviewAction('accepted')}
+                  disabled={reviewLoading}
+                  className="bg-green-600 hover:bg-green-700 text-white"
+                  size="sm"
+                >
+                  <Check className="h-4 w-4 mr-1" />
+                  Accept
+                </Button>
+                <Button
+                  onClick={() => setIsReviewing(true)}
+                  disabled={reviewLoading}
+                  variant="outline"
+                  size="sm"
+                >
+                  <Clock className="h-4 w-4 mr-1" />
+                  Return for Revision
+                </Button>
+                <Button
+                  onClick={() => handleReviewAction('rejected', 'This research log does not meet the required standards.')}
+                  disabled={reviewLoading}
+                  variant="destructive"
+                  size="sm"
+                >
+                  <X className="h-4 w-4 mr-1" />
+                  Not Accept
+                </Button>
+              </div>
+            ) : (
+              <div className="space-y-3">
+                <Textarea
+                  placeholder="Provide feedback for revision..."
+                  rows={3}
+                  onChange={(e) => setIsReviewing(e.target.value)}
+                />
+                <div className="flex gap-2">
+                  <Button
+                    onClick={() => handleReviewAction('revision', isReviewing)}
+                    disabled={reviewLoading}
+                    size="sm"
+                  >
+                    {reviewLoading ? 'Submitting...' : 'Submit Revision Request'}
+                  </Button>
+                  <Button
+                    onClick={() => setIsReviewing(false)}
+                    disabled={reviewLoading}
+                    variant="outline"
+                    size="sm"
+                  >
+                    Cancel
+                  </Button>
+                </div>
+              </div>
+            )}
+          </div>
+        )}
+        
         {log.supervisor_endorsement !== null && (
           <div className={`p-3 rounded-lg ${log.supervisor_endorsement ? 'bg-green-50' : 'bg-red-50'}`}>
             <div className="flex items-center gap-2">
