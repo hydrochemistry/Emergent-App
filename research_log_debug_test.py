@@ -377,7 +377,7 @@ class ResearchLogDebugTester:
         # Test research log creation with different data formats
         self.test_research_log_creation_exact_frontend_data()
         self.test_research_log_creation_backend_format()
-        self.test_research_log_creation_minimal_data()
+        self.test_research_log_minimal_data()
         
         # Test different roles
         self.test_supervisor_role_access()
