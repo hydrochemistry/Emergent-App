@@ -55,7 +55,7 @@ async def approve_student():
     print(f"Updated approval status: {updated_student.get('is_approved', False)}")
     print(f"Updated supervisor ID: {updated_student.get('supervisor_id', 'None')}")
     
-    await client.close()
+    client.close()
 
 if __name__ == "__main__":
     asyncio.run(approve_student())
