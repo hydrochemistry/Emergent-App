@@ -3262,7 +3262,6 @@ const CreateGrantDialog = ({ students, onGrantCreated }) => {
                 value={formData.title}
                 onChange={(e) => setFormData({...formData, title: e.target.value})}
                 placeholder="Enter grant title"
-                required
               />
             </div>
             
