@@ -43,7 +43,7 @@ class CriticalFixesTester:
     async def setup_test_users(self):
         """Create and authenticate test users (supervisor and student)"""
         try:
-            # Setup supervisor
+            # Setup supervisor user
             supervisor_data = {
                 "email": "supervisor.test@research.lab",
                 "password": "TestPassword123!",
@@ -59,24 +59,27 @@ class CriticalFixesTester:
                 data = response.json()
                 self.supervisor_token = data["access_token"]
                 self.supervisor_id = data["user_data"]["id"]
-                self.log_result("Supervisor Setup", True, "Test supervisor created and authenticated")
+                self.log_result("Supervisor Setup", True, "Test supervisor user created and authenticated")
             elif response.status_code == 400 and "already registered" in response.text:
-                # Login instead
-                login_data = {"email": "supervisor.test@research.lab", "password": "TestPassword123!"}
+                # Try to login instead
+                login_data = {
+                    "email": "supervisor.test@research.lab",
+                    "password": "TestPassword123!"
+                }
                 response = await self.client.post(f"{API_BASE}/auth/login", json=login_data)
                 if response.status_code == 200:
                     data = response.json()
                     self.supervisor_token = data["access_token"]
                     self.supervisor_id = data["user_data"]["id"]
-                    self.log_result("Supervisor Setup", True, "Logged in with existing supervisor")
+                    self.log_result("Supervisor Setup", True, "Logged in with existing test supervisor user")
                 else:
-                    self.log_result("Supervisor Setup", False, f"Login failed: {response.status_code}")
+                    self.log_result("Supervisor Setup", False, f"Failed to login supervisor: {response.status_code}")
                     return False
             else:
-                self.log_result("Supervisor Setup", False, f"Registration failed: {response.status_code}")
+                self.log_result("Supervisor Setup", False, f"Failed to setup supervisor: {response.status_code}")
                 return False
             
-            # Setup student
+            # Setup student user
             student_data = {
                 "email": "student.test@research.lab",
                 "password": "TestPassword123!",
@@ -93,21 +96,24 @@ class CriticalFixesTester:
                 data = response.json()
                 self.student_token = data["access_token"]
                 self.student_id = data["user_data"]["id"]
-                self.log_result("Student Setup", True, "Test student created and authenticated")
+                self.log_result("Student Setup", True, "Test student user created and authenticated")
             elif response.status_code == 400 and "already registered" in response.text:
-                # Login instead
-                login_data = {"email": "student.test@research.lab", "password": "TestPassword123!"}
+                # Try to login instead
+                login_data = {
+                    "email": "student.test@research.lab",
+                    "password": "TestPassword123!"
+                }
                 response = await self.client.post(f"{API_BASE}/auth/login", json=login_data)
                 if response.status_code == 200:
                     data = response.json()
                     self.student_token = data["access_token"]
                     self.student_id = data["user_data"]["id"]
-                    self.log_result("Student Setup", True, "Logged in with existing student")
+                    self.log_result("Student Setup", True, "Logged in with existing test student user")
                 else:
-                    self.log_result("Student Setup", False, f"Student login failed: {response.status_code}")
+                    self.log_result("Student Setup", False, f"Failed to login student: {response.status_code}")
                     return False
             else:
-                self.log_result("Student Setup", False, f"Student registration failed: {response.status_code}")
+                self.log_result("Student Setup", False, f"Failed to setup student: {response.status_code}")
                 return False
             
             return True
@@ -124,359 +130,511 @@ class CriticalFixesTester:
         """Get student authorization headers"""
         return {"Authorization": f"Bearer {self.student_token}"}
     
-    async def test_publications_authors_array_format(self):
-        """Test 1: Publications Menu Error Fix - Verify authors field is returned as array (List[str])"""
-        print("\n🔍 TESTING: Publications Authors Array Format Fix")
+    async def test_research_log_submissions_status_fix(self):
+        """Test 1: Research Log Submissions Status Fix"""
+        print("\n🔍 TESTING: Research Log Submissions Status Fix")
         
         try:
-            # Test GET /api/publications endpoint
-            response = await self.client.get(
-                f"{API_BASE}/publications",
-                headers=self.get_supervisor_headers()
-            )
-            
-            if response.status_code == 200:
-                publications = response.json()
-                self.log_result("Publications Endpoint", True, f"GET /api/publications working - Found {len(publications)} publications")
-                
-                # Check if any publications exist and verify authors field format
-                if publications:
-                    authors_format_correct = True
-                    for pub in publications:
-                        authors = pub.get("authors")
-                        if authors is not None:
-                            if not isinstance(authors, list):
-                                authors_format_correct = False
-                                self.log_result("Authors Field Format", False, 
-                                              f"Authors field is not a list: {type(authors)} - {authors}")
-                                break
-                            elif authors and not all(isinstance(author, str) for author in authors):
-                                authors_format_correct = False
-                                self.log_result("Authors Field Format", False, 
-                                              f"Authors list contains non-string elements: {authors}")
-                                break
-                    
-                    if authors_format_correct:
-                        self.log_result("Authors Field Format", True, 
-                                      "All publications have authors field as List[str] format")
-                else:
-                    self.log_result("Publications Data", True, "No publications found - will test with Scopus creation")
-                
-            else:
-                self.log_result("Publications Endpoint", False, 
-                              f"GET /api/publications failed: {response.status_code} - {response.text}")
-        
-        except Exception as e:
-            self.log_result("Publications Authors Test", False, f"Exception: {str(e)}")
-    
-    async def test_scopus_publication_creation(self):
-        """Test 2: Scopus Publication Creation with proper authors array format"""
-        print("\n🔍 TESTING: Scopus Publication Creation & Authors Format")
-        
-        try:
-            # Test POST /api/publications/scopus endpoint (only supervisors can add)
-            scopus_data = {
-                "scopus_id": "2-s2.0-85123456789"
+            # Step 1: Create research log as student
+            research_log_data = {
+                "activity_type": "experiment",
+                "title": "Machine Learning Model Training",
+                "description": "Training neural network for image classification",
+                "duration_hours": 4.5,
+                "findings": "Model achieved 92% accuracy on validation set",
+                "challenges": "Overfitting issues with small dataset",
+                "next_steps": "Implement data augmentation techniques",
+                "tags": ["machine-learning", "neural-networks", "training"]
             }
             
             response = await self.client.post(
-                f"{API_BASE}/publications/scopus",
-                json=scopus_data,
-                headers=self.get_supervisor_headers()
+                f"{API_BASE}/research-logs",
+                json=research_log_data,
+                headers=self.get_student_headers()
             )
             
             if response.status_code in [200, 201]:
-                publication = response.json()
-                self.log_result("Scopus Publication Creation", True, 
-                              f"Publication created from Scopus: {publication.get('title', 'Unknown')}")
+                log_data = response.json()
+                log_id = log_data["id"]
+                self.log_result("Research Log Creation", True, "Student successfully created research log")
                 
-                # Verify authors field is array format
-                authors = publication.get("authors")
-                if isinstance(authors, list) and all(isinstance(author, str) for author in authors):
-                    self.log_result("Scopus Authors Format", True, 
-                                  f"Scopus publication has correct authors format: {authors}")
-                else:
-                    self.log_result("Scopus Authors Format", False, 
-                                  f"Scopus publication has incorrect authors format: {type(authors)} - {authors}")
-                
-                # Test that publication is synchronized across all users
-                # Check as student
+                # Step 2: Test that student can see their own research logs
                 response = await self.client.get(
-                    f"{API_BASE}/publications",
+                    f"{API_BASE}/research-logs",
                     headers=self.get_student_headers()
                 )
                 
                 if response.status_code == 200:
-                    student_publications = response.json()
-                    found_in_student_view = any(pub.get("scopus_id") == scopus_data["scopus_id"] 
-                                              for pub in student_publications)
+                    logs = response.json()
+                    student_log_found = False
+                    for log in logs:
+                        if log.get("id") == log_id and (log.get("user_id") == self.student_id or log.get("student_id") == self.student_id):
+                            student_log_found = True
+                            break
                     
-                    if found_in_student_view:
-                        self.log_result("Publication Synchronization", True, 
-                                      "Scopus publication visible to all users (synchronized)")
+                    if student_log_found:
+                        self.log_result("Student Log Visibility", True, "Student can see their own research logs")
                     else:
-                        self.log_result("Publication Synchronization", False, 
-                                      "Scopus publication not visible to students")
+                        self.log_result("Student Log Visibility", False, "Student cannot see their own research logs - filtering issue")
                 else:
-                    self.log_result("Publication Synchronization", False, 
-                                  f"Failed to check student view: {response.status_code}")
+                    self.log_result("Student Log Visibility", False, f"Failed to retrieve logs as student: {response.status_code}")
                 
-            elif response.status_code == 404:
-                self.log_result("Scopus Publication Creation", False, 
-                              "POST /api/publications/scopus endpoint not found")
-            elif response.status_code == 403:
-                self.log_result("Scopus Publication Creation", False, 
-                              "Supervisor not authorized - check role restrictions")
-            else:
-                self.log_result("Scopus Publication Creation", False, 
-                              f"Scopus creation failed: {response.status_code} - {response.text}")
-            
-            # Test that only supervisors can add publications from Scopus
-            response = await self.client.post(
-                f"{API_BASE}/publications/scopus",
-                json={"scopus_id": "2-s2.0-85987654321"},
-                headers=self.get_student_headers()
-            )
-            
-            if response.status_code == 403:
-                self.log_result("Scopus Access Control", True, 
-                              "Students properly blocked from adding Scopus publications")
-            elif response.status_code == 404:
-                self.log_result("Scopus Access Control", False, 
-                              "Scopus endpoint not found - cannot test access control")
-            else:
-                self.log_result("Scopus Access Control", False, 
-                              f"Student access control failed: {response.status_code}")
-                
-        except Exception as e:
-            self.log_result("Scopus Publication Test", False, f"Exception: {str(e)}")
-    
-    async def test_grant_delete_functionality(self):
-        """Test 3: Grant Delete Functionality with proper authorization"""
-        print("\n🔍 TESTING: Grant Delete Functionality & Authorization")
-        
-        try:
-            # First create a test grant as supervisor
-            grant_data = {
-                "title": "Test Grant for Deletion",
-                "funding_agency": "Test Funding Agency",
-                "funding_type": "national",
-                "total_amount": 50000.0,
-                "status": "active",
-                "start_date": datetime.utcnow().isoformat(),
-                "end_date": (datetime.utcnow() + timedelta(days=365)).isoformat(),
-                "description": "Test grant for deletion functionality testing",
-                "duration_months": 12,
-                "grant_type": "research"
-            }
-            
-            response = await self.client.post(
-                f"{API_BASE}/grants",
-                json=grant_data,
-                headers=self.get_supervisor_headers()
-            )
-            
-            if response.status_code in [200, 201]:
-                grant = response.json()
-                grant_id = grant["id"]
-                self.log_result("Grant Creation", True, f"Test grant created: {grant['title']}")
-                
-                # Test DELETE /api/grants/{grant_id} as supervisor (should work)
-                response = await self.client.delete(
-                    f"{API_BASE}/grants/{grant_id}",
+                # Step 3: Test supervisor can see student logs with student info
+                response = await self.client.get(
+                    f"{API_BASE}/research-logs",
                     headers=self.get_supervisor_headers()
                 )
                 
                 if response.status_code == 200:
-                    self.log_result("Grant Delete (Supervisor)", True, 
-                                  "Supervisor can delete grants successfully")
+                    logs = response.json()
+                    supervisor_can_see_student_log = False
+                    student_info_present = False
                     
-                    # Verify grant is actually deleted
-                    response = await self.client.get(
-                        f"{API_BASE}/grants",
-                        headers=self.get_supervisor_headers()
-                    )
+                    for log in logs:
+                        if log.get("id") == log_id:
+                            supervisor_can_see_student_log = True
+                            if log.get("student_name") or log.get("student_id") or log.get("student_email"):
+                                student_info_present = True
+                            break
                     
-                    if response.status_code == 200:
-                        grants = response.json()
-                        deleted_grant_exists = any(g.get("id") == grant_id for g in grants)
+                    if supervisor_can_see_student_log:
+                        self.log_result("Supervisor Log Visibility", True, "Supervisor can see student research logs")
                         
-                        if not deleted_grant_exists:
-                            self.log_result("Grant Deletion Verification", True, 
-                                          "Grant successfully removed from database")
+                        if student_info_present:
+                            self.log_result("Student Info in Logs", True, "Research logs include student information for supervisor view")
                         else:
-                            self.log_result("Grant Deletion Verification", False, 
-                                          "Grant still exists after deletion")
-                    
-                elif response.status_code == 404:
-                    self.log_result("Grant Delete (Supervisor)", False, 
-                                  "DELETE /api/grants/{grant_id} endpoint not found")
-                elif response.status_code == 403:
-                    self.log_result("Grant Delete (Supervisor)", False, 
-                                  "Supervisor not authorized to delete grants")
+                            self.log_result("Student Info in Logs", False, "Research logs missing student information for supervisor view")
+                    else:
+                        self.log_result("Supervisor Log Visibility", False, "Supervisor cannot see student research logs")
                 else:
-                    self.log_result("Grant Delete (Supervisor)", False, 
-                                  f"Grant deletion failed: {response.status_code} - {response.text}")
+                    self.log_result("Supervisor Log Visibility", False, f"Failed to retrieve logs as supervisor: {response.status_code}")
                 
-                # Create another grant to test student access control
+                return log_id  # Return for use in review test
+                
+            else:
+                self.log_result("Research Log Creation", False, f"Failed to create research log: {response.status_code} - {response.text}")
+                return None
+                
+        except Exception as e:
+            self.log_result("Research Log Status Test", False, f"Exception: {str(e)}")
+            return None
+    
+    async def test_supervisor_review_system(self, log_id=None):
+        """Test 2: Supervisor Review System"""
+        print("\n🔍 TESTING: Supervisor Review System")
+        
+        try:
+            if not log_id:
+                # Create a research log if not provided
+                research_log_data = {
+                    "activity_type": "literature_review",
+                    "title": "Review of Deep Learning Papers",
+                    "description": "Comprehensive review of recent deep learning literature",
+                    "duration_hours": 6.0,
+                    "findings": "Identified key trends in transformer architectures",
+                    "challenges": "Large volume of papers to review",
+                    "next_steps": "Focus on specific application domains",
+                    "tags": ["literature-review", "deep-learning"]
+                }
+                
                 response = await self.client.post(
-                    f"{API_BASE}/grants",
-                    json=grant_data,
-                    headers=self.get_supervisor_headers()
+                    f"{API_BASE}/research-logs",
+                    json=research_log_data,
+                    headers=self.get_student_headers()
                 )
                 
                 if response.status_code in [200, 201]:
-                    grant2 = response.json()
-                    grant2_id = grant2["id"]
-                    
-                    # Test DELETE as student (should fail with 403)
-                    response = await self.client.delete(
-                        f"{API_BASE}/grants/{grant2_id}",
-                        headers=self.get_student_headers()
-                    )
-                    
-                    if response.status_code == 403:
-                        self.log_result("Grant Delete Authorization", True, 
-                                      "Students properly blocked from deleting grants")
-                    elif response.status_code == 404:
-                        self.log_result("Grant Delete Authorization", False, 
-                                      "DELETE endpoint not found - cannot test authorization")
-                    else:
-                        self.log_result("Grant Delete Authorization", False, 
-                                      f"Student authorization check failed: {response.status_code}")
-                    
-                    # Test that grant creator can delete their own grants
-                    response = await self.client.delete(
-                        f"{API_BASE}/grants/{grant2_id}",
-                        headers=self.get_supervisor_headers()
-                    )
-                    
-                    if response.status_code == 200:
-                        self.log_result("Grant Creator Delete", True, 
-                                      "Grant creator can delete their own grants")
-                    else:
-                        self.log_result("Grant Creator Delete", False, 
-                                      f"Grant creator deletion failed: {response.status_code}")
-                
-            else:
-                self.log_result("Grant Creation", False, 
-                              f"Failed to create test grant: {response.status_code} - {response.text}")
-                
-        except Exception as e:
-            self.log_result("Grant Delete Test", False, f"Exception: {str(e)}")
-    
-    async def test_publications_data_format_comprehensive(self):
-        """Test 4: Comprehensive Publications Data Format Testing"""
-        print("\n🔍 TESTING: Publications Data Format Comprehensive Check")
-        
-        try:
-            # Test GET /api/publications/all endpoint (enhanced view)
-            response = await self.client.get(
-                f"{API_BASE}/publications/all",
+                    log_data = response.json()
+                    log_id = log_data["id"]
+                    self.log_result("Review Test Log Creation", True, "Created research log for review testing")
+                else:
+                    self.log_result("Review Test Log Creation", False, "Failed to create research log for review testing")
+                    return
+            
+            # Test 1: Accept review
+            review_data = {
+                "action": "accepted",
+                "feedback": "Excellent work! The research methodology is sound and findings are well-documented."
+            }
+            
+            response = await self.client.post(
+                f"{API_BASE}/research-logs/{log_id}/review",
+                json=review_data,
                 headers=self.get_supervisor_headers()
             )
             
             if response.status_code == 200:
-                publications = response.json()
-                self.log_result("Publications All Endpoint", True, 
-                              f"GET /api/publications/all working - Found {len(publications)} publications")
+                self.log_result("Review Accept", True, "Supervisor can accept research logs")
                 
-                # Check data format for all publications
-                if publications:
-                    format_issues = []
-                    for i, pub in enumerate(publications):
-                        # Check required fields
-                        required_fields = ["title", "authors", "publication_year"]
-                        for field in required_fields:
-                            if field not in pub:
-                                format_issues.append(f"Publication {i}: Missing {field}")
-                        
-                        # Check authors field specifically
-                        authors = pub.get("authors")
-                        if authors is not None:
-                            if not isinstance(authors, list):
-                                format_issues.append(f"Publication {i}: authors is not list: {type(authors)}")
-                            elif not all(isinstance(author, str) for author in authors):
-                                format_issues.append(f"Publication {i}: authors contains non-strings")
-                        
-                        # Check publication_year is integer
-                        year = pub.get("publication_year")
-                        if year is not None and not isinstance(year, int):
-                            format_issues.append(f"Publication {i}: publication_year is not int: {type(year)}")
-                    
-                    if not format_issues:
-                        self.log_result("Publications Data Format", True, 
-                                      "All publications have correct data format")
-                    else:
-                        self.log_result("Publications Data Format", False, 
-                                      f"Data format issues found: {format_issues[:3]}")  # Show first 3 issues
-                else:
-                    self.log_result("Publications Data Format", True, 
-                                  "No publications to check format - endpoint working")
-                
-            elif response.status_code == 404:
-                self.log_result("Publications All Endpoint", False, 
-                              "GET /api/publications/all endpoint not found")
-            else:
-                self.log_result("Publications All Endpoint", False, 
-                              f"Publications/all failed: {response.status_code}")
-            
-            # Test regular publications endpoint for both roles
-            for role, headers in [("supervisor", self.get_supervisor_headers()), 
-                                ("student", self.get_student_headers())]:
+                # Verify review status is stored
                 response = await self.client.get(
-                    f"{API_BASE}/publications",
-                    headers=headers
+                    f"{API_BASE}/research-logs",
+                    headers=self.get_student_headers()
                 )
                 
                 if response.status_code == 200:
-                    publications = response.json()
-                    self.log_result(f"Publications Access ({role})", True, 
-                                  f"{role.capitalize()} can access publications")
+                    logs = response.json()
+                    reviewed_log = None
+                    for log in logs:
+                        if log.get("id") == log_id:
+                            reviewed_log = log
+                            break
                     
-                    # Verify data structure consistency
-                    if publications:
-                        sample_pub = publications[0]
-                        has_authors_array = isinstance(sample_pub.get("authors"), list)
-                        if has_authors_array:
-                            self.log_result(f"Publications Format ({role})", True, 
-                                          f"{role.capitalize()} sees correct authors format")
+                    if reviewed_log and reviewed_log.get("review_status") == "accepted":
+                        self.log_result("Review Status Storage", True, "Review status properly stored and retrievable")
+                        
+                        if reviewed_log.get("review_feedback"):
+                            self.log_result("Review Feedback Storage", True, "Review feedback properly stored")
                         else:
-                            self.log_result(f"Publications Format ({role})", False, 
-                                          f"{role.capitalize()} sees incorrect authors format")
+                            self.log_result("Review Feedback Storage", False, "Review feedback not stored")
+                            
+                        if reviewed_log.get("reviewer_name"):
+                            self.log_result("Reviewer Info Storage", True, "Reviewer information properly stored")
+                        else:
+                            self.log_result("Reviewer Info Storage", False, "Reviewer information not stored")
+                    else:
+                        self.log_result("Review Status Storage", False, "Review status not properly stored")
                 else:
-                    self.log_result(f"Publications Access ({role})", False, 
-                                  f"{role.capitalize()} cannot access publications: {response.status_code}")
+                    self.log_result("Review Status Storage", False, "Failed to retrieve logs to verify review status")
+            else:
+                self.log_result("Review Accept", False, f"Failed to accept research log: {response.status_code} - {response.text}")
+            
+            # Test 2: Revision review
+            review_data = {
+                "action": "revision",
+                "feedback": "Good work, but please add more details about the experimental setup and include statistical analysis."
+            }
+            
+            response = await self.client.post(
+                f"{API_BASE}/research-logs/{log_id}/review",
+                json=review_data,
+                headers=self.get_supervisor_headers()
+            )
+            
+            if response.status_code == 200:
+                self.log_result("Review Revision", True, "Supervisor can request revisions")
+            else:
+                self.log_result("Review Revision", False, f"Failed to request revision: {response.status_code}")
+            
+            # Test 3: Reject review
+            review_data = {
+                "action": "rejected",
+                "feedback": "The research methodology needs significant improvement. Please consult with me before proceeding."
+            }
+            
+            response = await self.client.post(
+                f"{API_BASE}/research-logs/{log_id}/review",
+                json=review_data,
+                headers=self.get_supervisor_headers()
+            )
+            
+            if response.status_code == 200:
+                self.log_result("Review Reject", True, "Supervisor can reject research logs")
+            else:
+                self.log_result("Review Reject", False, f"Failed to reject research log: {response.status_code}")
+            
+            # Test 4: Student cannot review (authorization test)
+            review_data = {
+                "action": "accepted",
+                "feedback": "Student trying to review"
+            }
+            
+            response = await self.client.post(
+                f"{API_BASE}/research-logs/{log_id}/review",
+                json=review_data,
+                headers=self.get_student_headers()
+            )
+            
+            if response.status_code == 403:
+                self.log_result("Review Authorization", True, "Students properly blocked from reviewing")
+            else:
+                self.log_result("Review Authorization", False, f"Students not properly blocked from reviewing: {response.status_code}")
+            
+            # Test 5: Invalid action validation
+            review_data = {
+                "action": "invalid_action",
+                "feedback": "Testing invalid action"
+            }
+            
+            response = await self.client.post(
+                f"{API_BASE}/research-logs/{log_id}/review",
+                json=review_data,
+                headers=self.get_supervisor_headers()
+            )
+            
+            if response.status_code == 400:
+                self.log_result("Review Validation", True, "Invalid review actions properly rejected")
+            else:
+                self.log_result("Review Validation", False, f"Invalid actions not properly validated: {response.status_code}")
                 
         except Exception as e:
-            self.log_result("Publications Format Test", False, f"Exception: {str(e)}")
+            self.log_result("Supervisor Review Test", False, f"Exception: {str(e)}")
     
-    async def run_critical_fixes_tests(self):
-        """Run all critical fixes tests"""
+    async def test_user_registration_approval_system(self):
+        """Test 3: User Registration Approval System"""
+        print("\n🔍 TESTING: User Registration Approval System")
+        
+        try:
+            # Test 1: Create unapproved user
+            unapproved_user_data = {
+                "email": "unapproved.student@research.lab",
+                "password": "TestPassword123!",
+                "full_name": "Unapproved Test Student",
+                "role": "student",
+                "student_id": "CS2024003",
+                "department": "Computer Science",
+                "program_type": "msc_research",
+                "supervisor_email": "supervisor.test@research.lab"
+            }
+            
+            response = await self.client.post(f"{API_BASE}/auth/register", json=unapproved_user_data)
+            
+            if response.status_code in [200, 201]:
+                unapproved_data = response.json()
+                unapproved_user_id = unapproved_data["user_data"]["id"]
+                unapproved_token = unapproved_data["access_token"]
+                self.log_result("Unapproved User Creation", True, "Unapproved user created successfully")
+                
+                # Test 2: Check if unapproved user gets 403 when accessing system
+                response = await self.client.get(
+                    f"{API_BASE}/research-logs",
+                    headers={"Authorization": f"Bearer {unapproved_token}"}
+                )
+                
+                if response.status_code == 403:
+                    self.log_result("Unapproved User Access Block", True, "Unapproved users properly blocked from system access")
+                else:
+                    self.log_result("Unapproved User Access Block", False, f"Unapproved users not properly blocked: {response.status_code}")
+                
+                # Test 3: Get pending registrations (supervisor view)
+                response = await self.client.get(
+                    f"{API_BASE}/pending-registrations",
+                    headers=self.get_supervisor_headers()
+                )
+                
+                if response.status_code == 200:
+                    pending_users = response.json()
+                    pending_user_found = False
+                    for user in pending_users:
+                        if user.get("id") == unapproved_user_id:
+                            pending_user_found = True
+                            break
+                    
+                    if pending_user_found:
+                        self.log_result("Pending Registrations Endpoint", True, "Pending registrations endpoint working")
+                    else:
+                        self.log_result("Pending Registrations Endpoint", False, "Unapproved user not found in pending registrations")
+                elif response.status_code == 404:
+                    self.log_result("Pending Registrations Endpoint", False, "GET /api/pending-registrations endpoint not found - needs implementation")
+                else:
+                    self.log_result("Pending Registrations Endpoint", False, f"Pending registrations endpoint failed: {response.status_code}")
+                
+                # Test 4: Approve user
+                response = await self.client.post(
+                    f"{API_BASE}/users/{unapproved_user_id}/approve",
+                    headers=self.get_supervisor_headers()
+                )
+                
+                if response.status_code == 200:
+                    self.log_result("User Approval", True, "User approval endpoint working")
+                    
+                    # Test 5: Check if approved user can now access system
+                    response = await self.client.get(
+                        f"{API_BASE}/research-logs",
+                        headers={"Authorization": f"Bearer {unapproved_token}"}
+                    )
+                    
+                    if response.status_code == 200:
+                        self.log_result("Approved User Access", True, "Approved users can access system")
+                    else:
+                        self.log_result("Approved User Access", False, f"Approved users still blocked: {response.status_code}")
+                        
+                elif response.status_code == 404:
+                    self.log_result("User Approval", False, "POST /api/users/{user_id}/approve endpoint not found - needs implementation")
+                else:
+                    self.log_result("User Approval", False, f"User approval failed: {response.status_code}")
+                
+                # Test 6: Create another unapproved user for rejection test
+                reject_user_data = {
+                    "email": "reject.student@research.lab",
+                    "password": "TestPassword123!",
+                    "full_name": "Reject Test Student",
+                    "role": "student",
+                    "student_id": "CS2024004",
+                    "department": "Computer Science",
+                    "program_type": "msc_research",
+                    "supervisor_email": "supervisor.test@research.lab"
+                }
+                
+                response = await self.client.post(f"{API_BASE}/auth/register", json=reject_user_data)
+                
+                if response.status_code in [200, 201]:
+                    reject_data = response.json()
+                    reject_user_id = reject_data["user_data"]["id"]
+                    
+                    # Test 7: Reject user
+                    response = await self.client.post(
+                        f"{API_BASE}/users/{reject_user_id}/reject",
+                        headers=self.get_supervisor_headers()
+                    )
+                    
+                    if response.status_code == 200:
+                        self.log_result("User Rejection", True, "User rejection endpoint working")
+                    elif response.status_code == 404:
+                        self.log_result("User Rejection", False, "POST /api/users/{user_id}/reject endpoint not found - needs implementation")
+                    else:
+                        self.log_result("User Rejection", False, f"User rejection failed: {response.status_code}")
+                else:
+                    self.log_result("Reject User Creation", False, "Failed to create user for rejection test")
+                    
+            else:
+                self.log_result("Unapproved User Creation", False, f"Failed to create unapproved user: {response.status_code}")
+                
+        except Exception as e:
+            self.log_result("User Approval System Test", False, f"Exception: {str(e)}")
+    
+    async def test_enhanced_user_management_endpoints(self):
+        """Test 4: Enhanced User Management Endpoints"""
+        print("\n🔍 TESTING: Enhanced User Management Endpoints")
+        
+        try:
+            # Test 1: PUT /api/users/{user_id}/edit for profile editing
+            edit_data = {
+                "full_name": "Updated Test Student Name",
+                "contact_number": "+1234567890",
+                "research_area": "Updated Research Area"
+            }
+            
+            response = await self.client.put(
+                f"{API_BASE}/users/{self.student_id}/edit",
+                json=edit_data,
+                headers=self.get_supervisor_headers()
+            )
+            
+            if response.status_code == 200:
+                self.log_result("User Profile Edit", True, "User profile edit endpoint working")
+            elif response.status_code == 404:
+                self.log_result("User Profile Edit", False, "PUT /api/users/{user_id}/edit endpoint not found - needs implementation")
+            else:
+                self.log_result("User Profile Edit", False, f"Profile edit failed: {response.status_code}")
+            
+            # Test 2: POST /api/users/{user_id}/freeze for access control
+            response = await self.client.post(
+                f"{API_BASE}/users/{self.student_id}/freeze",
+                headers=self.get_supervisor_headers()
+            )
+            
+            if response.status_code == 200:
+                self.log_result("User Freeze", True, "User freeze endpoint working")
+                
+                # Test if frozen user cannot access system
+                response = await self.client.get(
+                    f"{API_BASE}/research-logs",
+                    headers=self.get_student_headers()
+                )
+                
+                if response.status_code == 403:
+                    self.log_result("Frozen User Access Block", True, "Frozen users properly blocked from system access")
+                else:
+                    self.log_result("Frozen User Access Block", False, f"Frozen users not properly blocked: {response.status_code}")
+                    
+            elif response.status_code == 404:
+                self.log_result("User Freeze", False, "POST /api/users/{user_id}/freeze endpoint not found - needs implementation")
+            else:
+                self.log_result("User Freeze", False, f"User freeze failed: {response.status_code}")
+            
+            # Test 3: POST /api/users/{user_id}/unfreeze for access restoration
+            response = await self.client.post(
+                f"{API_BASE}/users/{self.student_id}/unfreeze",
+                headers=self.get_supervisor_headers()
+            )
+            
+            if response.status_code == 200:
+                self.log_result("User Unfreeze", True, "User unfreeze endpoint working")
+                
+                # Test if unfrozen user can access system again
+                response = await self.client.get(
+                    f"{API_BASE}/research-logs",
+                    headers=self.get_student_headers()
+                )
+                
+                if response.status_code == 200:
+                    self.log_result("Unfrozen User Access Restore", True, "Unfrozen users can access system again")
+                else:
+                    self.log_result("Unfrozen User Access Restore", False, f"Unfrozen users still blocked: {response.status_code}")
+                    
+            elif response.status_code == 404:
+                self.log_result("User Unfreeze", False, "POST /api/users/{user_id}/unfreeze endpoint not found - needs implementation")
+            else:
+                self.log_result("User Unfreeze", False, f"User unfreeze failed: {response.status_code}")
+            
+            # Test 4: Authorization - student cannot manage other users
+            response = await self.client.post(
+                f"{API_BASE}/users/{self.supervisor_id}/freeze",
+                headers=self.get_student_headers()
+            )
+            
+            if response.status_code == 403:
+                self.log_result("User Management Authorization", True, "Students properly blocked from user management")
+            else:
+                self.log_result("User Management Authorization", False, f"Students not properly blocked from user management: {response.status_code}")
+            
+            # Test 5: DELETE /api/users/{user_id} for profile deletion (careful test)
+            # Create a temporary user for deletion test
+            temp_user_data = {
+                "email": "temp.delete@research.lab",
+                "password": "TestPassword123!",
+                "full_name": "Temporary Delete User",
+                "role": "student",
+                "student_id": "CS2024999",
+                "department": "Computer Science",
+                "supervisor_email": "supervisor.test@research.lab"
+            }
+            
+            response = await self.client.post(f"{API_BASE}/auth/register", json=temp_user_data)
+            
+            if response.status_code in [200, 201]:
+                temp_data = response.json()
+                temp_user_id = temp_data["user_data"]["id"]
+                
+                # Test deletion
+                response = await self.client.delete(
+                    f"{API_BASE}/users/{temp_user_id}",
+                    headers=self.get_supervisor_headers()
+                )
+                
+                if response.status_code == 200:
+                    self.log_result("User Deletion", True, "User deletion endpoint working")
+                elif response.status_code == 404:
+                    self.log_result("User Deletion", False, "DELETE /api/users/{user_id} endpoint not found - needs implementation")
+                else:
+                    self.log_result("User Deletion", False, f"User deletion failed: {response.status_code}")
+            else:
+                self.log_result("Temp User Creation", False, "Failed to create temporary user for deletion test")
+                
+        except Exception as e:
+            self.log_result("Enhanced User Management Test", False, f"Exception: {str(e)}")
+    
+    async def run_all_critical_tests(self):
+        """Run all critical fix tests"""
         print("🚀 STARTING CRITICAL FIXES TESTING")
-        print("=" * 70)
-        print("Testing the 4 critical fixes that were just implemented:")
-        print("1. Publications Menu Error Fix (authors field as List[str])")
-        print("2. Grant Delete Functionality with authorization")
-        print("3. Scopus Publication Restrictions (supervisor-only)")
-        print("4. Publications Data Format Fix (comprehensive)")
-        print("=" * 70)
+        print("=" * 60)
         
         # Setup test users
         if not await self.setup_test_users():
             print("❌ Cannot proceed without authenticated users")
             return
         
-        # Run all critical fixes tests
-        await self.test_publications_authors_array_format()
-        await self.test_scopus_publication_creation()
-        await self.test_grant_delete_functionality()
-        await self.test_publications_data_format_comprehensive()
+        # Run all critical tests
+        log_id = await self.test_research_log_submissions_status_fix()
+        await self.test_supervisor_review_system(log_id)
+        await self.test_user_registration_approval_system()
+        await self.test_enhanced_user_management_endpoints()
         
         # Print summary
-        print("\n" + "=" * 70)
+        print("\n" + "=" * 60)
         print("📊 CRITICAL FIXES TEST SUMMARY")
-        print("=" * 70)
+        print("=" * 60)
         
         total_tests = len(self.test_results)
         passed_tests = len([r for r in self.test_results if "✅ PASS" in r["status"]])
@@ -491,22 +649,11 @@ class CriticalFixesTester:
         for result in self.test_results:
             print(f"{result['status']}: {result['test']} - {result['message']}")
         
-        # Categorize results by fix
-        print("\n🔍 RESULTS BY CRITICAL FIX:")
-        
-        publications_tests = [r for r in self.test_results if "Publications" in r["test"] or "Authors" in r["test"]]
-        scopus_tests = [r for r in self.test_results if "Scopus" in r["test"]]
-        grant_tests = [r for r in self.test_results if "Grant" in r["test"]]
-        
-        print(f"\n1. Publications Authors Array Fix: {len([t for t in publications_tests if '✅' in t['status']])}/{len(publications_tests)} passed")
-        print(f"2. Scopus Publication Restrictions: {len([t for t in scopus_tests if '✅' in t['status']])}/{len(scopus_tests)} passed")
-        print(f"3. Grant Delete Functionality: {len([t for t in grant_tests if '✅' in t['status']])}/{len(grant_tests)} passed")
-        
         return passed_tests, failed_tests
 
 async def main():
     async with CriticalFixesTester() as tester:
-        await tester.run_critical_fixes_tests()
+        await tester.run_all_critical_tests()
 
 if __name__ == "__main__":
     asyncio.run(main())
