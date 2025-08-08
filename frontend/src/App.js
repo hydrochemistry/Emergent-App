@@ -4541,6 +4541,49 @@ const AdminPanel = ({ user, labSettings, onSettingsUpdated, menuSettings, onMenu
           )}
         </TabsContent>
 
+        {/* Menu Settings Tab */}
+        <TabsContent value="menu-settings" className="mt-6">
+          {user.role === 'supervisor' ? (
+            <Card>
+              <CardHeader>
+                <CardTitle>Menu Settings</CardTitle>
+              </CardHeader>
+              <CardContent>
+                <div className="space-y-4">
+                  <p className="text-sm text-gray-600">Enable or disable menu tabs for all users</p>
+                  <div className="grid grid-cols-2 gap-4">
+                    {Object.entries(menuSettings).map(([key, value]) => (
+                      <div key={key} className="flex items-center space-x-2">
+                        <input
+                          type="checkbox"
+                          id={key}
+                          checked={value}
+                          onChange={(e) => onMenuSettingsUpdated({
+                            ...menuSettings,
+                            [key]: e.target.checked
+                          })}
+                          className="rounded border-gray-300"
+                        />
+                        <Label htmlFor={key} className="text-sm font-medium capitalize">
+                          {key.replace('_', ' ')}
+                        </Label>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              </CardContent>
+            </Card>
+          ) : (
+            <Card>
+              <CardContent className="text-center py-12">
+                <Settings className="h-12 w-12 text-gray-400 mx-auto mb-4" />
+                <h3 className="text-lg font-medium text-gray-900 mb-2">Access Restricted</h3>
+                <p className="text-gray-500">Only supervisors can access menu settings.</p>
+              </CardContent>
+            </Card>
+          )}
+        </TabsContent>
+
         {/* Security Tab */}
         <TabsContent value="security" className="mt-6">
           <Card>
