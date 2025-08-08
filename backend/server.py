@@ -1437,21 +1437,31 @@ async def download_research_log_pdf(log_id: str, current_user: User = Depends(ge
 
 @api_router.get("/research-logs", response_model=List[ResearchLog])
 async def get_research_logs(current_user: User = Depends(get_current_user)):
-    if current_user.role == UserRole.STUDENT:
-        logs = await db.research_logs.find({"user_id": current_user.id}).sort("date", -1).to_list(1000)
-    else:
-        student_ids = []
-        students = await db.users.find({"supervisor_id": current_user.id}).to_list(1000)
-        student_ids = [student["id"] for student in students]
-        logs = await db.research_logs.find({"user_id": {"$in": student_ids}}).sort("date", -1).to_list(1000)
-        
-        # Add student information for supervisor view
-        student_map = {student["id"]: student for student in students}
-        for log in logs:
-            student_info = student_map.get(log["user_id"], {})
-            log["student_name"] = student_info.get("full_name", "Unknown Student")
-            log["student_id"] = student_info.get("student_id", log["user_id"])
-            log["student_email"] = student_info.get("email", "")
+    """Get lab-wide research logs - synchronized data for all users in same lab"""
+    # Get supervisor ID for lab-wide data synchronization
+    supervisor_id = current_user.supervisor_id or current_user.id
+    
+    # Get all students under this supervisor (including the supervisor if they have logs)
+    students = await db.users.find({"supervisor_id": supervisor_id}).to_list(1000)
+    student_ids = [student["id"] for student in students]
+    
+    # Include supervisor's own ID for their research logs
+    if current_user.role != UserRole.STUDENT:
+        student_ids.append(current_user.id)
+    
+    # Fetch all lab research logs for synchronization
+    logs = await db.research_logs.find({"user_id": {"$in": student_ids}}).sort("date", -1).to_list(1000)
+    
+    # Add student information for all users to see
+    student_map = {student["id"]: student for student in students}
+    if current_user.role != UserRole.STUDENT:
+        student_map[current_user.id] = {"full_name": current_user.full_name, "student_id": current_user.id, "email": current_user.email}
+    
+    for log in logs:
+        student_info = student_map.get(log["user_id"], {})
+        log["student_name"] = student_info.get("full_name", "Unknown Student")
+        log["student_id"] = student_info.get("student_id", log["user_id"])
+        log["student_email"] = student_info.get("email", "")
     
     return [ResearchLog(**log) for log in logs]
 
