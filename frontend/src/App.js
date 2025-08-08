@@ -95,9 +95,15 @@ const AuthContext = ({ children }) => {
   }, []);
 
   const login = (token, userData) => {
+    console.log('🔑 Setting up authentication...');
     localStorage.setItem('token', token);
     localStorage.setItem('userData', JSON.stringify(userData));
+    
+    // Ensure axios defaults are set
+    delete axios.defaults.headers.common['Authorization'];
     axios.defaults.headers.common['Authorization'] = `Bearer ${token}`;
+    
+    console.log('✅ Auth token set:', axios.defaults.headers.common['Authorization']);
     setUser(userData);
   };
 
