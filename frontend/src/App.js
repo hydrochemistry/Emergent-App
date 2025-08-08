@@ -2506,13 +2506,46 @@ const CreateMeetingDialog = ({ students, onMeetingCreated, user }) => {
             </div>
             <div>
               <Label htmlFor="meeting_time">Time *</Label>
-              <Input
-                id="meeting_time"
-                type="time"
-                value={formData.meeting_time}
-                onChange={(e) => setFormData({...formData, meeting_time: e.target.value})}
-                required
-              />
+              <Select value={formData.meeting_time} onValueChange={(value) => setFormData({...formData, meeting_time: value})}>
+                <SelectTrigger>
+                  <SelectValue placeholder="Select time" />
+                </SelectTrigger>
+                <SelectContent className="max-h-60 overflow-y-auto">
+                  <SelectItem value="06:00">06:00</SelectItem>
+                  <SelectItem value="06:30">06:30</SelectItem>
+                  <SelectItem value="07:00">07:00</SelectItem>
+                  <SelectItem value="07:30">07:30</SelectItem>
+                  <SelectItem value="08:00">08:00</SelectItem>
+                  <SelectItem value="08:30">08:30</SelectItem>
+                  <SelectItem value="09:00">09:00</SelectItem>
+                  <SelectItem value="09:30">09:30</SelectItem>
+                  <SelectItem value="10:00">10:00</SelectItem>
+                  <SelectItem value="10:30">10:30</SelectItem>
+                  <SelectItem value="11:00">11:00</SelectItem>
+                  <SelectItem value="11:30">11:30</SelectItem>
+                  <SelectItem value="12:00">12:00</SelectItem>
+                  <SelectItem value="12:30">12:30</SelectItem>
+                  <SelectItem value="13:00">13:00</SelectItem>
+                  <SelectItem value="13:30">13:30</SelectItem>
+                  <SelectItem value="14:00">14:00</SelectItem>
+                  <SelectItem value="14:30">14:30</SelectItem>
+                  <SelectItem value="15:00">15:00</SelectItem>
+                  <SelectItem value="15:30">15:30</SelectItem>
+                  <SelectItem value="16:00">16:00</SelectItem>
+                  <SelectItem value="16:30">16:30</SelectItem>
+                  <SelectItem value="17:00">17:00</SelectItem>
+                  <SelectItem value="17:30">17:30</SelectItem>
+                  <SelectItem value="18:00">18:00</SelectItem>
+                  <SelectItem value="18:30">18:30</SelectItem>
+                  <SelectItem value="19:00">19:00</SelectItem>
+                  <SelectItem value="19:30">19:30</SelectItem>
+                  <SelectItem value="20:00">20:00</SelectItem>
+                  <SelectItem value="20:30">20:30</SelectItem>
+                  <SelectItem value="21:00">21:00</SelectItem>
+                  <SelectItem value="21:30">21:30</SelectItem>
+                  <SelectItem value="22:00">22:00</SelectItem>
+                </SelectContent>
+              </Select>
             </div>
           </div>
           
