@@ -2158,6 +2158,71 @@ async def delete_user_profile(user_id: str, current_user: User = Depends(get_cur
     
     return {"message": "User profile and all associated data deleted successfully"}
 
+@api_router.get("/pending-registrations")
+async def get_pending_registrations(current_user: User = Depends(get_current_user)):
+    """Get pending user registrations awaiting supervisor approval"""
+    if current_user.role not in [UserRole.SUPERVISOR, UserRole.LAB_MANAGER, UserRole.ADMIN]:
+        raise HTTPException(status_code=403, detail="Not authorized to view pending registrations")
+    
+    # Get users who are not approved yet
+    pending_users = await db.users.find({"is_approved": False}).to_list(1000)
+    
+    return [{
+        "id": user["id"],
+        "full_name": user["full_name"],
+        "email": user["email"],
+        "role": user["role"],
+        "student_id": user.get("student_id"),
+        "department": user.get("department"),
+        "program_type": user.get("program_type"),
+        "research_area": user.get("research_area"),
+        "created_at": user.get("created_at")
+    } for user in pending_users]
+
+@api_router.post("/users/{user_id}/approve")
+async def approve_user_registration(user_id: str, current_user: User = Depends(get_current_user)):
+    """Approve pending user registration"""
+    if current_user.role not in [UserRole.SUPERVISOR, UserRole.LAB_MANAGER, UserRole.ADMIN]:
+        raise HTTPException(status_code=403, detail="Not authorized to approve registrations")
+    
+    user_to_approve = await db.users.find_one({"id": user_id})
+    if not user_to_approve:
+        raise HTTPException(status_code=404, detail="User not found")
+    
+    if user_to_approve.get("is_approved"):
+        raise HTTPException(status_code=400, detail="User is already approved")
+    
+    # Approve the user
+    await db.users.update_one(
+        {"id": user_id},
+        {"$set": {
+            "is_approved": True,
+            "approved_by": current_user.id,
+            "approved_at": datetime.utcnow(),
+            "updated_at": datetime.utcnow()
+        }}
+    )
+    
+    return {"message": "User registration approved successfully"}
+
+@api_router.post("/users/{user_id}/reject")
+async def reject_user_registration(user_id: str, rejection_reason: str = None, current_user: User = Depends(get_current_user)):
+    """Reject pending user registration and delete account"""
+    if current_user.role not in [UserRole.SUPERVISOR, UserRole.LAB_MANAGER, UserRole.ADMIN]:
+        raise HTTPException(status_code=403, detail="Not authorized to reject registrations")
+    
+    user_to_reject = await db.users.find_one({"id": user_id})
+    if not user_to_reject:
+        raise HTTPException(status_code=404, detail="User not found")
+    
+    if user_to_reject.get("is_approved"):
+        raise HTTPException(status_code=400, detail="Cannot reject already approved user")
+    
+    # Delete the rejected user
+    await db.users.delete_one({"id": user_id})
+    
+    return {"message": "User registration rejected and account deleted successfully"}
+
 # Include the router in the main app
 app.include_router(api_router)
 
