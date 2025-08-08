@@ -159,11 +159,31 @@ class RegressionFixesTester:
                 self.log_result("Supervisor Profile Update - Basic Fields", True, 
                               "Supervisor can update profile with salutation, full_name, contact_number")
                 
-                # Test that enum validation errors are resolved - try with empty program_type and study_status
-                profile_with_empty_enums = {
+                # Test that enum validation errors are resolved - try with None values for enums
+                profile_with_none_enums = {
                     "full_name": "Prof. Test Enum Fix",
-                    "program_type": "",  # Empty string should not cause enum error
-                    "study_status": ""   # Empty string should not cause enum error
+                    "program_type": None,  # None should not cause enum error
+                    "study_status": None   # None should not cause enum error
+                }
+                
+                response = await self.client.put(
+                    f"{API_BASE}/users/profile",
+                    json=profile_with_none_enums,
+                    headers=self.get_supervisor_headers()
+                )
+                
+                if response.status_code == 200:
+                    self.log_result("Supervisor Profile Update - Enum Fix (None)", True, 
+                                  "None values for program_type and study_status work correctly")
+                else:
+                    self.log_result("Supervisor Profile Update - Enum Fix (None)", False, 
+                                  f"None enum validation error: {response.status_code} - {response.text}")
+                
+                # Test with empty strings (this should be handled by the backend)
+                profile_with_empty_enums = {
+                    "full_name": "Prof. Test Enum Fix Empty",
+                    "program_type": "",  # Empty string should be filtered out by backend
+                    "study_status": ""   # Empty string should be filtered out by backend
                 }
                 
                 response = await self.client.put(
@@ -173,11 +193,11 @@ class RegressionFixesTester:
                 )
                 
                 if response.status_code == 200:
-                    self.log_result("Supervisor Profile Update - Enum Fix", True, 
+                    self.log_result("Supervisor Profile Update - Enum Fix (Empty)", True, 
                                   "Empty string handling for program_type and study_status works correctly")
                 else:
-                    self.log_result("Supervisor Profile Update - Enum Fix", False, 
-                                  f"Enum validation error still exists: {response.status_code} - {response.text}")
+                    self.log_result("Supervisor Profile Update - Enum Fix (Empty)", False, 
+                                  f"Empty string enum validation error still exists: {response.status_code} - {response.text}")
                 
                 # Verify profile was actually updated
                 response = await self.client.get(
