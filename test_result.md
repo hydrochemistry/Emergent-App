@@ -102,7 +102,7 @@
 # Testing Data - Main Agent and testing sub agent both should log testing data below this section
 #====================================================================================================
 
-user_problem_statement: "Multiple critical bugs reported by user: 1) Research log creation failing with 'Error creating research log' for Students, 2) Schedule meeting button not working, 3) Create reminder button not working, 4) Post announcement failing with 'Error posting announcement', 5) Create grant button not working. All create/submit buttons appear to be failing."
+user_problem_statement: "Multiple UI/UX issues reported: 1) Dialog windows appear at bottom instead of center, 2) Task creation shows 'Error creating task: [object Object]', 3) Schedule Meeting button not active/clickable, 4) Grant creation button not working, 5) News approval/preview functionality missing, 6) Copyright text needs formatting fix, 7) Add profile headshot image functionality"
 
 backend:
   - task: "User Authentication System"
