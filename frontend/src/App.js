@@ -4291,7 +4291,7 @@ const StudentManagementCard = ({ student, user, onStudentUpdated }) => {
 };
 
 // Admin Panel Component
-const AdminPanel = ({ user, labSettings, onSettingsUpdated }) => {
+const AdminPanel = ({ user, labSettings, onSettingsUpdated, menuSettings, onMenuSettingsUpdated }) => {
   const [activeAdminTab, setActiveAdminTab] = useState('lab-settings');
   const [labData, setLabData] = useState({
     lab_name: labSettings?.lab_name || '',
