@@ -872,17 +872,28 @@ const Dashboard = ({ user, logout, setUser }) => {
                             DOI: {publication.doi}
                           </p>
                         )}
+                        {publication.scopus_id && (
+                          <p className="text-xs text-purple-600 mt-1 truncate">
+                            Scopus ID: {publication.scopus_id}
+                          </p>
+                        )}
                       </div>
                     </div>
                   ))}
                   {publications.length === 0 && (
-                    <p className="text-gray-500 text-sm">No publications yet</p>
+                    <div className="text-center py-4">
+                      <p className="text-gray-500 text-sm mb-2">No publications yet</p>
+                      <ScopusPublicationDialog onPublicationAdded={fetchDashboardData} />
+                    </div>
                   )}
                   {publications.length > 1 && (
                     <p className="text-xs text-gray-500 mt-2 pt-2 border-t">
                       +{publications.length - 1} more publications
                     </p>
                   )}
+                  <div className="mt-3 pt-2 border-t">
+                    <ScopusPublicationDialog onPublicationAdded={fetchDashboardData} />
+                  </div>
                 </CardContent>
               </Card>
 
