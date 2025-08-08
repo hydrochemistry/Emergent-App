@@ -1473,8 +1473,10 @@ async def get_research_logs(current_user: User = Depends(get_current_user)):
         # For students, use their supervisor_id
         supervisor_id = current_user.supervisor_id
         if not supervisor_id:
-            # If no supervisor assigned, return empty list
-            return []
+            # If no supervisor assigned, show all logs (temporary fallback for broken assignments)
+            print(f"Warning: Student {current_user.id} has no supervisor_id assigned")
+            logs = await db.research_logs.find({"user_id": current_user.id}).sort("date", -1).to_list(1000)
+            return [ResearchLog(**log) for log in logs]
     else:
         # For supervisors/admins, use their own ID as supervisor
         supervisor_id = current_user.id
@@ -1486,8 +1488,12 @@ async def get_research_logs(current_user: User = Depends(get_current_user)):
     # Include supervisor's own ID for their research logs (for lab-wide synchronization)
     student_ids.append(supervisor_id)
     
+    print(f"Fetching logs for supervisor {supervisor_id}, student_ids: {student_ids}")
+    
     # Fetch all lab research logs for synchronization
     logs = await db.research_logs.find({"user_id": {"$in": student_ids}}).sort("date", -1).to_list(1000)
+    
+    print(f"Found {len(logs)} research logs")
     
     # Add student information for all users to see
     student_map = {student["id"]: student for student in students}
