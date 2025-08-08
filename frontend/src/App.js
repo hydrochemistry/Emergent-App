@@ -2627,7 +2627,21 @@ const CreateReminderDialog = ({ students, onReminderCreated, user }) => {
       onReminderCreated();
     } catch (error) {
       console.error('Error creating reminder:', error);
-      alert('Error creating reminder: ' + (error.response?.data?.detail || error.message || 'Unknown error occurred'));
+      let errorMessage = 'Error creating reminder: ';
+      
+      if (error.response?.data?.detail) {
+        errorMessage += error.response.data.detail;
+      } else if (error.response?.data?.message) {
+        errorMessage += error.response.data.message;
+      } else if (error.message) {
+        errorMessage += error.message;
+      } else if (typeof error === 'string') {
+        errorMessage += error;
+      } else {
+        errorMessage += 'Unknown error occurred. Please check all required fields.';
+      }
+      
+      alert(errorMessage);
     } finally {
       setLoading(false);
     }
