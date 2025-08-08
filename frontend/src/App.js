@@ -935,7 +935,6 @@ const Dashboard = ({ user, logout, setUser }) => {
             </div>
 
             <div className="grid gap-6">
-              {console.log('Meetings Tab - meetings state:', meetings) || null}
               {meetings.map((meeting) => (
                 <MeetingCard key={meeting.id} meeting={meeting} user={user} onMeetingUpdated={fetchDashboardData} />
               ))}
