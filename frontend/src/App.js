@@ -94,11 +94,10 @@ const AuthContext = ({ children }) => {
   }, []);
 
   const login = (token, userData) => {
-    console.log('🔑 Setting up authentication...'); 
     localStorage.setItem('token', token);
     localStorage.setItem('userData', JSON.stringify(userData));
+    axios.defaults.headers.common['Authorization'] = `Bearer ${token}`;
     setUser(userData);
-    console.log('✅ User logged in:', userData.email, userData.role);
   };
 
   const logout = () => {
