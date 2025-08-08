@@ -545,11 +545,36 @@ const Dashboard = ({ user, logout, setUser }) => {
       setPublications(pubsRes.data || []);
       setLabSettings(labRes.data || {});
       
-      console.log('🔄 Setting meetings state with:', meetingsRes.data);
-      setMeetings(meetingsRes.data || []);
+      // Auto-cleanup completed/past items
+      const now = new Date();
       
-      console.log('🔄 Setting reminders state with:', remindersRes.data);
-      setReminders(remindersRes.data || []);
+      // Filter out past meetings (older than 24 hours)
+      const filteredMeetings = (meetingsRes.data || []).filter(meeting => {
+        const meetingDate = new Date(meeting.meeting_date);
+        const diffHours = (now - meetingDate) / (1000 * 60 * 60);
+        return diffHours < 24; // Keep meetings from last 24 hours
+      });
+      
+      // Filter out completed/past reminders
+      const filteredReminders = (remindersRes.data || []).filter(reminder => {
+        if (reminder.is_completed) return false;
+        const reminderDate = new Date(reminder.reminder_date);
+        return reminderDate >= now; // Keep future reminders only
+      });
+      
+      // Filter out completed tasks
+      const filteredTasks = (tasksRes.data || []).filter(task => {
+        return task.status !== 'completed';
+      });
+
+      console.log('🔄 Setting cleaned meetings state with:', filteredMeetings);
+      setMeetings(filteredMeetings);
+      
+      console.log('🔄 Setting cleaned reminders state with:', filteredReminders);
+      setReminders(filteredReminders);
+      
+      console.log('🔄 Setting cleaned tasks state with:', filteredTasks);
+      setTasks(filteredTasks);
       setNotes(notesRes.data || []);
 
       if (user.role === 'supervisor' || user.role === 'lab_manager') {
