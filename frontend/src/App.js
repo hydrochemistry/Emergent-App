@@ -759,7 +759,7 @@ const Dashboard = ({ user, logout, setUser }) => {
                     <Bell className="h-5 w-5" />
                     Recent Announcements
                     <Badge variant="outline" className="ml-auto">
-                      {bulletins.length} Active
+                      {bulletins.filter(b => b.status === 'approved').length} Active
                     </Badge>
                   </CardTitle>
                 </CardHeader>
