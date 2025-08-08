@@ -1762,10 +1762,8 @@ async def sync_scopus_publications(current_user: User = Depends(get_current_user
 
 @api_router.get("/publications", response_model=List[Publication])
 async def get_publications(current_user: User = Depends(get_current_user)):
-    if current_user.role == UserRole.STUDENT:
-        publications = await db.publications.find({"student_contributors": current_user.id}).to_list(1000)
-    else:
-        publications = await db.publications.find({"supervisor_id": current_user.id}).to_list(1000)
+    # Publications are synchronized across all users - everyone can see all publications
+    publications = await db.publications.find({}).to_list(1000)
     
     # Handle field migration from 'year' to 'publication_year'
     for pub in publications:
