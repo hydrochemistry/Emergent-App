@@ -3174,7 +3174,7 @@ const CreateBulletinDialog = ({ onBulletinCreated }) => {
             <Button type="button" variant="outline" onClick={() => setIsOpen(false)}>
               Cancel
             </Button>
-            <Button type="submit" disabled={loading || !formData.title || !formData.content}>
+            <Button type="submit" disabled={loading}>
               {loading ? 'Publishing...' : 'Post Announcement'}
             </Button>
           </div>
