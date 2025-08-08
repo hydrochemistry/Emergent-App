@@ -653,14 +653,22 @@ const Dashboard = ({ user, logout, setUser }) => {
                 </p>
               </div>
               {(user.role === 'supervisor' || user.role === 'lab_manager' || user.role === 'admin') && (
-                <Button variant="outline" className="text-xs text-white border-white hover:bg-white hover:text-blue-600 transition-colors" onClick={() => setActiveTab('admin')}>
-                  <Settings className="h-4 w-4" />
-                  <span className="ml-2">Admin</span>
+                <Button 
+                  variant="outline" 
+                  onClick={() => setActiveTab('admin')}
+                  className="bg-white text-black border-gray-300 hover:bg-gray-100"
+                >
+                  <Settings className="h-4 w-4 mr-2" />
+                  Admin
                 </Button>
               )}
-              <Button variant="outline" className="text-xs text-white border-white hover:bg-white hover:text-blue-600 transition-colors" onClick={logout}>
-                <LogOut className="h-4 w-4" />
-                <span className="ml-2">Logout</span>
+              <Button 
+                variant="outline" 
+                onClick={logout}
+                className="bg-white text-black border-gray-300 hover:bg-gray-100"
+              >
+                <LogOut className="h-4 w-4 mr-2" />
+                Logout
               </Button>
             </div>
           </div>
