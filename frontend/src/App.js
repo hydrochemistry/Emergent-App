@@ -3696,15 +3696,68 @@ const EditGrantDialog = ({ grant, onGrantUpdated, isPIC = false }) => {
       <DialogTrigger asChild>
         <Button variant="outline" size="sm">
           <Edit className="h-4 w-4 mr-2" />
-          Edit Grant
+          {isPIC ? 'Update Status' : 'Edit Grant'}
         </Button>
       </DialogTrigger>
       <DialogContent className="w-[95vw] max-w-2xl mx-4 max-h-[90vh] overflow-y-auto">
         <DialogHeader>
-          <DialogTitle>Edit Grant: {grant.title}</DialogTitle>
+          <DialogTitle>
+            {isPIC ? `Update Grant Status: ${grant.title}` : `Edit Grant: ${grant.title}`}
+          </DialogTitle>
         </DialogHeader>
         <form onSubmit={handleSubmit} className="space-y-4">
-          {/* Grant Details */}
+          
+          {/* PIC Mode - Limited Fields */}
+          {isPIC ? (
+            <>
+              <div>
+                <Label htmlFor="status">Grant Status *</Label>
+                <Select 
+                  value={formData.status} 
+                  onValueChange={(value) => setFormData({...formData, status: value})}
+                >
+                  <SelectTrigger>
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="active">Active</SelectItem>
+                    <SelectItem value="on_hold">On Hold</SelectItem>
+                    <SelectItem value="completed">Completed</SelectItem>
+                    <SelectItem value="cancelled">Cancelled</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+
+              <div>
+                <Label htmlFor="current_balance">Current Balance *</Label>
+                <Input
+                  id="current_balance"
+                  type="number"
+                  step="0.01"
+                  value={formData.current_balance}
+                  onChange={(e) => setFormData({...formData, current_balance: e.target.value})}
+                  placeholder="Enter current remaining balance"
+                />
+              </div>
+
+              <div>
+                <Label htmlFor="description">Progress Notes</Label>
+                <Textarea
+                  id="description"
+                  value={formData.description}
+                  onChange={(e) => setFormData({...formData, description: e.target.value})}
+                  placeholder="Update progress notes and status details..."
+                  rows={4}
+                />
+              </div>
+
+              <Button type="submit" disabled={loading} className="w-full">
+                {loading ? 'Updating...' : 'Update Grant Status'}
+              </Button>
+            </>
+          ) : (
+            <>
+          {/* Full Edit Mode - All Fields */}
           <div>
             <Label htmlFor="title">Grant Title *</Label>
             <Input
@@ -3712,7 +3765,6 @@ const EditGrantDialog = ({ grant, onGrantUpdated, isPIC = false }) => {
               value={formData.title}
               onChange={(e) => setFormData({...formData, title: e.target.value})}
               placeholder="Enter grant title"
-              required
             />
           </div>
           
