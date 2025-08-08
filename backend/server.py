@@ -1415,6 +1415,69 @@ async def update_grant(grant_id: str, grant_update: dict, current_user: User = D
     
     return {"message": "Grant updated successfully"}
 
+# Milestone endpoints
+@api_router.post("/milestones", response_model=Milestone)
+async def create_milestone(milestone: MilestoneCreate, current_user: User = Depends(get_current_user)):
+    """Create a new milestone for student project"""
+    
+    # Only students can create milestones for themselves
+    if current_user.role != UserRole.STUDENT:
+        raise HTTPException(status_code=403, detail="Only students can create milestones")
+    
+    milestone_data = milestone.dict()
+    milestone_data["student_id"] = current_user.id
+    milestone_data["id"] = str(uuid.uuid4())
+    milestone_data["created_at"] = datetime.utcnow()
+    milestone_data["updated_at"] = datetime.utcnow()
+    
+    await db.milestones.insert_one(milestone_data)
+    return Milestone(**milestone_data)
+
+@api_router.get("/milestones", response_model=List[Milestone])
+async def get_milestones(current_user: User = Depends(get_current_user)):
+    """Get milestones - students see their own, supervisors see all"""
+    
+    if current_user.role == UserRole.STUDENT:
+        milestones = await db.milestones.find({"student_id": current_user.id}).to_list(None)
+    else:
+        milestones = await db.milestones.find().to_list(None)
+    
+    # Add student names for supervisors
+    if current_user.role != UserRole.STUDENT:
+        student_ids = {milestone["student_id"] for milestone in milestones}
+        students = await db.users.find({"id": {"$in": list(student_ids)}}).to_list(None)
+        student_map = {student["id"]: student["full_name"] for student in students}
+        
+        for milestone in milestones:
+            milestone["student_name"] = student_map.get(milestone["student_id"], "Unknown Student")
+    
+    return [Milestone(**milestone) for milestone in milestones]
+
+@api_router.put("/milestones/{milestone_id}")
+async def update_milestone(milestone_id: str, milestone_update: dict, current_user: User = Depends(get_current_user)):
+    """Update milestone progress"""
+    
+    milestone = await db.milestones.find_one({"id": milestone_id})
+    if not milestone:
+        raise HTTPException(status_code=404, detail="Milestone not found")
+    
+    # Check permissions
+    if current_user.role == UserRole.STUDENT and milestone["student_id"] != current_user.id:
+        raise HTTPException(status_code=403, detail="Can only update your own milestones")
+    
+    update_data = {}
+    allowed_fields = ["progress_percentage", "status", "actual_end_date", "challenges", "next_steps", "deliverables"]
+    
+    for field in allowed_fields:
+        if field in milestone_update:
+            update_data[field] = milestone_update[field]
+    
+    if update_data:
+        update_data["updated_at"] = datetime.utcnow()
+        await db.milestones.update_one({"id": milestone_id}, {"$set": update_data})
+    
+    return {"message": "Milestone updated successfully"}
+
 @api_router.put("/grants/{grant_id}/spend")
 async def record_grant_spending(grant_id: str, amount: float, current_user: User = Depends(get_current_user)):
     grant = await db.grants.find_one({"id": grant_id})
