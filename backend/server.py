@@ -544,7 +544,35 @@ class MessageCreate(BaseModel):
     receiver_id: str
     content: str
 
-class CitationData(BaseModel):
+class LabSettings(BaseModel):
+    id: str = Field(default_factory=lambda: str(uuid.uuid4()))
+    lab_name: str = "Research Laboratory"
+    tagline: str = "Advancing Science Through Innovation"
+    about: str = "Welcome to our research laboratory where we conduct cutting-edge research."
+    address: str = ""
+    contact_email: str = ""
+    contact_phone: str = ""
+    website: str = ""
+    social_facebook: str = ""
+    social_twitter: str = ""
+    social_linkedin: str = ""
+    footer_attribution: str = "© 2025 Research Lab Management System. All rights reserved."
+    supervisor_id: str
+    created_at: datetime = Field(default_factory=datetime.utcnow)
+    updated_at: datetime = Field(default_factory=datetime.utcnow)
+
+class LabSettingsUpdate(BaseModel):
+    lab_name: Optional[str] = None
+    tagline: Optional[str] = None
+    about: Optional[str] = None
+    address: Optional[str] = None
+    contact_email: Optional[str] = None
+    contact_phone: Optional[str] = None
+    website: Optional[str] = None
+    social_facebook: Optional[str] = None
+    social_twitter: Optional[str] = None
+    social_linkedin: Optional[str] = None
+    footer_attribution: Optional[str] = None
     id: str = Field(default_factory=lambda: str(uuid.uuid4()))
     scholar_id: str
     total_citations: int
