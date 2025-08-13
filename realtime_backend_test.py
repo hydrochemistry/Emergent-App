@@ -402,7 +402,25 @@ class RealTimeBackendTester:
                 bulletin_id = bulletin["id"]
                 self.log_result("Bulletin Creation", True, "Lab-wide bulletin created successfully")
                 
-                # Test lab-wide visibility - student should see bulletin
+                # Approve the bulletin so students can see it
+                approval_data = {
+                    "bulletin_id": bulletin_id,
+                    "approved": True,
+                    "comments": "Approved for testing"
+                }
+                
+                response = await self.client.post(
+                    f"{API_BASE}/bulletins/{bulletin_id}/approve",
+                    json=approval_data,
+                    headers=self.get_supervisor_headers()
+                )
+                
+                if response.status_code == 200:
+                    self.log_result("Bulletin Approval", True, "Bulletin approved successfully")
+                else:
+                    self.log_result("Bulletin Approval", False, f"Bulletin approval failed: {response.status_code}")
+                
+                # Test lab-wide visibility - student should see approved bulletin
                 response = await self.client.get(
                     f"{API_BASE}/bulletins",
                     headers=self.get_student_headers()
