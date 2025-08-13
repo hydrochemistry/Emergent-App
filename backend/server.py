@@ -2487,6 +2487,19 @@ async def get_publications(current_user: User = Depends(get_current_user)):
         elif not pub.get("authors"):
             pub["authors"] = []
         
+        # Fix publication_year field if it's missing but year exists
+        if "publication_year" not in pub and "year" in pub:
+            pub["publication_year"] = pub["year"] if pub["year"] else 2024
+        elif "publication_year" not in pub:
+            pub["publication_year"] = 2024
+        
+        # Ensure publication_year is an integer
+        if isinstance(pub.get("publication_year"), str):
+            try:
+                pub["publication_year"] = int(pub["publication_year"]) if pub["publication_year"] else 2024
+            except ValueError:
+                pub["publication_year"] = 2024
+        
         publications.append(Publication(**pub))
     
     # Emit real-time event to synchronize with all lab members
