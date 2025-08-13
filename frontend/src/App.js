@@ -819,6 +819,17 @@ const Dashboard = ({ user, logout, setUser }) => {
               </div>
             </div>
             <div className="flex items-center space-x-2 sm:space-x-4 flex-shrink-0">
+              {/* Admin Menu Icon - Only visible for Supervisors/Admins */}
+              {(user.role === 'supervisor' || user.role === 'lab_manager' || user.role === 'admin') && (
+                <button
+                  onClick={() => setActiveTab('admin')}
+                  className="p-2 hover:bg-gray-100 rounded-md transition-colors"
+                  title="Admin Panel"
+                >
+                  <Settings className="h-5 w-5 text-gray-700" />
+                </button>
+              )}
+              
               {/* Notifications */}
               <div className="relative">
                 <Bell className="h-5 w-5 text-gray-600 cursor-pointer" onClick={() => setActiveTab('reminders')} />
