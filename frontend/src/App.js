@@ -1120,61 +1120,33 @@ const Dashboard = ({ user, logout, setUser }) => {
                 <CardHeader>
                   <CardTitle className="flex items-center gap-2">
                     <Award className="h-5 w-5" />
-                    Google Scholar Citations
-                    {citations && (
-                      <Badge variant="outline" className="ml-auto">
-                        Updated {new Date(citations.last_updated).toLocaleDateString()}
-                      </Badge>
-                    )}
+                    Google Scholar
                   </CardTitle>
+                  <p className="text-sm text-gray-600">Citations</p>
                 </CardHeader>
                 <CardContent>
                   {citations ? (
                     <div className="space-y-4">
-                      {/* Citation Metrics */}
-                      <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
-                        <div className="grid grid-cols-3 gap-4 text-center">
-                          <div>
-                            <p className="text-2xl font-bold text-blue-800">{citations.total_citations}</p>
-                            <p className="text-xs text-blue-600">Total Citations</p>
-                          </div>
-                          <div>
-                            <p className="text-2xl font-bold text-green-800">{citations.h_index}</p>
-                            <p className="text-xs text-green-600">h-index</p>
-                          </div>
-                          <div>
-                            <p className="text-2xl font-bold text-purple-800">{citations.i10_index}</p>
-                            <p className="text-xs text-purple-600">i10-index</p>
-                          </div>
+                      {/* Citation Metrics Only */}
+                      <div className="grid grid-cols-3 gap-4 text-center">
+                        <div>
+                          <p className="text-2xl font-bold text-blue-800">{citations.totalCitations}</p>
+                          <p className="text-xs text-blue-600">Total Citations</p>
+                        </div>
+                        <div>
+                          <p className="text-2xl font-bold text-green-800">{citations.hIndex}</p>
+                          <p className="text-xs text-green-600">h-index</p>
+                        </div>
+                        <div>
+                          <p className="text-2xl font-bold text-purple-800">{citations.i10Index}</p>
+                          <p className="text-xs text-purple-600">i10-index</p>
                         </div>
                       </div>
                       
-                      {/* Recent Top Papers */}
-                      {citations.recent_papers && citations.recent_papers.length > 0 && (
-                        <div>
-                          <p className="text-sm font-medium text-gray-700 mb-2">Top Recent Papers:</p>
-                          {citations.recent_papers.slice(0, 2).map((paper, index) => (
-                            <div key={index} className="py-2 border-b last:border-b-0">
-                              <p className="font-medium text-sm line-clamp-2">{paper.title}</p>
-                              <p className="text-xs text-gray-600 mt-1">{paper.authors}</p>
-                              <div className="flex items-center gap-4 mt-1">
-                                <p className="text-xs text-blue-600 font-medium">
-                                  {paper.citations} citations
-                                </p>
-                                {paper.year && (
-                                  <p className="text-xs text-gray-500">
-                                    {paper.year}
-                                  </p>
-                                )}
-                              </div>
-                            </div>
-                          ))}
-                        </div>
-                      )}
-                      
-                      {/* Refresh Button for Supervisors */}
-                      {user.role === 'supervisor' && (
-                        <div className="text-center pt-2 border-t">
+                      {/* Footer with Updated date and Refresh button */}
+                      <div className="flex items-center justify-between text-xs text-gray-500 pt-2 border-t">
+                        <span>Updated {new Date(citations.updatedAt).toLocaleDateString()}</span>
+                        {user.role === 'supervisor' && (
                           <button 
                             onClick={async () => {
                               try {
@@ -1186,17 +1158,55 @@ const Dashboard = ({ user, logout, setUser }) => {
                                 alert('Error refreshing citations');
                               }
                             }}
-                            className="text-xs text-blue-600 hover:text-blue-800 underline"
+                            className="text-blue-600 hover:text-blue-800 hover:underline"
                           >
                             Refresh Citations
                           </button>
-                        </div>
-                      )}
+                        )}
+                      </div>
                     </div>
                   ) : (
                     <div className="text-center py-4">
                       <Award className="h-8 w-8 text-gray-300 mx-auto mb-2" />
                       <p className="text-gray-500 text-sm">Loading citation data...</p>
+                    </div>
+                  )}
+                </CardContent>
+              </Card>
+
+              <Card>
+                <CardHeader>
+                  <CardTitle className="flex items-center gap-2">
+                    <BookOpen className="h-5 w-5" />
+                    Recent Paper (Scopus)
+                  </CardTitle>
+                </CardHeader>
+                <CardContent>
+                  {publications.slice(0, 1).map((publication) => (
+                    <div key={publication.id} className="py-2">
+                      <p className="font-medium text-sm line-clamp-2">{publication.title}</p>
+                      <p className="text-xs text-gray-600 mt-1">
+                        {Array.isArray(publication.authors) ? publication.authors.join(', ') : publication.authors}
+                      </p>
+                      <p className="text-xs text-gray-500 mt-1">
+                        {publication.journal} • {publication.year}
+                      </p>
+                      {publication.doi && (
+                        <a 
+                          href={`https://doi.org/${publication.doi}`}
+                          target="_blank" 
+                          rel="noopener noreferrer"
+                          className="text-xs text-blue-600 hover:text-blue-800 underline mt-1 block"
+                        >
+                          View on Scopus
+                        </a>
+                      )}
+                    </div>
+                  ))}
+                  {publications.length === 0 && (
+                    <div className="text-center py-4">
+                      <BookOpen className="h-8 w-8 text-gray-300 mx-auto mb-2" />
+                      <p className="text-gray-500 text-sm">No recent publications</p>
                     </div>
                   )}
                 </CardContent>
