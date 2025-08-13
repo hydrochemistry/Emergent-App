@@ -1487,10 +1487,20 @@ async def update_task(task_id: str, update_data: TaskUpdate, current_user: User 
 # Enhanced Research Log Routes with File Upload and Endorsement
 @api_router.post("/research-logs", response_model=ResearchLog)
 async def create_research_log(log_data: ResearchLogCreate, current_user: User = Depends(get_current_user)):
-    """Create research log with workflow status tracking"""
+    """Create research log with proper relational keys"""
     log_dict = log_data.dict()
     log_dict["id"] = str(uuid.uuid4())
     log_dict["user_id"] = current_user.id
+    
+    # CRITICAL FIX: Always set proper relational keys on creation
+    log_dict["student_id"] = current_user.id  # Always set studentId
+    if current_user.role == UserRole.STUDENT:
+        if not current_user.supervisor_id:
+            raise HTTPException(status_code=400, detail="Student must be assigned to a supervisor")
+        log_dict["supervisor_id"] = current_user.supervisor_id
+    else:
+        # For supervisors creating logs, they are their own supervisor
+        log_dict["supervisor_id"] = current_user.id
     
     # Set initial status based on user action
     if log_data.dict().get("submit", False):
@@ -1521,26 +1531,43 @@ async def create_research_log(log_data: ResearchLogCreate, current_user: User = 
         created_log = await db.research_logs.find_one({"_id": result.inserted_id})
         research_log = ResearchLog(**created_log)
         
-        # Emit real-time event for lab-wide synchronization
-        supervisor_id = await get_lab_supervisor_id(current_user)
+        # CRITICAL FIX: Emit to specific channels for both student and supervisor
+        student_id = log_dict["student_id"]
+        supervisor_id = log_dict["supervisor_id"]
+        
+        # Emit to both individual channels and pair channel
         await emit_event(
             EventType.RESEARCH_LOG_UPDATED,
             {
                 "action": "created",
                 "research_log": research_log.dict(),
-                "user_name": current_user.full_name
+                "user_name": current_user.full_name,
+                "student_id": student_id,
+                "supervisor_id": supervisor_id
             },
-            supervisor_id=supervisor_id
+            user_id=student_id
+        )
+        
+        await emit_event(
+            EventType.RESEARCH_LOG_UPDATED,
+            {
+                "action": "created", 
+                "research_log": research_log.dict(),
+                "user_name": current_user.full_name,
+                "student_id": student_id,
+                "supervisor_id": supervisor_id
+            },
+            user_id=supervisor_id
         )
         
         # Create notification if submitted
-        if log_dict["status"] == ResearchLogStatus.SUBMITTED.value and current_user.supervisor_id:
+        if log_dict["status"] == ResearchLogStatus.SUBMITTED.value and supervisor_id != student_id:
             await create_notification(
-                user_id=current_user.supervisor_id,
+                user_id=supervisor_id,
                 notification_type="research_log_submitted",
                 title="New Research Log Submitted",
                 message=f"{current_user.full_name} submitted a new research log: {log_data.title}",
-                payload={"research_log_id": research_log.id}
+                payload={"research_log_id": research_log.id, "student_id": student_id}
             )
         
         return research_log
