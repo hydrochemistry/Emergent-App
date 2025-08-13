@@ -205,6 +205,7 @@ class ComprehensiveSystemTest:
         print("📋 Testing PUT /api/lab/settings with student authentication (should be blocked)...")
         try:
             headers = self.get_auth_headers(self.student_token)
+            # Use only fields from the correct LabSettingsUpdate model
             update_data = {
                 "lab_name": "Student Attempted Update",
                 "description": "This should not work"
