@@ -345,6 +345,9 @@ class TaskEndorsement(BaseModel):
 class ResearchLog(BaseModel):
     id: str = Field(default_factory=lambda: str(uuid.uuid4()))
     user_id: str
+    # CRITICAL FIELDS: Relational keys for unified queries
+    student_id: Optional[str] = None  # Source of truth for student ownership
+    supervisor_id: Optional[str] = None  # Source of truth for supervisor assignment
     activity_type: ActivityType
     title: str
     description: str
@@ -373,8 +376,8 @@ class ResearchLog(BaseModel):
     
     # Additional student info fields for supervisor view
     student_name: Optional[str] = None
-    student_id: Optional[str] = None
     student_email: Optional[str] = None
+    supervisor_name: Optional[str] = None
 
 class ResearchLogCreate(BaseModel):
     activity_type: ActivityType
