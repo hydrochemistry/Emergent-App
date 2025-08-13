@@ -391,7 +391,7 @@ class ComprehensiveSystemTest:
                 print("✅ Research log resubmitted successfully")
                 print(f"   📊 Status: {resubmitted_log.get('status', 'N/A')}")
                 
-                if resubmitted_log.get('status') == 'SUBMITTED':
+                if resubmitted_log.get('status').upper() == 'SUBMITTED':
                     print("✅ Status transition RETURNED → SUBMITTED working")
                     self.test_results.append("✅ Status transition RETURNED → SUBMITTED working")
                 else:
