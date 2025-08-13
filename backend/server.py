@@ -352,15 +352,22 @@ class ResearchLog(BaseModel):
     next_steps: Optional[str] = None
     files: List[str] = []
     tags: List[str] = []
+    
+    # Research Log Workflow Fields
+    status: ResearchLogStatus = ResearchLogStatus.DRAFT
+    submitted_at: Optional[datetime] = None
+    reviewed_at: Optional[datetime] = None
+    supervisor_comment: Optional[str] = None
+    
+    # Legacy fields for backward compatibility
     supervisor_endorsement: Optional[bool] = None
     supervisor_comments: Optional[str] = None
     supervisor_rating: Optional[int] = None
-    # New review system fields
     review_status: Optional[str] = None  # 'accepted', 'revision', 'rejected'
     review_feedback: Optional[str] = None
     reviewed_by: Optional[str] = None
-    reviewed_at: Optional[str] = None
     reviewer_name: Optional[str] = None
+    
     # Additional student info fields for supervisor view
     student_name: Optional[str] = None
     student_id: Optional[str] = None
