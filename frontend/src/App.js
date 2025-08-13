@@ -586,13 +586,17 @@ const Dashboard = ({ user, logout, setUser }) => {
     fetchDashboardData();
   }, []);
 
-  // Individual fetch functions for real-time updates
+  // CRITICAL FIX: Defensive fetch functions for unified data handling
   const fetchResearchLogs = async () => {
     try {
       const response = await axios.get(`${API}/research-logs`);
-      setResearchLogs(response.data || []);
+      // Defensive schema handling - API returns array or object with items
+      const logs = Array.isArray(response.data) ? response.data : (response.data?.items ?? []);
+      setResearchLogs(logs);
     } catch (error) {
       console.error('Error fetching research logs:', error);
+      // Never leave empty on error - maintain current state or empty array
+      setResearchLogs(prev => prev || []);
     }
   };
 
@@ -600,9 +604,12 @@ const Dashboard = ({ user, logout, setUser }) => {
     if (user.role !== 'student') return;
     try {
       const response = await axios.get(`${API}/research-logs/student/status`);
-      setStudentLogStatus(response.data?.logs || []);
+      // Defensive schema handling
+      const logs = Array.isArray(response.data) ? response.data : (response.data?.logs ?? []);
+      setStudentLogStatus(logs);
     } catch (error) {
       console.error('Error fetching student log status:', error);
+      setStudentLogStatus(prev => prev || []);
     }
   };
 
