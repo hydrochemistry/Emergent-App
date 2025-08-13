@@ -623,6 +623,7 @@ class TodoUpdate(BaseModel):
     notes: Optional[str] = None
     due_at: Optional[datetime] = None
     priority: Optional[str] = None
+    is_completed: Optional[bool] = None
     order_index: Optional[int] = None
 
 class CitationData(BaseModel):
