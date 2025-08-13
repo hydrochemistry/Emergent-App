@@ -713,6 +713,15 @@ const Dashboard = ({ user, logout, setUser }) => {
     }
   };
 
+  const fetchTodos = async () => {
+    try {
+      const response = await axios.get(`${API}/todos`);
+      setTodos(response.data || []);
+    } catch (error) {
+      console.error('Error fetching todos:', error);
+    }
+  };
+
   const fetchDashboardData = async () => {
     try {
       setLoading(true);
