@@ -1119,36 +1119,85 @@ const Dashboard = ({ user, logout, setUser }) => {
               <Card>
                 <CardHeader>
                   <CardTitle className="flex items-center gap-2">
-                    <BookOpen className="h-5 w-5" />
-                    Latest Publications
+                    <Award className="h-5 w-5" />
+                    Google Scholar Citations
+                    {citations && (
+                      <Badge variant="outline" className="ml-auto">
+                        Updated {new Date(citations.last_updated).toLocaleDateString()}
+                      </Badge>
+                    )}
                   </CardTitle>
                 </CardHeader>
                 <CardContent>
-                  {publications.slice(0, 1).map((publication) => (
-                    <div key={publication.id} className="py-2">
-                      <div>
-                        <p className="font-medium text-sm line-clamp-2">{publication.title}</p>
-                        <p className="text-xs text-gray-600 mt-1">
-                          {Array.isArray(publication.authors) ? publication.authors.join(', ') : publication.authors} • {publication.journal || publication.conference}
-                        </p>
-                        <p className="text-xs text-gray-500 mt-1">
-                          {publication.publication_year || new Date(publication.created_at).getFullYear()}
-                        </p>
-                        {publication.doi && (
-                          <p className="text-xs text-blue-600 mt-1 truncate">
-                            DOI: {publication.doi}
-                          </p>
-                        )}
-                        {publication.scopus_id && (
-                          <p className="text-xs text-purple-600 mt-1 truncate">
-                            Scopus ID: {publication.scopus_id}
-                          </p>
-                        )}
+                  {citations ? (
+                    <div className="space-y-4">
+                      {/* Citation Metrics */}
+                      <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
+                        <div className="grid grid-cols-3 gap-4 text-center">
+                          <div>
+                            <p className="text-2xl font-bold text-blue-800">{citations.total_citations}</p>
+                            <p className="text-xs text-blue-600">Total Citations</p>
+                          </div>
+                          <div>
+                            <p className="text-2xl font-bold text-green-800">{citations.h_index}</p>
+                            <p className="text-xs text-green-600">h-index</p>
+                          </div>
+                          <div>
+                            <p className="text-2xl font-bold text-purple-800">{citations.i10_index}</p>
+                            <p className="text-xs text-purple-600">i10-index</p>
+                          </div>
+                        </div>
                       </div>
+                      
+                      {/* Recent Top Papers */}
+                      {citations.recent_papers && citations.recent_papers.length > 0 && (
+                        <div>
+                          <p className="text-sm font-medium text-gray-700 mb-2">Top Recent Papers:</p>
+                          {citations.recent_papers.slice(0, 2).map((paper, index) => (
+                            <div key={index} className="py-2 border-b last:border-b-0">
+                              <p className="font-medium text-sm line-clamp-2">{paper.title}</p>
+                              <p className="text-xs text-gray-600 mt-1">{paper.authors}</p>
+                              <div className="flex items-center gap-4 mt-1">
+                                <p className="text-xs text-blue-600 font-medium">
+                                  {paper.citations} citations
+                                </p>
+                                {paper.year && (
+                                  <p className="text-xs text-gray-500">
+                                    {paper.year}
+                                  </p>
+                                )}
+                              </div>
+                            </div>
+                          ))}
+                        </div>
+                      )}
+                      
+                      {/* Refresh Button for Supervisors */}
+                      {user.role === 'supervisor' && (
+                        <div className="text-center pt-2 border-t">
+                          <button 
+                            onClick={async () => {
+                              try {
+                                await axios.post(`${API}/citations/refresh`);
+                                fetchCitations();
+                                showNotification('Citations Refreshed', 'Google Scholar data updated successfully');
+                              } catch (error) {
+                                console.error('Error refreshing citations:', error);
+                                alert('Error refreshing citations');
+                              }
+                            }}
+                            className="text-xs text-blue-600 hover:text-blue-800 underline"
+                          >
+                            Refresh Citations
+                          </button>
+                        </div>
+                      )}
                     </div>
-                  ))}
-                  {publications.length === 0 && (
-                    <p className="text-gray-500 text-sm">No publications yet</p>
+                  ) : (
+                    <div className="text-center py-4">
+                      <Award className="h-8 w-8 text-gray-300 mx-auto mb-2" />
+                      <p className="text-gray-500 text-sm">Loading citation data...</p>
+                    </div>
                   )}
                 </CardContent>
               </Card>
