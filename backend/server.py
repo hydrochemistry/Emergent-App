@@ -2381,33 +2381,78 @@ async def sync_scopus_publications(current_user: User = Depends(get_current_user
 
 @api_router.get("/publications", response_model=List[Publication])
 async def get_publications(current_user: User = Depends(get_current_user)):
-    """Get lab-wide publications synchronized from lab Scopus ID - same data for all users"""
-    # Get supervisor ID to fetch lab publications
-    if current_user.role == UserRole.STUDENT:
-        supervisor_id = current_user.supervisor_id
-        if not supervisor_id:
-            return []  # No supervisor assigned, return empty
-    else:
-        supervisor_id = current_user.id
+    """Get publications - ensure lab-wide visibility for all users"""
+    # Get supervisor ID for lab-wide data access
+    supervisor_id = await get_lab_supervisor_id(current_user)
     
-    # Fetch publications for the lab (tied to supervisor) - sorted by publication year (newest first)
-    publications = await db.publications.find({"supervisor_id": supervisor_id}).sort("publication_year", -1).to_list(1000)
+    # Get supervisor user to access their SCOPUS ID
+    supervisor_user = await db.users.find_one({"id": supervisor_id})
+    if not supervisor_user:
+        return []
     
-    # Handle field migration and data format fixes
-    for pub in publications:
-        pub.pop("_id", None)  # Remove MongoDB ObjectId
+    # If supervisor has SCOPUS ID, fetch from SCOPUS and store/update in database
+    if supervisor_user.get("scopus_id"):
+        try:
+            scopus_publications = await fetch_scopus_publications(supervisor_user["scopus_id"])
+            
+            # Update publications in database for lab-wide access
+            for pub_data in scopus_publications:
+                pub_dict = {
+                    "id": str(uuid.uuid4()),
+                    "supervisor_id": supervisor_id,
+                    "scopus_id": supervisor_user["scopus_id"],
+                    "title": pub_data.get("title", ""),
+                    "authors": pub_data.get("authors", []),
+                    "journal": pub_data.get("journal", ""),
+                    "year": pub_data.get("year", ""),
+                    "citations": pub_data.get("citations", 0),
+                    "doi": pub_data.get("doi", ""),
+                    "abstract": pub_data.get("abstract", ""),
+                    "keywords": pub_data.get("keywords", []),
+                    "publication_date": pub_data.get("publication_date", ""),
+                    "source": "scopus",
+                    "created_at": datetime.utcnow()
+                }
+                
+                # Upsert publication (update if exists, insert if new)
+                await db.publications.update_one(
+                    {"doi": pub_dict["doi"], "supervisor_id": supervisor_id},
+                    {"$set": pub_dict},
+                    upsert=True
+                )
+        except Exception as e:
+            print(f"Error fetching SCOPUS publications: {e}")
+    
+    # Fetch all publications for the lab (both SCOPUS and manual entries)
+    lab_publications = await db.publications.find({
+        "$or": [
+            {"supervisor_id": supervisor_id},
+            {"author_ids": {"$in": [current_user.id]}}  # Include publications where user is an author
+        ]
+    }).sort("year", -1).to_list(1000)
+    
+    publications = []
+    for pub in lab_publications:
+        # Ensure proper author handling (string or array)
+        if isinstance(pub.get("authors"), str):
+            pub["authors"] = [pub["authors"]]
+        elif not pub.get("authors"):
+            pub["authors"] = []
         
-        # Handle field migration from 'year' to 'publication_year'
-        if "year" in pub and "publication_year" not in pub:
-            pub["publication_year"] = pub.pop("year")
-        
-        # Handle authors field migration from string to List[str]
-        if "authors" in pub and isinstance(pub["authors"], str):
-            pub["authors"] = [pub["authors"]]  # Convert string to list
-        elif "authors" not in pub:
-            pub["authors"] = []  # Default empty list if missing
+        publications.append(Publication(**pub))
     
-    return [Publication(**pub) for pub in publications]
+    # Emit real-time event to synchronize with all lab members
+    await emit_event(
+        EventType.PUBLICATION_UPDATED,
+        {
+            "action": "synchronized",
+            "publications_count": len(publications),
+            "supervisor_scopus_id": supervisor_user.get("scopus_id")
+        },
+        supervisor_id=supervisor_id
+    )
+    
+    return publications
 
 @api_router.post("/publications/{pub_id}/tag-student")
 async def tag_student_in_publication(pub_id: str, student_id: str, current_user: User = Depends(get_current_user)):
