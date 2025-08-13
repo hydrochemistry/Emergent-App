@@ -1463,44 +1463,65 @@ async def update_task(task_id: str, update_data: TaskUpdate, current_user: User 
 # Enhanced Research Log Routes with File Upload and Endorsement
 @api_router.post("/research-logs", response_model=ResearchLog)
 async def create_research_log(log_data: ResearchLogCreate, current_user: User = Depends(get_current_user)):
-    """Create research log with enhanced error handling"""
-    try:
-        # Handle date/time from frontend
-        research_date = datetime.utcnow()  # Default to current time
-        if log_data.log_date:
-            try:
-                if log_data.log_time:
-                    # Combine date and time
-                    research_date = datetime.fromisoformat(f"{log_data.log_date}T{log_data.log_time}")
-                else:
-                    # Just date, set time to current
-                    research_date = datetime.fromisoformat(f"{log_data.log_date}T{datetime.utcnow().strftime('%H:%M:%S')}")
-            except ValueError as e:
-                print(f"Date parsing error: {e}")
-                # If parsing fails, use current time
-                research_date = datetime.utcnow()
+    """Create research log with workflow status tracking"""
+    log_dict = log_data.dict()
+    log_dict["id"] = str(uuid.uuid4())
+    log_dict["user_id"] = current_user.id
+    
+    # Set initial status based on user action
+    if log_data.dict().get("submit", False):
+        log_dict["status"] = ResearchLogStatus.SUBMITTED.value
+        log_dict["submitted_at"] = datetime.utcnow()
+    else:
+        log_dict["status"] = ResearchLogStatus.DRAFT.value
+    
+    # Handle log_date and log_time from frontend
+    if "log_date" in log_dict and log_dict["log_date"]:
+        try:
+            # If log_time is also provided, combine them
+            if "log_time" in log_dict and log_dict["log_time"]:
+                combined_datetime = f"{log_dict['log_date']} {log_dict['log_time']}"
+                log_dict["date"] = datetime.fromisoformat(combined_datetime.replace('Z', '+00:00'))
+            else:
+                log_dict["date"] = datetime.fromisoformat(log_dict["log_date"].replace('Z', '+00:00'))
+        except:
+            log_dict["date"] = datetime.utcnow()
+    
+    # Remove log_date and log_time as they're not part of the model
+    log_dict.pop("log_date", None)
+    log_dict.pop("log_time", None)
+    log_dict.pop("submit", None)
+    
+    result = await db.research_logs.insert_one(log_dict)
+    if result:
+        created_log = await db.research_logs.find_one({"_id": result.inserted_id})
+        research_log = ResearchLog(**created_log)
         
-        research_log = ResearchLog(
-            user_id=current_user.id,
-            activity_type=log_data.activity_type,
-            title=log_data.title,
-            description=log_data.description,
-            date=research_date,  # Use parsed date
-            duration_hours=log_data.duration_hours,
-            findings=log_data.findings,
-            challenges=log_data.challenges,
-            next_steps=log_data.next_steps,
-            tags=log_data.tags or []
+        # Emit real-time event for lab-wide synchronization
+        supervisor_id = await get_lab_supervisor_id(current_user)
+        await emit_event(
+            EventType.RESEARCH_LOG_UPDATED,
+            {
+                "action": "created",
+                "research_log": research_log.dict(),
+                "user_name": current_user.full_name
+            },
+            supervisor_id=supervisor_id
         )
         
-        await db.research_logs.insert_one(research_log.dict())
-        print(f"Research log created successfully: {research_log.title}")
-        return research_log
+        # Create notification if submitted
+        if log_dict["status"] == ResearchLogStatus.SUBMITTED.value and current_user.supervisor_id:
+            await create_notification(
+                user_id=current_user.supervisor_id,
+                notification_type="research_log_submitted",
+                title="New Research Log Submitted",
+                message=f"{current_user.full_name} submitted a new research log: {log_data.title}",
+                payload={"research_log_id": research_log.id}
+            )
         
-    except Exception as e:
-        print(f"Error creating research log: {str(e)}")
-        print(f"Log data: {log_data}")
-        raise HTTPException(status_code=500, detail=f"Error creating research log: {str(e)}")
+        return research_log
+    else:
+        raise HTTPException(status_code=500, detail="Failed to create research log")
 
 @api_router.post("/research-logs/{log_id}/files")
 async def upload_research_log_files(log_id: str, files: List[UploadFile] = File(...), current_user: User = Depends(get_current_user)):
