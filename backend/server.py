@@ -2452,7 +2452,7 @@ async def get_publications(current_user: User = Depends(get_current_user)):
                     "title": pub_data.get("title", ""),
                     "authors": pub_data.get("authors", []),
                     "journal": pub_data.get("journal", ""),
-                    "year": pub_data.get("year", ""),
+                    "publication_year": pub_data.get("publication_year", 2024),  # Fixed field name
                     "citations": pub_data.get("citations", 0),
                     "doi": pub_data.get("doi", ""),
                     "abstract": pub_data.get("abstract", ""),
