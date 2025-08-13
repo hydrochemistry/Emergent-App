@@ -2727,35 +2727,81 @@ const ResearchLogCard = ({ log, user, onLogUpdated }) => {
           </div>
         )}
         
-        {/* Supervisor Review Status */}
-        {log.review_status && (
-          <div className={`p-3 rounded-lg mb-4 ${
-            log.review_status === 'accepted' ? 'bg-green-50' : 
-            log.review_status === 'revision' ? 'bg-yellow-50' : 
-            'bg-red-50'
-          }`}>
-            <div className="flex items-center gap-2">
-              {log.review_status === 'accepted' && <CheckCircle className="h-4 w-4 text-green-600" />}
-              {log.review_status === 'revision' && <Clock className="h-4 w-4 text-yellow-600" />}
-              {log.review_status === 'rejected' && <X className="h-4 w-4 text-red-600" />}
-              <span className="font-medium">
-                Status: {log.review_status === 'accepted' ? 'Accepted' : 
-                         log.review_status === 'revision' ? 'Needs Revision' : 
-                         'Not Accepted'}
-              </span>
-            </div>
-            {log.review_feedback && (
-              <p className="text-sm text-gray-700 mt-2">
-                <strong>Feedback:</strong> {log.review_feedback}
-              </p>
-            )}
-            {log.reviewed_by && log.reviewed_at && (
-              <p className="text-xs text-gray-500 mt-1">
-                Reviewed by {log.reviewer_name || 'Supervisor'} on {new Date(log.reviewed_at).toLocaleDateString()}
-              </p>
-            )}
+        {/* Research Log Status and Actions */}
+        <div className={`p-3 rounded-lg mb-4 ${
+          log.status === 'accepted' ? 'bg-green-50' : 
+          log.status === 'returned' ? 'bg-yellow-50' : 
+          log.status === 'declined' ? 'bg-red-50' :
+          log.status === 'submitted' ? 'bg-blue-50' :
+          'bg-gray-50'
+        }`}>
+          <div className="flex items-center gap-2 mb-2">
+            {log.status === 'accepted' && <CheckCircle className="h-4 w-4 text-green-600" />}
+            {log.status === 'returned' && <Clock className="h-4 w-4 text-yellow-600" />}
+            {log.status === 'declined' && <X className="h-4 w-4 text-red-600" />}
+            {log.status === 'submitted' && <Upload className="h-4 w-4 text-blue-600" />}
+            {(!log.status || log.status === 'draft') && <FileText className="h-4 w-4 text-gray-600" />}
+            <span className="font-medium">
+              Status: {
+                log.status === 'accepted' ? 'Accepted' : 
+                log.status === 'returned' ? 'Needs Revision' : 
+                log.status === 'declined' ? 'Declined' :
+                log.status === 'submitted' ? 'Under Review' :
+                'Draft'
+              }
+            </span>
           </div>
-        )}
+          
+          {/* Show supervisor comment if available */}
+          {(log.supervisor_comment || log.review_feedback) && (
+            <p className="text-sm text-gray-700 mb-2">
+              <strong>Supervisor Comment:</strong> {log.supervisor_comment || log.review_feedback}
+            </p>
+          )}
+          
+          {/* Show reviewer info */}
+          {log.reviewer_name && log.reviewed_at && (
+            <p className="text-xs text-gray-500">
+              Reviewed by {log.reviewer_name} on {new Date(log.reviewed_at).toLocaleDateString()}
+            </p>
+          )}
+          
+          {/* Student Actions for RETURNED (Needs Revision) logs */}
+          {user.role === 'student' && log.status === 'returned' && log.user_id === user.id && (
+            <div className="flex gap-2 mt-3">
+              <Button 
+                size="sm" 
+                variant="outline"
+                onClick={() => {
+                  // Set editing state to open edit dialog
+                  setEditingResearchLog({
+                    ...log,
+                    log_date: new Date(log.date).toISOString().split('T')[0],
+                    log_time: new Date(log.date).toTimeString().slice(0, 5)
+                  });
+                }}
+              >
+                <Edit className="h-4 w-4 mr-1" />
+                Edit
+              </Button>
+              <Button 
+                size="sm"
+                onClick={async () => {
+                  try {
+                    await axios.post(`${API}/research-logs/${log.id}/submit`);
+                    alert('Research log resubmitted successfully!');
+                    onLogUpdated();
+                  } catch (error) {
+                    alert(`Error resubmitting: ${error.response?.data?.detail || error.message}`);
+                  }
+                }}
+              >
+                <Upload className="h-4 w-4 mr-1" />
+                Resubmit
+              </Button>
+            </div>
+          )}
+        </div>
         
         {/* Supervisor Review Actions */}
         {(user.role === 'supervisor' || user.role === 'lab_manager' || user.role === 'admin') && 
