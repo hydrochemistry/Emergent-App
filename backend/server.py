@@ -1650,7 +1650,7 @@ async def endorse_research_log(log_id: str, endorsement: ResearchLogEndorsement,
 
 @api_router.post("/research-logs/{log_id}/submit")
 async def submit_research_log(log_id: str, current_user: User = Depends(get_current_user)):
-    """Submit research log (DRAFT → SUBMITTED)"""
+    """Submit research log (DRAFT → SUBMITTED) with idempotency and proper relational keys"""
     log = await db.research_logs.find_one({"id": log_id})
     if not log:
         raise HTTPException(status_code=404, detail="Research log not found")
@@ -1661,15 +1661,32 @@ async def submit_research_log(log_id: str, current_user: User = Depends(get_curr
     
     current_status = ResearchLogStatus(log.get("status", ResearchLogStatus.DRAFT))
     
+    # IDEMPOTENCY: If already submitted, return success without error
+    if current_status == ResearchLogStatus.SUBMITTED:
+        return {"message": "Research log already submitted", "status": ResearchLogStatus.SUBMITTED.value}
+    
     # Validate transition
     if not validate_status_transition(current_status, ResearchLogStatus.SUBMITTED):
         raise HTTPException(status_code=400, detail=f"Cannot submit research log with status {current_status}")
     
-    # Update status
+    # CRITICAL FIX: Guarantee foreign keys are set on submit
     update_data = {
         "status": ResearchLogStatus.SUBMITTED.value,
         "submitted_at": datetime.utcnow()
     }
+    
+    # Ensure studentId is set (should be current user for students)
+    if not log.get("student_id"):
+        update_data["student_id"] = current_user.id
+    
+    # Ensure supervisorId is set from student assignment
+    if not log.get("supervisor_id"):
+        if current_user.role == UserRole.STUDENT:
+            if not current_user.supervisor_id:
+                raise HTTPException(status_code=400, detail="Student must be assigned to a supervisor before submitting")
+            update_data["supervisor_id"] = current_user.supervisor_id
+        else:
+            update_data["supervisor_id"] = current_user.id
     
     await db.research_logs.update_one({"id": log_id}, {"$set": update_data})
     
@@ -1677,26 +1694,34 @@ async def submit_research_log(log_id: str, current_user: User = Depends(get_curr
     updated_log = await db.research_logs.find_one({"id": log_id})
     research_log = ResearchLog(**updated_log)
     
-    # Emit real-time event
-    supervisor_id = await get_lab_supervisor_id(current_user)
-    await emit_event(
-        EventType.RESEARCH_LOG_UPDATED,
-        {
-            "action": "submitted",
-            "research_log": research_log.dict(),
-            "user_name": current_user.full_name
-        },
-        supervisor_id=supervisor_id
-    )
+    # CRITICAL FIX: Emit to specific channels for real-time sync
+    student_id = updated_log.get("student_id", current_user.id)
+    supervisor_id = updated_log.get("supervisor_id")
+    
+    # Emit researchLog.updated to both user channels and pair channel
+    event_data = {
+        "action": "submitted",
+        "research_log": research_log.dict(),
+        "user_name": current_user.full_name,
+        "student_id": student_id,
+        "supervisor_id": supervisor_id
+    }
+    
+    # Emit to student channel
+    await emit_event(EventType.RESEARCH_LOG_UPDATED, event_data, user_id=student_id)
+    
+    # Emit to supervisor channel (if different from student)
+    if supervisor_id and supervisor_id != student_id:
+        await emit_event(EventType.RESEARCH_LOG_UPDATED, event_data, user_id=supervisor_id)
     
     # Notify supervisor
-    if current_user.supervisor_id:
+    if supervisor_id and supervisor_id != student_id:
         await create_notification(
-            user_id=current_user.supervisor_id,
+            user_id=supervisor_id,
             notification_type="research_log_submitted",
             title="Research Log Submitted",
-            message=f"{current_user.full_name} submitted research log: {log['title']}",
-            payload={"research_log_id": log_id}
+            message=f"{current_user.full_name} submitted research log: {updated_log['title']}",
+            payload={"research_log_id": log_id, "student_id": student_id}
         )
     
     return {"message": "Research log submitted successfully", "status": ResearchLogStatus.SUBMITTED.value}
