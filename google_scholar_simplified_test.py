@@ -8,7 +8,7 @@ from datetime import datetime, timedelta
 import sys
 
 # Test configuration
-BACKEND_URL = os.environ.get('REACT_APP_BACKEND_URL', 'https://c5e539fb-9522-486d-b275-1bb355b557d8.preview.emergentagent.com')
+BACKEND_URL = os.environ.get('REACT_APP_BACKEND_URL', 'https://researchpulse.preview.emergentagent.com')
 API_BASE = f"{BACKEND_URL}/api"
 
 class GoogleScholarSimplifiedTest:

@@ -2,7 +2,7 @@ import requests
 import json
 
 # Test registration endpoint directly
-url = "https://c5e539fb-9522-486d-b275-1bb355b557d8.preview.emergentagent.com/api/auth/register"
+url = "https://researchpulse.preview.emergentagent.com/api/auth/register"
 
 # Simple student registration data
 student_data = {

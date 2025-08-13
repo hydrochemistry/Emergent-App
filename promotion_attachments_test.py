@@ -6,7 +6,7 @@ import os
 from datetime import datetime, timedelta
 
 class PromotionAttachmentsAPITester:
-    def __init__(self, base_url="https://c5e539fb-9522-486d-b275-1bb355b557d8.preview.emergentagent.com"):
+    def __init__(self, base_url="https://researchpulse.preview.emergentagent.com"):
         self.base_url = base_url
         self.api_url = f"{base_url}/api"
         self.supervisor_token = None
