@@ -14,6 +14,7 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from 
 import { Label } from "./components/ui/label";
 import { Textarea } from "./components/ui/textarea";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "./components/ui/select";
+import AvatarPicker from './components/AvatarPicker';
 import { 
   Calendar, CheckCircle, CheckSquare, Clock, MessageSquare, BookOpen, FlaskConical, 
   Users, BarChart3, PlusCircle, Settings, LogOut, Upload, Star, 
