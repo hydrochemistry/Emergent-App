@@ -2982,7 +2982,7 @@ async def get_messages(with_user: str, current_user: User = Depends(get_current_
 # Citation Routes with Google Scholar Integration
 @api_router.get("/citations")
 async def get_citations(current_user: User = Depends(get_current_user)):
-    """Get citation data with automatic updates"""
+    """Get citation metrics data with automatic updates (metrics only)"""
     # Default Google Scholar ID for the lab
     default_scholar_id = "7pUFcrsAAAAJ"  # From the provided URL
     
@@ -3009,7 +3009,6 @@ async def get_citations(current_user: User = Depends(get_current_user)):
                 "total_citations": scholar_data.get("total_citations", 0),
                 "h_index": scholar_data.get("h_index", 0),
                 "i10_index": scholar_data.get("i10_index", 0),
-                "recent_papers": scholar_data.get("recent_papers", []),
                 "last_updated": datetime.utcnow(),
                 "supervisor_id": supervisor_id
             }
@@ -3026,32 +3025,48 @@ async def get_citations(current_user: User = Depends(get_current_user)):
                 EventType.PUBLICATION_UPDATED,
                 {
                     "action": "citations_updated",
-                    "citations": citation_data,
                     "total_citations": citation_data["total_citations"],
-                    "h_index": citation_data["h_index"]
+                    "h_index": citation_data["h_index"],
+                    "i10_index": citation_data["i10_index"]
                 },
                 supervisor_id=supervisor_id
             )
             
             print(f"Updated citations: {citation_data['total_citations']} total, h-index: {citation_data['h_index']}")
-            return CitationData(**citation_data)
+            
+            # Return simplified metrics-only payload
+            return {
+                "updatedAt": citation_data["last_updated"].isoformat() + "Z",
+                "totalCitations": citation_data["total_citations"],
+                "hIndex": citation_data["h_index"],
+                "i10Index": citation_data["i10_index"]
+            }
             
         except Exception as e:
             print(f"Error updating citations: {str(e)}")
             # Return cached data if available, otherwise empty data
             if cached_citations:
-                return CitationData(**cached_citations)
+                return {
+                    "updatedAt": cached_citations.get("last_updated", datetime.utcnow()).isoformat() + "Z",
+                    "totalCitations": cached_citations.get("total_citations", 0),
+                    "hIndex": cached_citations.get("h_index", 0),
+                    "i10Index": cached_citations.get("i10_index", 0)
+                }
             else:
-                return CitationData(
-                    scholar_id=default_scholar_id,
-                    total_citations=0,
-                    h_index=0,
-                    i10_index=0,
-                    recent_papers=[],
-                    supervisor_id=supervisor_id
-                )
+                return {
+                    "updatedAt": datetime.utcnow().isoformat() + "Z",
+                    "totalCitations": 0,
+                    "hIndex": 0,
+                    "i10Index": 0
+                }
     
-    return CitationData(**cached_citations)
+    # Return cached data in simplified format
+    return {
+        "updatedAt": cached_citations.get("last_updated", datetime.utcnow()).isoformat() + "Z",
+        "totalCitations": cached_citations.get("total_citations", 0),
+        "hIndex": cached_citations.get("h_index", 0),
+        "i10Index": cached_citations.get("i10_index", 0)
+    }
 
 @api_router.post("/citations/refresh")
 async def refresh_citations(current_user: User = Depends(get_current_user)):
