@@ -1735,14 +1735,13 @@ async def return_research_log(
     comment_data: dict, 
     current_user: User = Depends(get_current_user)
 ):
-    """Return research log with comments (SUBMITTED → RETURNED)"""
+    """Return research log with comments (SUBMITTED → RETURNED) - bounces to student immediately"""
     log = await db.research_logs.find_one({"id": log_id})
     if not log:
         raise HTTPException(status_code=404, detail="Research log not found")
     
-    # Check if user is supervisor of the log owner
-    log_owner = await db.users.find_one({"id": log["user_id"]})
-    if not log_owner or log_owner.get("supervisor_id") != current_user.id:
+    # Check if user is supervisor of the log (use supervisor_id field for authority)
+    if log.get("supervisor_id") != current_user.id:
         if current_user.role not in [UserRole.ADMIN, UserRole.LAB_MANAGER]:
             raise HTTPException(status_code=403, detail="Not authorized to return this research log")
     
@@ -1770,27 +1769,36 @@ async def return_research_log(
     updated_log = await db.research_logs.find_one({"id": log_id})
     research_log = ResearchLog(**updated_log)
     
-    # Emit real-time event
-    supervisor_id = await get_lab_supervisor_id(current_user)
-    await emit_event(
-        EventType.RESEARCH_LOG_UPDATED,
-        {
-            "action": "returned",
-            "research_log": research_log.dict(),
-            "supervisor_name": current_user.full_name,
-            "comment": comment_data.get("comment", "")
-        },
-        supervisor_id=supervisor_id
-    )
+    # CRITICAL FIX: Emit to both student and supervisor channels for immediate update
+    student_id = updated_log.get("student_id")
+    supervisor_id = updated_log.get("supervisor_id")
+    
+    event_data = {
+        "action": "returned",
+        "research_log": research_log.dict(),
+        "supervisor_name": current_user.full_name,
+        "comment": comment_data.get("comment", ""),
+        "student_id": student_id,
+        "supervisor_id": supervisor_id
+    }
+    
+    # Emit to student (bounces back immediately)
+    if student_id:
+        await emit_event(EventType.RESEARCH_LOG_UPDATED, event_data, user_id=student_id)
+    
+    # Emit to supervisor
+    if supervisor_id:
+        await emit_event(EventType.RESEARCH_LOG_UPDATED, event_data, user_id=supervisor_id)
     
     # Notify student
-    await create_notification(
-        user_id=log["user_id"],
-        notification_type="research_log_returned",
-        title="Research Log Returned",
-        message=f"Your research log '{log['title']}' was returned by {current_user.full_name}",
-        payload={"research_log_id": log_id, "comment": comment_data.get("comment", "")}
-    )
+    if student_id:
+        await create_notification(
+            user_id=student_id,
+            notification_type="research_log_returned",
+            title="Research Log Returned",
+            message=f"Your research log '{updated_log['title']}' was returned by {current_user.full_name}",
+            payload={"research_log_id": log_id, "comment": comment_data.get("comment", "")}
+        )
     
     return {"message": "Research log returned successfully", "status": ResearchLogStatus.RETURNED.value}
 
@@ -1800,14 +1808,13 @@ async def accept_research_log(
     comment_data: dict, 
     current_user: User = Depends(get_current_user)
 ):
-    """Accept research log (SUBMITTED → ACCEPTED)"""
+    """Accept research log (SUBMITTED → ACCEPTED) - bounces to student immediately"""
     log = await db.research_logs.find_one({"id": log_id})
     if not log:
         raise HTTPException(status_code=404, detail="Research log not found")
     
-    # Check if user is supervisor of the log owner
-    log_owner = await db.users.find_one({"id": log["user_id"]})
-    if not log_owner or log_owner.get("supervisor_id") != current_user.id:
+    # Check if user is supervisor of the log (use supervisor_id field for authority)
+    if log.get("supervisor_id") != current_user.id:
         if current_user.role not in [UserRole.ADMIN, UserRole.LAB_MANAGER]:
             raise HTTPException(status_code=403, detail="Not authorized to accept this research log")
     
@@ -1836,27 +1843,36 @@ async def accept_research_log(
     updated_log = await db.research_logs.find_one({"id": log_id})
     research_log = ResearchLog(**updated_log)
     
-    # Emit real-time event
-    supervisor_id = await get_lab_supervisor_id(current_user)
-    await emit_event(
-        EventType.RESEARCH_LOG_UPDATED,
-        {
-            "action": "accepted",
-            "research_log": research_log.dict(),
-            "supervisor_name": current_user.full_name,
-            "comment": comment_data.get("comment", "Approved")
-        },
-        supervisor_id=supervisor_id
-    )
+    # CRITICAL FIX: Emit to both student and supervisor channels for immediate update
+    student_id = updated_log.get("student_id")
+    supervisor_id = updated_log.get("supervisor_id")
+    
+    event_data = {
+        "action": "accepted",
+        "research_log": research_log.dict(),
+        "supervisor_name": current_user.full_name,
+        "comment": comment_data.get("comment", "Approved"),
+        "student_id": student_id,
+        "supervisor_id": supervisor_id
+    }
+    
+    # Emit to student (bounces back immediately)
+    if student_id:
+        await emit_event(EventType.RESEARCH_LOG_UPDATED, event_data, user_id=student_id)
+    
+    # Emit to supervisor
+    if supervisor_id:
+        await emit_event(EventType.RESEARCH_LOG_UPDATED, event_data, user_id=supervisor_id)
     
     # Notify student
-    await create_notification(
-        user_id=log["user_id"],
-        notification_type="research_log_accepted",
-        title="Research Log Accepted",
-        message=f"Your research log '{log['title']}' was accepted by {current_user.full_name}",
-        payload={"research_log_id": log_id, "comment": comment_data.get("comment", "Approved")}
-    )
+    if student_id:
+        await create_notification(
+            user_id=student_id,
+            notification_type="research_log_accepted",
+            title="Research Log Accepted",
+            message=f"Your research log '{updated_log['title']}' was accepted by {current_user.full_name}",
+            payload={"research_log_id": log_id, "comment": comment_data.get("comment", "Approved")}
+        )
     
     return {"message": "Research log accepted successfully", "status": ResearchLogStatus.ACCEPTED.value}
 
@@ -1866,14 +1882,13 @@ async def decline_research_log(
     comment_data: dict, 
     current_user: User = Depends(get_current_user)
 ):
-    """Decline research log (SUBMITTED → DECLINED)"""
+    """Decline research log (SUBMITTED → DECLINED) - bounces to student immediately"""
     log = await db.research_logs.find_one({"id": log_id})
     if not log:
         raise HTTPException(status_code=404, detail="Research log not found")
     
-    # Check if user is supervisor of the log owner
-    log_owner = await db.users.find_one({"id": log["user_id"]})
-    if not log_owner or log_owner.get("supervisor_id") != current_user.id:
+    # Check if user is supervisor of the log (use supervisor_id field for authority)
+    if log.get("supervisor_id") != current_user.id:
         if current_user.role not in [UserRole.ADMIN, UserRole.LAB_MANAGER]:
             raise HTTPException(status_code=403, detail="Not authorized to decline this research log")
     
@@ -1902,27 +1917,36 @@ async def decline_research_log(
     updated_log = await db.research_logs.find_one({"id": log_id})
     research_log = ResearchLog(**updated_log)
     
-    # Emit real-time event
-    supervisor_id = await get_lab_supervisor_id(current_user)
-    await emit_event(
-        EventType.RESEARCH_LOG_UPDATED,
-        {
-            "action": "declined",
-            "research_log": research_log.dict(),
-            "supervisor_name": current_user.full_name,
-            "comment": comment_data.get("comment", "Declined")
-        },
-        supervisor_id=supervisor_id
-    )
+    # CRITICAL FIX: Emit to both student and supervisor channels for immediate update
+    student_id = updated_log.get("student_id")
+    supervisor_id = updated_log.get("supervisor_id")
+    
+    event_data = {
+        "action": "declined",
+        "research_log": research_log.dict(),
+        "supervisor_name": current_user.full_name,
+        "comment": comment_data.get("comment", "Declined"),
+        "student_id": student_id,
+        "supervisor_id": supervisor_id
+    }
+    
+    # Emit to student (bounces back immediately)
+    if student_id:
+        await emit_event(EventType.RESEARCH_LOG_UPDATED, event_data, user_id=student_id)
+    
+    # Emit to supervisor  
+    if supervisor_id:
+        await emit_event(EventType.RESEARCH_LOG_UPDATED, event_data, user_id=supervisor_id)
     
     # Notify student
-    await create_notification(
-        user_id=log["user_id"],
-        notification_type="research_log_declined",
-        title="Research Log Declined",
-        message=f"Your research log '{log['title']}' was declined by {current_user.full_name}",
-        payload={"research_log_id": log_id, "comment": comment_data.get("comment", "Declined")}
-    )
+    if student_id:
+        await create_notification(
+            user_id=student_id,
+            notification_type="research_log_declined",
+            title="Research Log Declined",
+            message=f"Your research log '{updated_log['title']}' was declined by {current_user.full_name}",
+            payload={"research_log_id": log_id, "comment": comment_data.get("comment", "Declined")}
+        )
     
     return {"message": "Research log declined successfully", "status": ResearchLogStatus.DECLINED.value}
 
