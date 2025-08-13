@@ -516,17 +516,24 @@ const Dashboard = ({ user, logout, setUser }) => {
   const [notifications, setNotifications] = useState([]);
   const [showAvatarPicker, setShowAvatarPicker] = useState(false);
 
-  // WebSocket for real-time updates
+  // CRITICAL FIX: Enhanced WebSocket handling with cache invalidation
   const handleWebSocketMessage = (data) => {
     console.log('Received real-time update:', data);
     
     switch (data.type) {
       case 'research_log_updated':
+        // CRITICAL: Immediately refresh research logs on any update
         fetchResearchLogs();
         if (user.role === 'student') {
           fetchStudentLogStatus();
         }
-        showNotification(data.data.action, `Research log ${data.data.action} by ${data.data.user_name || data.data.supervisor_name}`);
+        // Emit notification for state change
+        const action = data.data.action;
+        const userName = data.data.user_name || data.data.supervisor_name;
+        showNotification(
+          `Research Log ${action.charAt(0).toUpperCase() + action.slice(1)}`, 
+          `${userName}: ${action} research log${data.data.comment ? ` - ${data.data.comment}` : ''}`
+        );
         break;
       case 'meeting_updated':
         fetchMeetings();
