@@ -544,6 +544,125 @@ class MessageCreate(BaseModel):
     receiver_id: str
     content: str
 
+class CitationData(BaseModel):
+    id: str = Field(default_factory=lambda: str(uuid.uuid4()))
+    scholar_id: str
+    total_citations: int
+    h_index: int
+    i10_index: int
+    recent_papers: List[Dict[str, Any]] = []
+    last_updated: datetime = Field(default_factory=datetime.utcnow)
+    supervisor_id: str
+
+# Google Scholar Integration
+GOOGLE_SCHOLAR_BASE_URL = "https://scholar.google.com/citations"
+USER_AGENTS = [
+    'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36',
+    'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36',
+    'Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36'
+]
+
+async def fetch_google_scholar_citations(scholar_id: str) -> Dict[str, Any]:
+    """Fetch citation data from Google Scholar profile"""
+    url = f"{GOOGLE_SCHOLAR_BASE_URL}?user={scholar_id}&hl=en"
+    
+    headers = {
+        'User-Agent': USER_AGENTS[0],
+        'Accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,image/webp,*/*;q=0.8',
+        'Accept-Language': 'en-US,en;q=0.5',
+        'Accept-Encoding': 'gzip, deflate',
+        'Connection': 'keep-alive',
+        'Upgrade-Insecure-Requests': '1',
+    }
+    
+    try:
+        async with httpx.AsyncClient(timeout=30.0, follow_redirects=True) as client:
+            response = await client.get(url, headers=headers)
+            response.raise_for_status()
+            
+            soup = BeautifulSoup(response.text, 'html.parser')
+            
+            # Extract citation metrics
+            citation_data = {
+                'total_citations': 0,
+                'h_index': 0,
+                'i10_index': 0,
+                'recent_papers': []
+            }
+            
+            # Get citation numbers from the stats table
+            stats_table = soup.find('table', {'id': 'gsc_rsb_st'})
+            if stats_table:
+                rows = stats_table.find_all('tr')
+                if len(rows) >= 3:
+                    # Total citations (all years)
+                    citations_row = rows[1]  # Second row contains the numbers
+                    citations_cells = citations_row.find_all('td', class_='gsc_rsb_std')
+                    if citations_cells:
+                        citation_data['total_citations'] = int(citations_cells[0].get_text().strip() or 0)
+                    
+                    # H-index
+                    if len(rows) >= 3:
+                        h_index_row = rows[2]
+                        h_cells = h_index_row.find_all('td', class_='gsc_rsb_std')
+                        if h_cells:
+                            citation_data['h_index'] = int(h_cells[0].get_text().strip() or 0)
+                    
+                    # i10-index  
+                    if len(rows) >= 4:
+                        i10_row = rows[3]
+                        i10_cells = i10_row.find_all('td', class_='gsc_rsb_std')
+                        if i10_cells:
+                            citation_data['i10_index'] = int(i10_cells[0].get_text().strip() or 0)
+            
+            # Extract recent papers
+            papers = []
+            paper_rows = soup.find_all('tr', class_='gsc_a_tr')
+            for row in paper_rows[:5]:  # Get top 5 recent papers
+                title_cell = row.find('td', class_='gsc_a_t')
+                citation_cell = row.find('td', class_='gsc_a_c')
+                year_cell = row.find('td', class_='gsc_a_y')
+                
+                if title_cell:
+                    title_link = title_cell.find('a')
+                    title = title_link.get_text().strip() if title_link else 'Unknown Title'
+                    
+                    authors_div = title_cell.find('div', class_='gs_gray')
+                    authors = authors_div.get_text().strip() if authors_div else 'Unknown Authors'
+                    
+                    citations = 0
+                    if citation_cell:
+                        citation_link = citation_cell.find('a')
+                        if citation_link:
+                            citations = int(citation_link.get_text().strip() or 0)
+                    
+                    year = ''
+                    if year_cell:
+                        year = year_cell.get_text().strip()
+                    
+                    papers.append({
+                        'title': title,
+                        'authors': authors,
+                        'citations': citations,
+                        'year': year
+                    })
+            
+            citation_data['recent_papers'] = papers
+            
+            print(f"Successfully fetched Google Scholar data for {scholar_id}: {citation_data['total_citations']} citations")
+            return citation_data
+            
+    except Exception as e:
+        print(f"Error fetching Google Scholar data for {scholar_id}: {str(e)}")
+        # Return default data if scraping fails
+        return {
+            'total_citations': 0,
+            'h_index': 0,
+            'i10_index': 0,
+            'recent_papers': [],
+            'error': str(e)
+        }
+
 # File upload helper
 async def save_uploaded_file(file: UploadFile, directory: str) -> str:
     """Save uploaded file and return the file path"""
