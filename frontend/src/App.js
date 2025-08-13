@@ -1130,65 +1130,54 @@ const Dashboard = ({ user, logout, setUser }) => {
               <Card>
                 <CardHeader>
                   <CardTitle className="flex items-center gap-2">
-                    <DollarSign className="h-5 w-5" />
-                    Active Grants
+                    <AlertTriangle className="h-5 w-5" />
+                    Active Reminders
                     <Badge variant="outline" className="ml-auto">
-                      {activeGrants.length} Active
+                      {reminders.filter(r => !r.is_completed).length} Active
                     </Badge>
                   </CardTitle>
                 </CardHeader>
                 <CardContent>
-                  {/* Cumulative Balance Summary */}
-                  <div className="bg-green-50 border border-green-200 rounded-lg p-3 mb-4">
-                    <div className="flex items-center justify-between">
-                      <div>
-                        <p className="text-sm font-medium text-green-800">Total Active Balance</p>
-                        <p className="text-xs text-green-600">Remaining funds across all active grants</p>
-                      </div>
-                      <div className="text-right">
-                        <p className="text-lg font-bold text-green-800">
-                          ${activeGrants.reduce((sum, grant) => sum + (grant.remaining_balance || 0), 0).toLocaleString()}
-                        </p>
-                      </div>
-                    </div>
-                  </div>
-                  
-                  {/* Active Grants List */}
-                  {activeGrants.slice(0, 3).map((grant) => (
-                    <div key={grant.id} className="py-2 border-b last:border-b-0">
+                  {reminders.filter(r => !r.is_completed).slice(0, 4).map((reminder) => (
+                    <div key={reminder.id} className="py-2 border-b last:border-b-0">
                       <div className="flex items-start justify-between">
                         <div className="flex-1">
-                          <p className="font-medium text-sm line-clamp-2">{grant.title}</p>
+                          <p className="font-medium text-sm line-clamp-2">{reminder.title}</p>
                           <p className="text-xs text-gray-600 mt-1">
-                            {grant.funding_agency} • {grant.grant_type || 'Research Grant'}
+                            {reminder.description && reminder.description.substring(0, 60)}
+                            {reminder.description && reminder.description.length > 60 && '...'}
                           </p>
                           <div className="flex items-center gap-4 mt-1">
-                            <p className="text-xs text-green-600 font-medium">
-                              Balance: ${(grant.remaining_balance || 0).toLocaleString()}
+                            <p className="text-xs text-blue-600 font-medium">
+                              Due: {new Date(reminder.reminder_date).toLocaleDateString()}
                             </p>
-                            {grant.person_in_charge && (
-                              <p className="text-xs text-blue-600">
-                                PIC: {grant.person_in_charge}
+                            {reminder.reminder_time && (
+                              <p className="text-xs text-purple-600">
+                                {reminder.reminder_time}
                               </p>
                             )}
                           </div>
                         </div>
-                        <Badge className="bg-green-100 text-green-800 ml-2" size="sm">
-                          Active
+                        <Badge className={
+                          reminder.priority === 'high' ? 'bg-red-100 text-red-800' :
+                          reminder.priority === 'medium' ? 'bg-yellow-100 text-yellow-800' :
+                          'bg-green-100 text-green-800'
+                        } size="sm">
+                          {reminder.priority || 'Normal'}
                         </Badge>
                       </div>
                     </div>
                   ))}
-                  {activeGrants.length === 0 && (
+                  {reminders.filter(r => !r.is_completed).length === 0 && (
                     <div className="text-center py-4">
-                      <DollarSign className="h-8 w-8 text-gray-300 mx-auto mb-2" />
-                      <p className="text-gray-500 text-sm">No active grants</p>
+                      <AlertTriangle className="h-8 w-8 text-gray-300 mx-auto mb-2" />
+                      <p className="text-gray-500 text-sm">No active reminders</p>
                     </div>
                   )}
-                  {activeGrants.length > 3 && (
+                  {reminders.filter(r => !r.is_completed).length > 4 && (
                     <div className="text-center pt-2 mt-2 border-t">
                       <p className="text-xs text-gray-500">
-                        +{activeGrants.length - 3} more grants
+                        +{reminders.filter(r => !r.is_completed).length - 4} more reminders
                       </p>
                     </div>
                   )}
