@@ -810,36 +810,46 @@ const Dashboard = ({ user, logout, setUser }) => {
                 )}
               </div>
               
-              <Button variant="outline" size="sm" onClick={() => setActiveTab('profile')} className="hidden sm:flex">
-                <User className="h-4 w-4" />
-              </Button>
-              <Avatar className="h-8 w-8 sm:h-10 sm:w-10 cursor-pointer flex-shrink-0" onClick={() => setActiveTab('profile')}>
-                <AvatarFallback>
-                  {user.full_name.split(' ').map(n => n[0]).join('')}
-                </AvatarFallback>
-              </Avatar>
-              <div className="hidden sm:block">
-                <p className="text-sm font-medium text-gray-900">{user.full_name}</p>
-                <p className="text-xs text-gray-500">
-                  {user.role.replace('_', ' ').toUpperCase()}
-                </p>
+              <div className="flex items-center space-x-4">
+                <div className="flex flex-col items-center sm:flex-row sm:space-x-2">
+                  <div className="flex items-center space-x-4 bg-white rounded-lg px-4 py-2 shadow-sm border border-gray-200 cursor-pointer hover:bg-gray-50 transition-colors" onClick={() => setActiveTab('profile')}>
+                    {/* Square Man Icon */}
+                    <div className="w-8 h-8 bg-blue-100 rounded-md flex items-center justify-center">
+                      <User className="h-5 w-5 text-blue-600" />
+                    </div>
+                    
+                    {/* User Name */}
+                    <div className="hidden sm:block">
+                      <p className="text-sm font-medium text-gray-900">{user.full_name}</p>
+                      <p className="text-xs text-gray-500">
+                        {user.role.replace('_', ' ').toUpperCase()}
+                      </p>
+                    </div>
+                    
+                    {/* Bell Icon */}
+                    <div className="relative">
+                      <Bell className="h-5 w-5 text-gray-600" />
+                      {notifications.length > 0 && (
+                        <span className="absolute -top-1 -right-1 h-3 w-3 bg-red-500 rounded-full text-xs flex items-center justify-center">
+                          <span className="w-2 h-2 bg-red-500 rounded-full"></span>
+                        </span>
+                      )}
+                    </div>
+                    
+                    {/* Logout Icon */}
+                    <button 
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        logout();
+                      }}
+                      className="p-1 hover:bg-gray-100 rounded-md transition-colors"
+                      title="Logout"
+                    >
+                      <LogOut className="h-5 w-5 text-gray-600" />
+                    </button>
+                  </div>
+                </div>
               </div>
-              {(user.role === 'supervisor' || user.role === 'lab_manager' || user.role === 'admin') && (
-                <Button 
-                  onClick={() => setActiveTab('admin')}
-                  className="bg-white text-black border border-gray-300 hover:bg-gray-100 hover:text-black px-3 py-2 rounded-md text-sm font-medium"
-                >
-                  <Settings className="h-4 w-4 mr-2" />
-                  Admin
-                </Button>
-              )}
-              <Button 
-                onClick={logout}
-                className="bg-white text-black border border-gray-300 hover:bg-gray-100 hover:text-black px-3 py-2 rounded-md text-sm font-medium"
-              >
-                <LogOut className="h-4 w-4 mr-2" />
-                Logout
-              </Button>
             </div>
           </div>
         </div>
