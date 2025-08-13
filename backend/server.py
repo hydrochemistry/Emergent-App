@@ -148,6 +148,7 @@ class User(BaseModel):
     lab_name: Optional[str] = None
     lab_logo: Optional[str] = None
     profile_picture: Optional[str] = None
+    avatar_emoji: Optional[str] = None  # New field for emoji avatar
     scopus_id: Optional[str] = None
     orcid_id: Optional[str] = None
     
