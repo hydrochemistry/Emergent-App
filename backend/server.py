@@ -2979,6 +2979,127 @@ async def get_messages(with_user: str, current_user: User = Depends(get_current_
     
     return [Message(**msg) for msg in messages]
 
+# Citation Routes with Google Scholar Integration
+@api_router.get("/citations")
+async def get_citations(current_user: User = Depends(get_current_user)):
+    """Get citation data with automatic updates"""
+    # Default Google Scholar ID for the lab
+    default_scholar_id = "7pUFcrsAAAAJ"  # From the provided URL
+    
+    # Determine supervisor ID
+    supervisor_id = await get_lab_supervisor_id(current_user)
+    
+    # Check if we have cached citation data
+    cached_citations = await db.citations.find_one({"supervisor_id": supervisor_id})
+    
+    # Update if data is older than 1 hour or doesn't exist
+    should_update = (
+        not cached_citations or 
+        (datetime.utcnow() - cached_citations.get("last_updated", datetime.min)).total_seconds() > 3600
+    )
+    
+    if should_update:
+        try:
+            print(f"Fetching fresh Google Scholar data for scholar ID: {default_scholar_id}")
+            scholar_data = await fetch_google_scholar_citations(default_scholar_id)
+            
+            citation_data = {
+                "id": str(uuid.uuid4()),
+                "scholar_id": default_scholar_id,
+                "total_citations": scholar_data.get("total_citations", 0),
+                "h_index": scholar_data.get("h_index", 0),
+                "i10_index": scholar_data.get("i10_index", 0),
+                "recent_papers": scholar_data.get("recent_papers", []),
+                "last_updated": datetime.utcnow(),
+                "supervisor_id": supervisor_id
+            }
+            
+            # Upsert citation data
+            await db.citations.update_one(
+                {"supervisor_id": supervisor_id},
+                {"$set": citation_data},
+                upsert=True
+            )
+            
+            # Emit real-time event for citation updates
+            await emit_event(
+                EventType.PUBLICATION_UPDATED,
+                {
+                    "action": "citations_updated",
+                    "citations": citation_data,
+                    "total_citations": citation_data["total_citations"],
+                    "h_index": citation_data["h_index"]
+                },
+                supervisor_id=supervisor_id
+            )
+            
+            print(f"Updated citations: {citation_data['total_citations']} total, h-index: {citation_data['h_index']}")
+            return CitationData(**citation_data)
+            
+        except Exception as e:
+            print(f"Error updating citations: {str(e)}")
+            # Return cached data if available, otherwise empty data
+            if cached_citations:
+                return CitationData(**cached_citations)
+            else:
+                return CitationData(
+                    scholar_id=default_scholar_id,
+                    total_citations=0,
+                    h_index=0,
+                    i10_index=0,
+                    recent_papers=[],
+                    supervisor_id=supervisor_id
+                )
+    
+    return CitationData(**cached_citations)
+
+@api_router.post("/citations/refresh")
+async def refresh_citations(current_user: User = Depends(get_current_user)):
+    """Manually refresh citation data"""
+    # Only supervisors can refresh citation data
+    if current_user.role not in [UserRole.SUPERVISOR, UserRole.LAB_MANAGER, UserRole.ADMIN]:
+        raise HTTPException(status_code=403, detail="Only supervisors can refresh citation data")
+    
+    default_scholar_id = "7pUFcrsAAAAJ"
+    supervisor_id = await get_lab_supervisor_id(current_user)
+    
+    try:
+        scholar_data = await fetch_google_scholar_citations(default_scholar_id)
+        
+        citation_data = {
+            "id": str(uuid.uuid4()),
+            "scholar_id": default_scholar_id,
+            "total_citations": scholar_data.get("total_citations", 0),
+            "h_index": scholar_data.get("h_index", 0),
+            "i10_index": scholar_data.get("i10_index", 0),
+            "recent_papers": scholar_data.get("recent_papers", []),
+            "last_updated": datetime.utcnow(),
+            "supervisor_id": supervisor_id
+        }
+        
+        await db.citations.update_one(
+            {"supervisor_id": supervisor_id},
+            {"$set": citation_data},
+            upsert=True
+        )
+        
+        # Emit real-time event
+        await emit_event(
+            EventType.PUBLICATION_UPDATED,
+            {
+                "action": "citations_refreshed",
+                "citations": citation_data,
+                "total_citations": citation_data["total_citations"],
+                "h_index": citation_data["h_index"]
+            },
+            supervisor_id=supervisor_id
+        )
+        
+        return {"message": "Citations refreshed successfully", "citations": CitationData(**citation_data)}
+        
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Failed to refresh citations: {str(e)}")
+
 # Students Routes
 @api_router.get("/students")
 async def get_students(current_user: User = Depends(get_current_user)):
