@@ -3509,6 +3509,139 @@ async def reject_user_registration(user_id: str, rejection_reason: str = None, c
     
     return {"message": "User registration rejected and account deleted successfully"}
 
+# To-Do List Management Endpoints
+@api_router.post("/todos", response_model=Todo)
+async def create_todo(todo_data: TodoCreate, current_user: User = Depends(get_current_user)):
+    """Create a new to-do item"""
+    todo = Todo(
+        user_id=current_user.id,
+        title=todo_data.title,
+        notes=todo_data.notes,
+        due_at=todo_data.due_at,
+        priority=todo_data.priority
+    )
+    
+    await db.todos.insert_one(todo.dict())
+    
+    # Emit real-time event
+    supervisor_id = await get_lab_supervisor_id(current_user)
+    await emit_event(
+        EventType.USER_UPDATED,
+        {"action": "todo_created", "todo_id": todo.id, "user_id": current_user.id},
+        supervisor_id=supervisor_id
+    )
+    
+    return todo
+
+@api_router.get("/todos", response_model=List[Todo])
+async def get_todos(current_user: User = Depends(get_current_user)):
+    """Get user's to-do items"""
+    todos = await db.todos.find({"user_id": current_user.id}).sort("order_index", 1).to_list(1000)
+    return [Todo(**todo) for todo in todos]
+
+@api_router.put("/todos/{todo_id}", response_model=Todo)
+async def update_todo(todo_id: str, todo_update: TodoUpdate, current_user: User = Depends(get_current_user)):
+    """Update a to-do item"""
+    # Verify ownership
+    existing_todo = await db.todos.find_one({"id": todo_id, "user_id": current_user.id})
+    if not existing_todo:
+        raise HTTPException(status_code=404, detail="Todo not found")
+    
+    # Prepare update data
+    update_data = {k: v for k, v in todo_update.dict().items() if v is not None}
+    update_data["updated_at"] = datetime.utcnow()
+    
+    # Handle completion
+    if "is_completed" in update_data and update_data["is_completed"] and not existing_todo.get("is_completed"):
+        update_data["completed_at"] = datetime.utcnow()
+    elif "is_completed" in update_data and not update_data["is_completed"]:
+        update_data["completed_at"] = None
+    
+    await db.todos.update_one({"id": todo_id}, {"$set": update_data})
+    
+    # Get updated todo
+    updated_todo = await db.todos.find_one({"id": todo_id})
+    
+    # Emit real-time event
+    supervisor_id = await get_lab_supervisor_id(current_user)
+    await emit_event(
+        EventType.USER_UPDATED,
+        {"action": "todo_updated", "todo_id": todo_id, "user_id": current_user.id},
+        supervisor_id=supervisor_id
+    )
+    
+    return Todo(**updated_todo)
+
+@api_router.put("/todos/{todo_id}/complete")
+async def complete_todo(todo_id: str, current_user: User = Depends(get_current_user)):
+    """Toggle completion status of a to-do item"""
+    existing_todo = await db.todos.find_one({"id": todo_id, "user_id": current_user.id})
+    if not existing_todo:
+        raise HTTPException(status_code=404, detail="Todo not found")
+    
+    is_completed = not existing_todo.get("is_completed", False)
+    update_data = {
+        "is_completed": is_completed,
+        "updated_at": datetime.utcnow()
+    }
+    
+    if is_completed:
+        update_data["completed_at"] = datetime.utcnow()
+    else:
+        update_data["completed_at"] = None
+    
+    await db.todos.update_one({"id": todo_id}, {"$set": update_data})
+    
+    # Get updated todo
+    updated_todo = await db.todos.find_one({"id": todo_id})
+    
+    # Emit real-time event
+    supervisor_id = await get_lab_supervisor_id(current_user)
+    await emit_event(
+        EventType.USER_UPDATED,
+        {"action": "todo_completed", "todo_id": todo_id, "completed": is_completed, "user_id": current_user.id},
+        supervisor_id=supervisor_id
+    )
+    
+    return Todo(**updated_todo)
+
+@api_router.delete("/todos/{todo_id}")
+async def delete_todo(todo_id: str, current_user: User = Depends(get_current_user)):
+    """Delete a to-do item"""
+    result = await db.todos.delete_one({"id": todo_id, "user_id": current_user.id})
+    
+    if result.deleted_count == 0:
+        raise HTTPException(status_code=404, detail="Todo not found")
+    
+    # Emit real-time event
+    supervisor_id = await get_lab_supervisor_id(current_user)
+    await emit_event(
+        EventType.USER_UPDATED,
+        {"action": "todo_deleted", "todo_id": todo_id, "user_id": current_user.id},
+        supervisor_id=supervisor_id
+    )
+    
+    return {"message": "Todo deleted successfully"}
+
+@api_router.put("/todos/{todo_id}/reorder")
+async def reorder_todo(todo_id: str, new_index: int, current_user: User = Depends(get_current_user)):
+    """Reorder a to-do item"""
+    # Verify ownership
+    existing_todo = await db.todos.find_one({"id": todo_id, "user_id": current_user.id})
+    if not existing_todo:
+        raise HTTPException(status_code=404, detail="Todo not found")
+    
+    # Update order index
+    await db.todos.update_one(
+        {"id": todo_id}, 
+        {"$set": {"order_index": new_index, "updated_at": datetime.utcnow()}}
+    )
+    
+    # Get updated todo
+    updated_todo = await db.todos.find_one({"id": todo_id})
+    
+    return Todo(**updated_todo)
+
 # Include the router in the main app
 app.include_router(api_router)
 
