@@ -3070,7 +3070,7 @@ async def get_citations(current_user: User = Depends(get_current_user)):
 
 @api_router.post("/citations/refresh")
 async def refresh_citations(current_user: User = Depends(get_current_user)):
-    """Manually refresh citation data"""
+    """Manually refresh citation metrics data"""
     # Only supervisors can refresh citation data
     if current_user.role not in [UserRole.SUPERVISOR, UserRole.LAB_MANAGER, UserRole.ADMIN]:
         raise HTTPException(status_code=403, detail="Only supervisors can refresh citation data")
@@ -3087,7 +3087,6 @@ async def refresh_citations(current_user: User = Depends(get_current_user)):
             "total_citations": scholar_data.get("total_citations", 0),
             "h_index": scholar_data.get("h_index", 0),
             "i10_index": scholar_data.get("i10_index", 0),
-            "recent_papers": scholar_data.get("recent_papers", []),
             "last_updated": datetime.utcnow(),
             "supervisor_id": supervisor_id
         }
@@ -3103,14 +3102,23 @@ async def refresh_citations(current_user: User = Depends(get_current_user)):
             EventType.PUBLICATION_UPDATED,
             {
                 "action": "citations_refreshed",
-                "citations": citation_data,
                 "total_citations": citation_data["total_citations"],
-                "h_index": citation_data["h_index"]
+                "h_index": citation_data["h_index"],
+                "i10_index": citation_data["i10_index"]
             },
             supervisor_id=supervisor_id
         )
         
-        return {"message": "Citations refreshed successfully", "citations": CitationData(**citation_data)}
+        # Return simplified metrics-only response
+        return {
+            "message": "Citations refreshed successfully", 
+            "citations": {
+                "updatedAt": citation_data["last_updated"].isoformat() + "Z",
+                "totalCitations": citation_data["total_citations"],
+                "hIndex": citation_data["h_index"],
+                "i10Index": citation_data["i10_index"]
+            }
+        }
         
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"Failed to refresh citations: {str(e)}")
