@@ -1218,55 +1218,31 @@ const Dashboard = ({ user, logout, setUser }) => {
               <Card>
                 <CardHeader>
                   <CardTitle className="flex items-center gap-2">
-                    <AlertTriangle className="h-5 w-5" />
-                    Active Reminders
-                    <Badge variant="outline" className="ml-auto">
-                      {reminders.filter(r => !r.is_completed).length} Active
-                    </Badge>
+                    <BookOpen className="h-5 w-5" />
+                    Recent News
                   </CardTitle>
                 </CardHeader>
                 <CardContent>
-                  {reminders.filter(r => !r.is_completed).slice(0, 4).map((reminder) => (
-                    <div key={reminder.id} className="py-2 border-b last:border-b-0">
-                      <div className="flex items-start justify-between">
-                        <div className="flex-1">
-                          <p className="font-medium text-sm line-clamp-2">{reminder.title}</p>
-                          <p className="text-xs text-gray-600 mt-1">
-                            {reminder.description && reminder.description.substring(0, 60)}
-                            {reminder.description && reminder.description.length > 60 && '...'}
-                          </p>
-                          <div className="flex items-center gap-4 mt-1">
-                            <p className="text-xs text-blue-600 font-medium">
-                              Due: {new Date(reminder.reminder_date).toLocaleDateString()}
-                            </p>
-                            {reminder.reminder_time && (
-                              <p className="text-xs text-purple-600">
-                                {reminder.reminder_time}
-                              </p>
-                            )}
-                          </div>
-                        </div>
-                        <Badge className={
-                          reminder.priority === 'high' ? 'bg-red-100 text-red-800' :
-                          reminder.priority === 'medium' ? 'bg-yellow-100 text-yellow-800' :
-                          'bg-green-100 text-green-800'
-                        } size="sm">
-                          {reminder.priority || 'Normal'}
-                        </Badge>
+                  {bulletins.filter(b => b.is_highlight).slice(0, 3).map((bulletin) => (
+                    <div key={bulletin.id} className="flex items-center justify-between py-2 border-b last:border-b-0">
+                      <div>
+                        <p className="font-medium text-sm">{bulletin.title}</p>
+                        <p className="text-xs text-gray-600">{new Date(bulletin.created_at).toLocaleDateString()}</p>
                       </div>
+                      <Badge className={
+                        bulletin.category === 'announcement' ? 'bg-blue-100 text-blue-800' :
+                        bulletin.category === 'achievement' ? 'bg-green-100 text-green-800' :
+                        bulletin.category === 'event' ? 'bg-purple-100 text-purple-800' :
+                        'bg-gray-100 text-gray-800'
+                      } size="sm">
+                        {bulletin.status}
+                      </Badge>
                     </div>
                   ))}
-                  {reminders.filter(r => !r.is_completed).length === 0 && (
+                  {bulletins.filter(b => b.is_highlight).length === 0 && (
                     <div className="text-center py-4">
-                      <AlertTriangle className="h-8 w-8 text-gray-300 mx-auto mb-2" />
-                      <p className="text-gray-500 text-sm">No active reminders</p>
-                    </div>
-                  )}
-                  {reminders.filter(r => !r.is_completed).length > 4 && (
-                    <div className="text-center pt-2 mt-2 border-t">
-                      <p className="text-xs text-gray-500">
-                        +{reminders.filter(r => !r.is_completed).length - 4} more reminders
-                      </p>
+                      <Star className="h-8 w-8 text-gray-300 mx-auto mb-2" />
+                      <p className="text-gray-500 text-sm">No recent news</p>
                     </div>
                   )}
                 </CardContent>
