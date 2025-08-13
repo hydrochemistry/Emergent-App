@@ -549,7 +549,37 @@ class LabSettings(BaseModel):
     social_twitter: str = ""
     social_linkedin: str = ""
     footer_attribution: str = "© 2025 Research Lab Management System. All rights reserved."
+    # New fields for admin functionality
+    lab_logo_url: Optional[str] = None
+    copyright_disclaimer: Optional[str] = None
+    menu_visibility: Dict[str, Dict[str, bool]] = Field(default_factory=lambda: {
+        "student": {
+            "Dashboard": True,
+            "Tasks": True,
+            "Research": True,
+            "Meetings": True,
+            "Publications": True,
+            "Milestones": True,
+            "Reminders": True,
+            "News": True,
+            "Grants": True,
+            "Profile": True
+        },
+        "supervisor": {
+            "Dashboard": True,
+            "Students": True,
+            "Research": True,
+            "Meetings": True,
+            "Publications": True,
+            "Milestones": True,
+            "Reminders": True,
+            "News": True,
+            "Grants": True,
+            "Profile": True
+        }
+    })
     supervisor_id: str
+    updated_by: Optional[str] = None
     created_at: datetime = Field(default_factory=datetime.utcnow)
     updated_at: datetime = Field(default_factory=datetime.utcnow)
 
@@ -565,6 +595,35 @@ class LabSettingsUpdate(BaseModel):
     social_twitter: Optional[str] = None
     social_linkedin: Optional[str] = None
     footer_attribution: Optional[str] = None
+    lab_logo_url: Optional[str] = None
+    copyright_disclaimer: Optional[str] = None
+    menu_visibility: Optional[Dict[str, Dict[str, bool]]] = None
+
+class Todo(BaseModel):
+    id: str = Field(default_factory=lambda: str(uuid.uuid4()))
+    user_id: str
+    title: str
+    notes: Optional[str] = None
+    due_at: Optional[datetime] = None
+    priority: str = "normal"  # 'low', 'normal', 'high'
+    is_completed: bool = False
+    order_index: int = 0
+    created_at: datetime = Field(default_factory=datetime.utcnow)
+    updated_at: datetime = Field(default_factory=datetime.utcnow)
+    completed_at: Optional[datetime] = None
+
+class TodoCreate(BaseModel):
+    title: str
+    notes: Optional[str] = None
+    due_at: Optional[datetime] = None
+    priority: str = "normal"
+
+class TodoUpdate(BaseModel):
+    title: Optional[str] = None
+    notes: Optional[str] = None
+    due_at: Optional[datetime] = None
+    priority: Optional[str] = None
+    order_index: Optional[int] = None
     id: str = Field(default_factory=lambda: str(uuid.uuid4()))
     scholar_id: str
     total_citations: int
