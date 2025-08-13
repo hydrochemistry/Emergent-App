@@ -2014,6 +2014,9 @@ async def get_active_grants(current_user: User = Depends(get_current_user)):
 # Enhanced Bulletin/News Routes with Highlight Feature
 @api_router.post("/bulletins", response_model=Bulletin)
 async def create_bulletin(bulletin_data: BulletinCreate, current_user: User = Depends(get_current_user)):
+    # Get supervisor ID for lab-wide visibility
+    supervisor_id = await get_lab_supervisor_id(current_user)
+    
     bulletin = Bulletin(
         title=bulletin_data.title,
         content=bulletin_data.content,
@@ -2023,7 +2026,23 @@ async def create_bulletin(bulletin_data: BulletinCreate, current_user: User = De
         status=BulletinStatus.PENDING
     )
     
-    await db.bulletins.insert_one(bulletin.dict())
+    # Add supervisor_id for lab-wide visibility
+    bulletin_dict = bulletin.dict()
+    bulletin_dict["supervisor_id"] = supervisor_id
+    
+    await db.bulletins.insert_one(bulletin_dict)
+    
+    # Emit real-time event for lab-wide synchronization
+    await emit_event(
+        EventType.BULLETIN_UPDATED,
+        {
+            "action": "created",
+            "bulletin": bulletin_dict,
+            "author_name": current_user.full_name
+        },
+        supervisor_id=supervisor_id
+    )
+    
     return bulletin
 
 @api_router.post("/bulletins/{bulletin_id}/approve")
