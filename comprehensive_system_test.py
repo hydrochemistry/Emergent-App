@@ -308,7 +308,7 @@ class ComprehensiveSystemTest:
                 print("✅ Research log submitted successfully")
                 print(f"   📊 Status: {submitted_log.get('status', 'N/A')}")
                 
-                if submitted_log.get('status') == 'SUBMITTED':
+                if submitted_log.get('status').upper() == 'SUBMITTED':
                     print("✅ Status transition DRAFT → SUBMITTED working")
                     self.test_results.append("✅ Status transition DRAFT → SUBMITTED working")
                 else:
