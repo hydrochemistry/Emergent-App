@@ -514,6 +514,7 @@ const Dashboard = ({ user, logout, setUser }) => {
   const [notes, setNotes] = useState([]);
   const [loading, setLoading] = useState(true);
   const [notifications, setNotifications] = useState([]);
+  const [showAvatarPicker, setShowAvatarPicker] = useState(false);
 
   // WebSocket for real-time updates
   const handleWebSocketMessage = (data) => {
