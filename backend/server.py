@@ -3007,6 +3007,64 @@ async def get_messages(with_user: str, current_user: User = Depends(get_current_
     
     return [Message(**msg) for msg in messages]
 
+# Lab Settings Routes
+@api_router.get("/lab/settings")
+async def get_lab_settings(current_user: User = Depends(get_current_user)):
+    """Get lab settings for current user's lab"""
+    supervisor_id = await get_lab_supervisor_id(current_user)
+    
+    # Get or create lab settings
+    settings = await db.lab_settings.find_one({"supervisor_id": supervisor_id})
+    
+    if not settings:
+        # Create default lab settings
+        default_settings = LabSettings(supervisor_id=supervisor_id)
+        await db.lab_settings.insert_one(default_settings.dict())
+        return default_settings
+    
+    return LabSettings(**settings)
+
+@api_router.put("/lab/settings")
+async def update_lab_settings(
+    settings_update: LabSettingsUpdate, 
+    current_user: User = Depends(get_current_user)
+):
+    """Update lab settings (Supervisor/Admin only)"""
+    # Only supervisors can update lab settings
+    if current_user.role not in [UserRole.SUPERVISOR, UserRole.LAB_MANAGER, UserRole.ADMIN]:
+        raise HTTPException(status_code=403, detail="Only supervisors can update lab settings")
+    
+    supervisor_id = await get_lab_supervisor_id(current_user)
+    
+    # Prepare update data
+    update_data = {k: v for k, v in settings_update.dict().items() if v is not None}
+    update_data["updated_at"] = datetime.utcnow()
+    
+    # Update lab settings
+    result = await db.lab_settings.update_one(
+        {"supervisor_id": supervisor_id},
+        {"$set": update_data},
+        upsert=True
+    )
+    
+    # Get updated settings
+    updated_settings = await db.lab_settings.find_one({"supervisor_id": supervisor_id})
+    lab_settings = LabSettings(**updated_settings)
+    
+    # Broadcast lab.updated event for real-time updates
+    await emit_event(
+        EventType.USER_UPDATED,  # We'll use USER_UPDATED for lab settings
+        {
+            "action": "lab_settings_updated",
+            "lab_settings": lab_settings.dict(),
+            "lab_name": lab_settings.lab_name,
+            "footer_attribution": lab_settings.footer_attribution
+        },
+        supervisor_id=supervisor_id
+    )
+    
+    return {"message": "Lab settings updated successfully", "settings": lab_settings}
+
 # Citation Routes with Google Scholar Integration
 @api_router.get("/citations")
 async def get_citations(current_user: User = Depends(get_current_user)):
