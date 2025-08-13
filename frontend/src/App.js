@@ -657,7 +657,19 @@ const Dashboard = ({ user, logout, setUser }) => {
     }
   };
 
-  const fetchMilestones = async () => {
+  const updateAvatar = async (avatarEmoji) => {
+    try {
+      await axios.put(`${API}/users/${user.id}/avatar`, {
+        avatar_emoji: avatarEmoji
+      });
+      setUser({ ...user, avatar_emoji: avatarEmoji });
+      setShowAvatarPicker(false);
+      showNotification('Avatar Updated', 'Your avatar has been updated successfully');
+    } catch (error) {
+      console.error('Error updating avatar:', error);
+      alert('Error updating avatar');
+    }
+  };
     try {
       const response = await axios.get(`${API}/milestones`);
       setMilestones(response.data || []);
