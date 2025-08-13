@@ -759,7 +759,8 @@ const Dashboard = ({ user, logout, setUser }) => {
         fetchPublications(), // Keep for Scopus Recent Paper
         fetchBulletins(),
         fetchMeetings(),
-        fetchMilestones()
+        fetchMilestones(),
+        fetchTodos()
       ]);
 
       // Fetch student-specific data
