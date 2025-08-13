@@ -590,9 +590,111 @@ async def get_current_user(credentials: HTTPAuthorizationCredentials = Depends(s
     if not user.get("is_approved", False) and user.get("role") not in ["supervisor", "admin", "lab_manager"]:
         raise HTTPException(status_code=403, detail="Account pending approval. Please wait for supervisor authorization.")
     
-    return User(**user)
+# WebSocket Connection Manager for Real-time Updates
+class ConnectionManager:
+    def __init__(self):
+        self.active_connections: Dict[str, List[WebSocket]] = defaultdict(list)
+        self.user_connections: Dict[str, List[WebSocket]] = defaultdict(list)
+    
+    async def connect(self, websocket: WebSocket, user_id: str, channel: str = "global"):
+        await websocket.accept()
+        self.active_connections[channel].append(websocket)
+        self.user_connections[user_id].append(websocket)
+        print(f"User {user_id} connected to channel {channel}")
+    
+    def disconnect(self, websocket: WebSocket, user_id: str, channel: str = "global"):
+        if websocket in self.active_connections[channel]:
+            self.active_connections[channel].remove(websocket)
+        if websocket in self.user_connections[user_id]:
+            self.user_connections[user_id].remove(websocket)
+        print(f"User {user_id} disconnected from channel {channel}")
+    
+    async def send_personal_message(self, message: dict, user_id: str):
+        """Send message to specific user"""
+        connections = self.user_connections[user_id]
+        for connection in connections:
+            try:
+                await connection.send_text(json.dumps(message))
+            except:
+                # Remove broken connections
+                self.user_connections[user_id].remove(connection)
+    
+    async def send_to_lab(self, message: dict, supervisor_id: str):
+        """Send message to all users in a lab (supervisor + students)"""
+        # Get all students under this supervisor
+        students = await db.users.find({"supervisor_id": supervisor_id}).to_list(1000)
+        user_ids = [supervisor_id] + [student["id"] for student in students]
+        
+        for user_id in user_ids:
+            await self.send_personal_message(message, user_id)
+    
+    async def broadcast_to_channel(self, message: dict, channel: str = "global"):
+        """Broadcast to all connections in a channel"""
+        connections = self.active_connections[channel]
+        for connection in connections:
+            try:
+                await connection.send_text(json.dumps(message))
+            except:
+                # Remove broken connections
+                self.active_connections[channel].remove(connection)
 
-# Scopus API integration
+manager = ConnectionManager()
+
+# Event System for Real-time Updates
+class EventType(str, Enum):
+    RESEARCH_LOG_UPDATED = "research_log_updated"
+    MEETING_UPDATED = "meeting_updated"
+    MILESTONE_UPDATED = "milestone_updated"
+    GRANT_UPDATED = "grant_updated"
+    PUBLICATION_UPDATED = "publication_updated"
+    USER_UPDATED = "user_updated"
+    NOTIFICATION_CREATED = "notification_created"
+    BULLETIN_UPDATED = "bulletin_updated"
+
+async def emit_event(event_type: EventType, data: dict, user_id: str = None, supervisor_id: str = None):
+    """Emit real-time event to relevant users"""
+    event_message = {
+        "type": event_type.value,
+        "data": data,
+        "timestamp": datetime.utcnow().isoformat()
+    }
+    
+    if user_id:
+        await manager.send_personal_message(event_message, user_id)
+    elif supervisor_id:
+        await manager.send_to_lab(event_message, supervisor_id)
+    else:
+        await manager.broadcast_to_channel(event_message)
+
+# Notification System
+class Notification(BaseModel):
+    id: str = Field(default_factory=lambda: str(uuid.uuid4()))
+    user_id: str
+    type: str
+    title: str
+    message: str
+    payload: Dict[str, Any] = {}
+    is_read: bool = False
+    created_at: datetime = Field(default_factory=datetime.utcnow)
+
+async def create_notification(user_id: str, notification_type: str, title: str, message: str, payload: dict = None):
+    """Create notification and emit real-time event"""
+    notification = Notification(
+        user_id=user_id,
+        type=notification_type,
+        title=title,
+        message=message,
+        payload=payload or {}
+    )
+    
+    await db.notifications.insert_one(notification.dict())
+    
+    # Emit real-time notification
+    await emit_event(
+        EventType.NOTIFICATION_CREATED,
+        notification.dict(),
+        user_id=user_id
+    )
 async def fetch_scopus_publications(scopus_id: str):
     """Fetch publications from Scopus API using the provided Scopus Author ID"""
     scopus_api_key = os.environ.get('SCOPUS_API_KEY')
