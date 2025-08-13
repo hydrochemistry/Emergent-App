@@ -670,6 +670,8 @@ const Dashboard = ({ user, logout, setUser }) => {
       alert('Error updating avatar');
     }
   };
+
+  const fetchMilestones = async () => {
     try {
       const response = await axios.get(`${API}/milestones`);
       setMilestones(response.data || []);
