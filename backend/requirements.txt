@@ -10,3 +10,5 @@ python-jose[cryptography]==3.3.0
 httpx==0.25.0
 reportlab==4.0.7
 Pillow==10.1.0
+websockets==12.0
+python-socketio==5.10.0
