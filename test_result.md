@@ -594,7 +594,12 @@ metadata:
 
 test_plan:
   current_focus:
-    - "Enhanced Features Testing Completed Successfully"
+    - "Real-time Synchronization System (WebSocket/SSE)"
+    - "Research Log Workflow State Machine"
+    - "SCOPUS ID & Publications Visibility System"
+    - "Avatar System with Real-time Updates"
+    - "Dashboard Parity Implementation"
+    - "Comprehensive Real-time Testing"
   stuck_tasks: []
   test_all: false
   test_priority: "high_first"
