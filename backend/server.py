@@ -700,6 +700,26 @@ async def create_notification(user_id: str, notification_type: str, title: str, 
         user_id=user_id
     )
 
+# Notifications Routes
+@api_router.get("/notifications")
+async def get_notifications(current_user: User = Depends(get_current_user)):
+    """Get notifications for current user"""
+    notifications = await db.notifications.find({"user_id": current_user.id}).sort("created_at", -1).to_list(100)
+    return [Notification(**notification) for notification in notifications]
+
+@api_router.put("/notifications/{notification_id}/read")
+async def mark_notification_read(notification_id: str, current_user: User = Depends(get_current_user)):
+    """Mark notification as read"""
+    result = await db.notifications.update_one(
+        {"id": notification_id, "user_id": current_user.id},
+        {"$set": {"is_read": True}}
+    )
+    
+    if result.matched_count == 0:
+        raise HTTPException(status_code=404, detail="Notification not found")
+    
+    return {"message": "Notification marked as read"}
+
 # Research Log Workflow State Machine
 VALID_TRANSITIONS = {
     ResearchLogStatus.DRAFT: [ResearchLogStatus.SUBMITTED],
