@@ -624,6 +624,8 @@ class TodoUpdate(BaseModel):
     due_at: Optional[datetime] = None
     priority: Optional[str] = None
     order_index: Optional[int] = None
+
+class CitationData(BaseModel):
     id: str = Field(default_factory=lambda: str(uuid.uuid4()))
     scholar_id: str
     total_citations: int
