@@ -582,14 +582,16 @@ async def get_current_user(credentials: HTTPAuthorizationCredentials = Depends(s
     except jwt.PyJWTError:
         raise HTTPException(status_code=401, detail="Invalid authentication credentials")
     
-    user = await db.users.find_one({"id": user_id})
-    if user is None:
+    user_data = await db.users.find_one({"id": user_id})
+    if user_data is None:
         raise HTTPException(status_code=401, detail="User not found")
     
     # Check if user is approved (except for supervisors/admins who are auto-approved)
-    if not user.get("is_approved", False) and user.get("role") not in ["supervisor", "admin", "lab_manager"]:
+    if not user_data.get("is_approved", False) and user_data.get("role") not in ["supervisor", "admin", "lab_manager"]:
         raise HTTPException(status_code=403, detail="Account pending approval. Please wait for supervisor authorization.")
     
+    # Convert to User object
+    user = User(**user_data)
     return user
     
 # WebSocket Connection Manager for Real-time Updates
