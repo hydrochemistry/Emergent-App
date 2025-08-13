@@ -584,7 +584,85 @@ const Dashboard = ({ user, logout, setUser }) => {
     fetchDashboardData();
   }, []);
 
-  const fetchDashboardData = async () => {
+  // Individual fetch functions for real-time updates
+  const fetchResearchLogs = async () => {
+    try {
+      const response = await axios.get(`${API}/research-logs`);
+      setResearchLogs(response.data || []);
+    } catch (error) {
+      console.error('Error fetching research logs:', error);
+    }
+  };
+
+  const fetchStudentLogStatus = async () => {
+    if (user.role !== 'student') return;
+    try {
+      const response = await axios.get(`${API}/research-logs/student/status`);
+      setStudentLogStatus(response.data?.logs || []);
+    } catch (error) {
+      console.error('Error fetching student log status:', error);
+    }
+  };
+
+  const fetchGrants = async () => {
+    try {
+      const response = await axios.get(`${API}/grants`);
+      setGrants(response.data || []);
+    } catch (error) {
+      console.error('Error fetching grants:', error);
+    }
+  };
+
+  const fetchActiveGrants = async () => {
+    try {
+      const response = await axios.get(`${API}/grants/active`);
+      setActiveGrants(response.data?.active_grants || []);
+    } catch (error) {
+      console.error('Error fetching active grants:', error);
+    }
+  };
+
+  const fetchPublications = async () => {
+    try {
+      const response = await axios.get(`${API}/publications`);
+      setPublications(response.data || []);
+    } catch (error) {
+      console.error('Error fetching publications:', error);
+    }
+  };
+
+  const fetchBulletins = async () => {
+    try {
+      const response = await axios.get(`${API}/bulletins`);
+      setBulletins(response.data || []);
+    } catch (error) {
+      console.error('Error fetching bulletins:', error);
+    }
+  };
+
+  const fetchMeetings = async () => {
+    try {
+      const response = await axios.get(`${API}/meetings`);
+      const filteredMeetings = (response.data || []).filter(meeting => {
+        const meetingDate = new Date(meeting.meeting_date);
+        const now = new Date();
+        const diffDays = (now - meetingDate) / (1000 * 60 * 60 * 24);
+        return diffDays < 7;
+      });
+      setMeetings(filteredMeetings);
+    } catch (error) {
+      console.error('Error fetching meetings:', error);
+    }
+  };
+
+  const fetchMilestones = async () => {
+    try {
+      const response = await axios.get(`${API}/milestones`);
+      setMilestones(response.data || []);
+    } catch (error) {
+      console.error('Error fetching milestones:', error);
+    }
+  };
     try {
       const apiCalls = [
         axios.get(`${API}/tasks`).catch(() => ({data: []})),
