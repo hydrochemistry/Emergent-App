@@ -238,14 +238,6 @@ class LabSettings(BaseModel):
     created_at: datetime = Field(default_factory=datetime.utcnow)
     updated_at: datetime = Field(default_factory=datetime.utcnow)
 
-class LabSettingsUpdate(BaseModel):
-    lab_name: Optional[str] = None
-    description: Optional[str] = None
-    address: Optional[str] = None
-    website: Optional[str] = None
-    contact_email: Optional[str] = None
-    lab_scopus_id: Optional[str] = None  # Added lab-wide Scopus ID
-
 class SupervisorMeeting(BaseModel):
     id: str = Field(default_factory=lambda: str(uuid.uuid4()))
     student_id: str
