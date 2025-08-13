@@ -590,6 +590,8 @@ async def get_current_user(credentials: HTTPAuthorizationCredentials = Depends(s
     if not user.get("is_approved", False) and user.get("role") not in ["supervisor", "admin", "lab_manager"]:
         raise HTTPException(status_code=403, detail="Account pending approval. Please wait for supervisor authorization.")
     
+    return user
+    
 # WebSocket Connection Manager for Real-time Updates
 class ConnectionManager:
     def __init__(self):
