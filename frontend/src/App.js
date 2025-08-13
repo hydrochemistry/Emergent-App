@@ -512,6 +512,73 @@ const Dashboard = ({ user, logout, setUser }) => {
   });
   const [notes, setNotes] = useState([]);
   const [loading, setLoading] = useState(true);
+  const [notifications, setNotifications] = useState([]);
+
+  // WebSocket for real-time updates
+  const handleWebSocketMessage = (data) => {
+    console.log('Received real-time update:', data);
+    
+    switch (data.type) {
+      case 'research_log_updated':
+        fetchResearchLogs();
+        if (user.role === 'student') {
+          fetchStudentLogStatus();
+        }
+        showNotification(data.data.action, `Research log ${data.data.action} by ${data.data.user_name || data.data.supervisor_name}`);
+        break;
+      case 'meeting_updated':
+        fetchMeetings();
+        showNotification('Meeting Update', `Meeting ${data.data.action}`);
+        break;
+      case 'milestone_updated':
+        fetchMilestones();
+        showNotification('Milestone Update', `Milestone ${data.data.action}`);
+        break;
+      case 'grant_updated':
+        fetchGrants();
+        fetchActiveGrants();
+        showNotification('Grant Update', `Grant ${data.data.action}`);
+        break;
+      case 'publication_updated':
+        fetchPublications();
+        showNotification('Publications', `Publications synchronized (${data.data.publications_count} total)`);
+        break;
+      case 'user_updated':
+        if (data.data.action === 'avatar_updated') {
+          if (data.data.user_id === user.id) {
+            setUser({ ...user, avatar_emoji: data.data.avatar_emoji });
+          }
+          showNotification('Avatar Updated', `${data.data.user_name} updated their avatar`);
+        }
+        break;
+      case 'bulletin_updated':
+        fetchBulletins();
+        showNotification('Announcement', `Announcement ${data.data.action}`);
+        break;
+      case 'notification_created':
+        setNotifications(prev => [data.data, ...prev]);
+        showNotification(data.data.title, data.data.message);
+        break;
+      default:
+        console.log('Unknown event type:', data.type);
+    }
+  };
+
+  const { isConnected } = useWebSocket(user?.id, handleWebSocketMessage);
+
+  const showNotification = (title, message) => {
+    // Simple notification system - you can enhance this with toast libraries
+    if (Notification.permission === 'granted') {
+      new Notification(title, { body: message });
+    }
+  };
+
+  // Request notification permission
+  useEffect(() => {
+    if (Notification.permission === 'default') {
+      Notification.requestPermission();
+    }
+  }, []);
 
   useEffect(() => {
     fetchDashboardData();
