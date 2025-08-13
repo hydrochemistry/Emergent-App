@@ -262,12 +262,16 @@ class ComprehensiveSystemTest:
         print("📋 Testing PATCH /api/research-logs/{log_id} for editing...")
         try:
             headers = self.get_auth_headers(self.student_token)
+            # PATCH endpoint expects full ResearchLogCreate object
             edit_data = {
+                "activity_type": "experiment",
                 "title": "Updated Comprehensive System Test Research Log",
                 "description": "Updated description for testing edit functionality",
+                "duration_hours": 4.5,
                 "findings": "Updated findings after editing",
                 "challenges": "Updated challenges after editing",
-                "next_steps": "Updated next steps after editing"
+                "next_steps": "Updated next steps after editing",
+                "tags": ["testing", "comprehensive", "workflow", "updated"]
             }
             
             response = await self.client.patch(f"{API_BASE}/research-logs/{self.research_log_id}", json=edit_data, headers=headers)
