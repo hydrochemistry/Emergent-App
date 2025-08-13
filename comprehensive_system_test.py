@@ -166,13 +166,13 @@ class ComprehensiveSystemTest:
         print("📋 Testing PUT /api/lab/settings with supervisor authentication...")
         try:
             headers = self.get_auth_headers(self.supervisor_token)
+            # Use only fields from the correct LabSettingsUpdate model
             update_data = {
                 "lab_name": "Updated Comprehensive Research Lab",
                 "description": "A comprehensive research laboratory for testing",
                 "address": "123 University Street, Tech City",
                 "website": "https://comprehensive-lab.edu",
-                "contact_email": "contact@comprehensive-lab.edu",
-                "lab_scopus_id": "60000000"
+                "contact_email": "contact@comprehensive-lab.edu"
             }
             
             response = await self.client.put(f"{API_BASE}/lab/settings", json=update_data, headers=headers)
