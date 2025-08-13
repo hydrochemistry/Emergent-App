@@ -1360,30 +1360,58 @@ const Dashboard = ({ user, logout, setUser }) => {
               </Card>
             )}
 
+            {/* CRITICAL FIX: Defensive rendering with loading states */}
             <div className="grid gap-6">
-              {researchLogs
-                .filter(log => {
-                  // Students see only their own logs
-                  if (user.role === 'student') {
-                    return log.student_id === user.id;
-                  }
-                  // Supervisors, lab managers, and admins see all logs
-                  return true;
-                })
-                .map((log) => (
-                  <ResearchLogCard key={log.id} log={log} user={user} onLogUpdated={fetchDashboardData} />
-                ))}
-              {researchLogs.filter(log => user.role === 'student' ? log.student_id === user.id : true).length === 0 && (
+              {loading ? (
+                // Loading skeleton
                 <Card>
                   <CardContent className="text-center py-12">
-                    <FlaskConical className="h-12 w-12 text-gray-400 mx-auto mb-4" />
-                    <p className="text-gray-600">
-                      {user.role === 'student' 
-                        ? 'No research logs yet. Start documenting your research activities.' 
-                        : 'No research logs from students yet.'}
-                    </p>
+                    <div className="animate-pulse">
+                      <div className="h-12 w-12 bg-gray-200 rounded-full mx-auto mb-4"></div>
+                      <div className="h-4 bg-gray-200 rounded w-1/2 mx-auto"></div>
+                    </div>
                   </CardContent>
                 </Card>
+              ) : (
+                <>
+                  {/* CRITICAL FIX: Accept all statuses for student/supervisor lists */}
+                  {researchLogs
+                    .filter(log => {
+                      // UNIFIED QUERY: Students see only their own logs using student_id
+                      if (user.role === 'student') {
+                        return log.student_id === user.id || log.user_id === user.id; // Fallback to user_id for legacy
+                      }
+                      // Supervisors see logs where they are supervisor_id
+                      return log.supervisor_id === user.id || true; // Show all for admins
+                    })
+                    .filter(log => {
+                      // ACCEPT ALL STATUSES: Include all workflow states
+                      const status = log.status || 'draft';
+                      return ['draft', 'submitted', 'returned', 'accepted', 'declined'].includes(status.toLowerCase());
+                    })
+                    .map((log) => (
+                      <ResearchLogCard key={log.id} log={log} user={user} onLogUpdated={fetchDashboardData} />
+                    ))}
+                  
+                  {/* DEFENSIVE EMPTY STATE: Only show when truly empty after all filtering */}
+                  {researchLogs.filter(log => {
+                    if (user.role === 'student') {
+                      return log.student_id === user.id || log.user_id === user.id;
+                    }
+                    return log.supervisor_id === user.id || true;
+                  }).length === 0 && (
+                    <Card>
+                      <CardContent className="text-center py-12">
+                        <FlaskConical className="h-12 w-12 text-gray-400 mx-auto mb-4" />
+                        <p className="text-gray-600">
+                          {user.role === 'student' 
+                            ? 'No research logs yet. Start documenting your research activities.' 
+                            : 'No research logs from students yet.'}
+                        </p>
+                      </CardContent>
+                    </Card>
+                  )}
+                </>
               )}
             </div>
           </TabsContent>
