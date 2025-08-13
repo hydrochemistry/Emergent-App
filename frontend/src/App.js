@@ -497,6 +497,8 @@ const Dashboard = ({ user, logout, setUser }) => {
   const [citations, setCitations] = useState(null);
   const [publications, setPublications] = useState([]);
   const [labSettings, setLabSettings] = useState({});
+  const [editingResearchLog, setEditingResearchLog] = useState(null);
+  const [showLabSettingsDialog, setShowLabSettingsDialog] = useState(false);
   const [meetings, setMeetings] = useState([]);
   const [reminders, setReminders] = useState([]);
   const [milestones, setMilestones] = useState([]);
