@@ -695,6 +695,30 @@ async def create_notification(user_id: str, notification_type: str, title: str, 
         notification.dict(),
         user_id=user_id
     )
+
+# Research Log Workflow State Machine
+VALID_TRANSITIONS = {
+    ResearchLogStatus.DRAFT: [ResearchLogStatus.SUBMITTED],
+    ResearchLogStatus.SUBMITTED: [ResearchLogStatus.RETURNED, ResearchLogStatus.ACCEPTED, ResearchLogStatus.DECLINED],
+    ResearchLogStatus.RETURNED: [ResearchLogStatus.SUBMITTED],
+    ResearchLogStatus.ACCEPTED: [],  # Terminal state
+    ResearchLogStatus.DECLINED: []   # Terminal state
+}
+
+def validate_status_transition(current_status: ResearchLogStatus, new_status: ResearchLogStatus) -> bool:
+    """Validate if status transition is allowed"""
+    if current_status not in VALID_TRANSITIONS:
+        return False
+    return new_status in VALID_TRANSITIONS[current_status]
+
+async def get_lab_supervisor_id(user: User) -> str:
+    """Get supervisor ID for a user (for lab-wide operations)"""
+    if user.role == UserRole.STUDENT:
+        return user.supervisor_id or user.id
+    else:
+        return user.id
+
+# Scopus API integration
 async def fetch_scopus_publications(scopus_id: str):
     """Fetch publications from Scopus API using the provided Scopus Author ID"""
     scopus_api_key = os.environ.get('SCOPUS_API_KEY')
