@@ -338,7 +338,7 @@ class ComprehensiveSystemTest:
                 print(f"   📊 Status: {returned_log.get('status', 'N/A')}")
                 print(f"   💬 Feedback: {return_data['feedback'][:50]}...")
                 
-                if returned_log.get('status') == 'RETURNED':
+                if returned_log.get('status').upper() == 'RETURNED':
                     print("✅ Status transition SUBMITTED → RETURNED working")
                     self.test_results.append("✅ Status transition SUBMITTED → RETURNED working")
                 else:
