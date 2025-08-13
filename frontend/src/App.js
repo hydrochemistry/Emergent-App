@@ -639,6 +639,16 @@ const Dashboard = ({ user, logout, setUser }) => {
     }
   };
 
+  const fetchCitations = async () => {
+    try {
+      const response = await axios.get(`${API}/citations`);
+      setCitations(response.data || null);
+    } catch (error) {
+      console.error('Error fetching citations:', error);
+      setCitations(prev => prev || null);
+    }
+  };
+
   const fetchPublications = async () => {
     try {
       const response = await axios.get(`${API}/publications`);
