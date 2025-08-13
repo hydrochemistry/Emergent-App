@@ -550,8 +550,13 @@ const Dashboard = ({ user, logout, setUser }) => {
         showNotification('Grant Update', `Grant ${data.data.action}`);
         break;
       case 'publication_updated':
-        fetchPublications();
-        showNotification('Publications', `Publications synchronized (${data.data.publications_count} total)`);
+        if (data.data.action === 'citations_updated' || data.data.action === 'citations_refreshed') {
+          fetchCitations();
+          showNotification('Citations Updated', `Google Scholar citations updated: ${data.data.total_citations} total citations`);
+        } else {
+          fetchPublications();
+          showNotification('Publications', `Publications synchronized (${data.data.publications_count} total)`);
+        }
         break;
       case 'user_updated':
         if (data.data.action === 'avatar_updated') {
