@@ -1977,44 +1977,46 @@ async def download_research_log_pdf(log_id: str, current_user: User = Depends(ge
 
 @api_router.get("/research-logs", response_model=List[ResearchLog])
 async def get_research_logs(current_user: User = Depends(get_current_user)):
-    """Get lab-wide research logs - synchronized data for all users in same lab"""
-    # Determine supervisor ID for proper lab-wide synchronization
+    """UNIFIED READ MODEL: Get research logs with unified queries (no role-split datasets)"""
+    
     if current_user.role == UserRole.STUDENT:
-        supervisor_id = current_user.supervisor_id
-        if not supervisor_id:
-            print(f"Warning: Student {current_user.id} has no supervisor_id assigned")
-            # Show student's own logs only if no supervisor is assigned
-            logs = await db.research_logs.find({"user_id": current_user.id}).sort("date", -1).to_list(1000)
-            return [ResearchLog(**log) for log in logs]
-    else:
-        supervisor_id = current_user.id
-    
-    # Get all students under this supervisor for lab-wide data synchronization
-    students = await db.users.find({"supervisor_id": supervisor_id}).to_list(1000)
-    student_ids = [student["id"] for student in students]
-    student_ids.append(supervisor_id)  # Include supervisor's logs
-    
-    # Fetch all research logs in the lab
-    logs = await db.research_logs.find({"user_id": {"$in": student_ids}}).sort("date", -1).to_list(1000)
-    
-    # Create student info mapping
-    student_map = {student["id"]: student for student in students}
-    supervisor_user = await db.users.find_one({"id": supervisor_id})
-    if supervisor_user:
-        student_map[supervisor_id] = {
-            "full_name": supervisor_user.get("full_name", "Unknown Supervisor"),
-            "student_id": supervisor_user.get("student_id", supervisor_id),
-            "email": supervisor_user.get("email", "")
-        }
-    
-    # Enhance logs with student information and review status
-    for log in logs:
-        student_info = student_map.get(log["user_id"], {})
-        log["student_name"] = student_info.get("full_name", "Unknown Student")
-        log["student_id"] = student_info.get("student_id", log["user_id"])
-        log["student_email"] = student_info.get("email", "")
+        # STUDENT LIST: Only use studentId filter (source of truth)
+        logs = await db.research_logs.find(
+            {"student_id": current_user.id}
+        ).sort("submitted_at", -1).to_list(1000)
         
-        # Ensure review status fields are present
+        # Apply secondary sort for null submitted_at
+        logs_with_submitted = [log for log in logs if log.get("submitted_at")]
+        logs_without_submitted = [log for log in logs if not log.get("submitted_at")]
+        logs_without_submitted.sort(key=lambda x: x.get("date", datetime.min), reverse=True)
+        
+        logs = logs_with_submitted + logs_without_submitted
+        
+    else:
+        # SUPERVISOR LIST: Only use supervisorId filter (source of truth)
+        logs = await db.research_logs.find(
+            {"supervisor_id": current_user.id}
+        ).sort([("submitted_at", -1), ("date", -1)]).to_list(1000)
+    
+    # Enhance logs with student information for display
+    for log in logs:
+        # Get student info for display
+        if log.get("student_id"):
+            student = await db.users.find_one({"id": log["student_id"]})
+            if student:
+                log["student_name"] = student.get("full_name", "Unknown Student")
+                log["student_email"] = student.get("email", "")
+            else:
+                log["student_name"] = "Unknown Student"
+                log["student_email"] = ""
+        
+        # Get supervisor info for display
+        if log.get("supervisor_id"):
+            supervisor = await db.users.find_one({"id": log["supervisor_id"]})
+            if supervisor:
+                log["supervisor_name"] = supervisor.get("full_name", "Unknown Supervisor")
+        
+        # Ensure all review status fields are present
         if "review_status" not in log:
             log["review_status"] = None
         if "review_feedback" not in log:
@@ -2023,6 +2025,8 @@ async def get_research_logs(current_user: User = Depends(get_current_user)):
             log["reviewer_name"] = None
         if "reviewed_at" not in log:
             log["reviewed_at"] = None
+        if "supervisor_comment" not in log:
+            log["supervisor_comment"] = None
     
     return [ResearchLog(**log) for log in logs]
 
