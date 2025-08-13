@@ -87,6 +87,14 @@ class TaskPriority(str, Enum):
     URGENT = "urgent"
 
 class ActivityType(str, Enum):
+    EXPERIMENT = "experiment"
+    LITERATURE_REVIEW = "literature_review"
+    DATA_COLLECTION = "data_collection"
+    MEETING = "meeting"
+    WRITING = "writing"
+    ANALYSIS = "analysis"
+
+class ResearchLogStatus(str, Enum):
     DRAFT = "draft"
     SUBMITTED = "submitted"
     RETURNED = "returned"
