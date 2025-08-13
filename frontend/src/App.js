@@ -515,6 +515,7 @@ const Dashboard = ({ user, logout, setUser }) => {
     admin: true
   });
   const [notes, setNotes] = useState([]);
+  const [todos, setTodos] = useState([]);
   const [loading, setLoading] = useState(true);
   const [notifications, setNotifications] = useState([]);
   const [showAvatarPicker, setShowAvatarPicker] = useState(false);
