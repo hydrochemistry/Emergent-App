@@ -2040,15 +2040,59 @@ async def approve_bulletin(bulletin_id: str, approval: BulletinApproval, current
     
     return {"message": f"Bulletin {status.value} successfully"}
 
-@api_router.get("/bulletins", response_model=List[Bulletin])
-async def get_bulletins(status: Optional[BulletinStatus] = None, current_user: User = Depends(get_current_user)):
-    query = {}
-    if status:
-        query["status"] = status
-    elif current_user.role == UserRole.STUDENT:
-        query["status"] = BulletinStatus.APPROVED
+@api_router.put("/users/{user_id}/avatar")
+async def update_user_avatar(user_id: str, avatar_data: dict, current_user: User = Depends(get_current_user)):
+    """Update user avatar emoji with real-time sync"""
+    # Check if user can update this avatar
+    if user_id != current_user.id and current_user.role not in [UserRole.ADMIN, UserRole.LAB_MANAGER]:
+        raise HTTPException(status_code=403, detail="Not authorized to update this avatar")
     
-    bulletins = await db.bulletins.find(query).sort("created_at", -1).to_list(1000)
+    avatar_emoji = avatar_data.get("avatar_emoji")
+    if not avatar_emoji:
+        raise HTTPException(status_code=400, detail="Avatar emoji is required")
+    
+    # Update user avatar
+    await db.users.update_one(
+        {"id": user_id},
+        {"$set": {"avatar_emoji": avatar_emoji}}
+    )
+    
+    # Get updated user
+    user = await db.users.find_one({"id": user_id})
+    if not user:
+        raise HTTPException(status_code=404, detail="User not found")
+    
+    # Emit real-time event for avatar update across all sessions
+    supervisor_id = await get_lab_supervisor_id(current_user)
+    await emit_event(
+        EventType.USER_UPDATED,
+        {
+            "action": "avatar_updated",
+            "user_id": user_id,
+            "avatar_emoji": avatar_emoji,
+            "user_name": user.get("full_name", "Unknown User")
+        },
+        supervisor_id=supervisor_id
+    )
+    
+    return {"message": "Avatar updated successfully", "avatar_emoji": avatar_emoji}
+
+@api_router.get("/bulletins", response_model=List[Bulletin])
+async def get_bulletins(current_user: User = Depends(get_current_user)):
+    """Get bulletins - ensure approved bulletins are visible to all users"""
+    # Get supervisor ID for lab-wide bulletins
+    supervisor_id = await get_lab_supervisor_id(current_user)
+    
+    if current_user.role in [UserRole.SUPERVISOR, UserRole.LAB_MANAGER, UserRole.ADMIN]:
+        # Supervisors can see all bulletins in their lab
+        bulletins = await db.bulletins.find({"supervisor_id": supervisor_id}).sort("created_at", -1).to_list(1000)
+    else:
+        # Students can see all approved bulletins in their lab
+        bulletins = await db.bulletins.find({
+            "supervisor_id": supervisor_id,
+            "status": BulletinStatus.APPROVED.value
+        }).sort("created_at", -1).to_list(1000)
+    
     return [Bulletin(**bulletin) for bulletin in bulletins]
 
 @api_router.get("/bulletins/highlights")
