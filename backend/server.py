@@ -1597,6 +1597,256 @@ async def endorse_research_log(log_id: str, endorsement: ResearchLogEndorsement,
     
     return {"message": "Research log endorsed successfully"}
 
+@api_router.post("/research-logs/{log_id}/submit")
+async def submit_research_log(log_id: str, current_user: User = Depends(get_current_user)):
+    """Submit research log (DRAFT → SUBMITTED)"""
+    log = await db.research_logs.find_one({"id": log_id})
+    if not log:
+        raise HTTPException(status_code=404, detail="Research log not found")
+    
+    # Check if user owns the log
+    if log["user_id"] != current_user.id:
+        raise HTTPException(status_code=403, detail="Not authorized to submit this research log")
+    
+    current_status = ResearchLogStatus(log.get("status", ResearchLogStatus.DRAFT))
+    
+    # Validate transition
+    if not validate_status_transition(current_status, ResearchLogStatus.SUBMITTED):
+        raise HTTPException(status_code=400, detail=f"Cannot submit research log with status {current_status}")
+    
+    # Update status
+    update_data = {
+        "status": ResearchLogStatus.SUBMITTED.value,
+        "submitted_at": datetime.utcnow()
+    }
+    
+    await db.research_logs.update_one({"id": log_id}, {"$set": update_data})
+    
+    # Get updated log
+    updated_log = await db.research_logs.find_one({"id": log_id})
+    research_log = ResearchLog(**updated_log)
+    
+    # Emit real-time event
+    supervisor_id = await get_lab_supervisor_id(current_user)
+    await emit_event(
+        EventType.RESEARCH_LOG_UPDATED,
+        {
+            "action": "submitted",
+            "research_log": research_log.dict(),
+            "user_name": current_user.full_name
+        },
+        supervisor_id=supervisor_id
+    )
+    
+    # Notify supervisor
+    if current_user.supervisor_id:
+        await create_notification(
+            user_id=current_user.supervisor_id,
+            notification_type="research_log_submitted",
+            title="Research Log Submitted",
+            message=f"{current_user.full_name} submitted research log: {log['title']}",
+            payload={"research_log_id": log_id}
+        )
+    
+    return {"message": "Research log submitted successfully", "status": ResearchLogStatus.SUBMITTED.value}
+
+@api_router.post("/research-logs/{log_id}/return")
+async def return_research_log(
+    log_id: str, 
+    comment_data: dict, 
+    current_user: User = Depends(get_current_user)
+):
+    """Return research log with comments (SUBMITTED → RETURNED)"""
+    log = await db.research_logs.find_one({"id": log_id})
+    if not log:
+        raise HTTPException(status_code=404, detail="Research log not found")
+    
+    # Check if user is supervisor of the log owner
+    log_owner = await db.users.find_one({"id": log["user_id"]})
+    if not log_owner or log_owner.get("supervisor_id") != current_user.id:
+        if current_user.role not in [UserRole.ADMIN, UserRole.LAB_MANAGER]:
+            raise HTTPException(status_code=403, detail="Not authorized to return this research log")
+    
+    current_status = ResearchLogStatus(log.get("status", ResearchLogStatus.DRAFT))
+    
+    # Validate transition
+    if not validate_status_transition(current_status, ResearchLogStatus.RETURNED):
+        raise HTTPException(status_code=400, detail=f"Cannot return research log with status {current_status}")
+    
+    # Update status
+    update_data = {
+        "status": ResearchLogStatus.RETURNED.value,
+        "reviewed_at": datetime.utcnow(),
+        "supervisor_comment": comment_data.get("comment", ""),
+        "reviewed_by": current_user.id,
+        "reviewer_name": current_user.full_name,
+        # Keep legacy fields for compatibility
+        "review_status": "revision",
+        "review_feedback": comment_data.get("comment", "")
+    }
+    
+    await db.research_logs.update_one({"id": log_id}, {"$set": update_data})
+    
+    # Get updated log
+    updated_log = await db.research_logs.find_one({"id": log_id})
+    research_log = ResearchLog(**updated_log)
+    
+    # Emit real-time event
+    supervisor_id = await get_lab_supervisor_id(current_user)
+    await emit_event(
+        EventType.RESEARCH_LOG_UPDATED,
+        {
+            "action": "returned",
+            "research_log": research_log.dict(),
+            "supervisor_name": current_user.full_name,
+            "comment": comment_data.get("comment", "")
+        },
+        supervisor_id=supervisor_id
+    )
+    
+    # Notify student
+    await create_notification(
+        user_id=log["user_id"],
+        notification_type="research_log_returned",
+        title="Research Log Returned",
+        message=f"Your research log '{log['title']}' was returned by {current_user.full_name}",
+        payload={"research_log_id": log_id, "comment": comment_data.get("comment", "")}
+    )
+    
+    return {"message": "Research log returned successfully", "status": ResearchLogStatus.RETURNED.value}
+
+@api_router.post("/research-logs/{log_id}/accept")
+async def accept_research_log(
+    log_id: str, 
+    comment_data: dict, 
+    current_user: User = Depends(get_current_user)
+):
+    """Accept research log (SUBMITTED → ACCEPTED)"""
+    log = await db.research_logs.find_one({"id": log_id})
+    if not log:
+        raise HTTPException(status_code=404, detail="Research log not found")
+    
+    # Check if user is supervisor of the log owner
+    log_owner = await db.users.find_one({"id": log["user_id"]})
+    if not log_owner or log_owner.get("supervisor_id") != current_user.id:
+        if current_user.role not in [UserRole.ADMIN, UserRole.LAB_MANAGER]:
+            raise HTTPException(status_code=403, detail="Not authorized to accept this research log")
+    
+    current_status = ResearchLogStatus(log.get("status", ResearchLogStatus.DRAFT))
+    
+    # Validate transition
+    if not validate_status_transition(current_status, ResearchLogStatus.ACCEPTED):
+        raise HTTPException(status_code=400, detail=f"Cannot accept research log with status {current_status}")
+    
+    # Update status
+    update_data = {
+        "status": ResearchLogStatus.ACCEPTED.value,
+        "reviewed_at": datetime.utcnow(),
+        "supervisor_comment": comment_data.get("comment", "Approved"),
+        "reviewed_by": current_user.id,
+        "reviewer_name": current_user.full_name,
+        # Keep legacy fields for compatibility
+        "review_status": "accepted",
+        "review_feedback": comment_data.get("comment", "Approved"),
+        "supervisor_endorsement": True
+    }
+    
+    await db.research_logs.update_one({"id": log_id}, {"$set": update_data})
+    
+    # Get updated log
+    updated_log = await db.research_logs.find_one({"id": log_id})
+    research_log = ResearchLog(**updated_log)
+    
+    # Emit real-time event
+    supervisor_id = await get_lab_supervisor_id(current_user)
+    await emit_event(
+        EventType.RESEARCH_LOG_UPDATED,
+        {
+            "action": "accepted",
+            "research_log": research_log.dict(),
+            "supervisor_name": current_user.full_name,
+            "comment": comment_data.get("comment", "Approved")
+        },
+        supervisor_id=supervisor_id
+    )
+    
+    # Notify student
+    await create_notification(
+        user_id=log["user_id"],
+        notification_type="research_log_accepted",
+        title="Research Log Accepted",
+        message=f"Your research log '{log['title']}' was accepted by {current_user.full_name}",
+        payload={"research_log_id": log_id, "comment": comment_data.get("comment", "Approved")}
+    )
+    
+    return {"message": "Research log accepted successfully", "status": ResearchLogStatus.ACCEPTED.value}
+
+@api_router.post("/research-logs/{log_id}/decline")
+async def decline_research_log(
+    log_id: str, 
+    comment_data: dict, 
+    current_user: User = Depends(get_current_user)
+):
+    """Decline research log (SUBMITTED → DECLINED)"""
+    log = await db.research_logs.find_one({"id": log_id})
+    if not log:
+        raise HTTPException(status_code=404, detail="Research log not found")
+    
+    # Check if user is supervisor of the log owner
+    log_owner = await db.users.find_one({"id": log["user_id"]})
+    if not log_owner or log_owner.get("supervisor_id") != current_user.id:
+        if current_user.role not in [UserRole.ADMIN, UserRole.LAB_MANAGER]:
+            raise HTTPException(status_code=403, detail="Not authorized to decline this research log")
+    
+    current_status = ResearchLogStatus(log.get("status", ResearchLogStatus.DRAFT))
+    
+    # Validate transition
+    if not validate_status_transition(current_status, ResearchLogStatus.DECLINED):
+        raise HTTPException(status_code=400, detail=f"Cannot decline research log with status {current_status}")
+    
+    # Update status
+    update_data = {
+        "status": ResearchLogStatus.DECLINED.value,
+        "reviewed_at": datetime.utcnow(),
+        "supervisor_comment": comment_data.get("comment", "Declined"),
+        "reviewed_by": current_user.id,
+        "reviewer_name": current_user.full_name,
+        # Keep legacy fields for compatibility
+        "review_status": "rejected",
+        "review_feedback": comment_data.get("comment", "Declined"),
+        "supervisor_endorsement": False
+    }
+    
+    await db.research_logs.update_one({"id": log_id}, {"$set": update_data})
+    
+    # Get updated log
+    updated_log = await db.research_logs.find_one({"id": log_id})
+    research_log = ResearchLog(**updated_log)
+    
+    # Emit real-time event
+    supervisor_id = await get_lab_supervisor_id(current_user)
+    await emit_event(
+        EventType.RESEARCH_LOG_UPDATED,
+        {
+            "action": "declined",
+            "research_log": research_log.dict(),
+            "supervisor_name": current_user.full_name,
+            "comment": comment_data.get("comment", "Declined")
+        },
+        supervisor_id=supervisor_id
+    )
+    
+    # Notify student
+    await create_notification(
+        user_id=log["user_id"],
+        notification_type="research_log_declined",
+        title="Research Log Declined",
+        message=f"Your research log '{log['title']}' was declined by {current_user.full_name}",
+        payload={"research_log_id": log_id, "comment": comment_data.get("comment", "Declined")}
+    )
+    
+    return {"message": "Research log declined successfully", "status": ResearchLogStatus.DECLINED.value}
+
 @api_router.post("/research-logs/{log_id}/review")
 async def review_research_log(
     log_id: str, 
