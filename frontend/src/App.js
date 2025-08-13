@@ -663,71 +663,50 @@ const Dashboard = ({ user, logout, setUser }) => {
       console.error('Error fetching milestones:', error);
     }
   };
+
+  const fetchDashboardData = async () => {
     try {
+      setLoading(true);
+      
+      // Fetch basic dashboard data
       const apiCalls = [
         axios.get(`${API}/tasks`).catch(() => ({data: []})),
-        axios.get(`${API}/research-logs`).catch(() => ({data: []})),
         axios.get(`${API}/dashboard/stats`).catch(() => ({data: {}})),
-        axios.get(`${API}/bulletins`).catch(() => ({data: []})),
-        axios.get(`${API}/grants`).catch(() => ({data: []})),
-        axios.get(`${API}/publications`).catch(() => ({data: []})),
         axios.get(`${API}/lab/settings`).catch(() => ({data: {}})),
-        axios.get(`${API}/meetings`).catch(() => ({data: []})),
         axios.get(`${API}/reminders`).catch(() => ({data: []})),
-        axios.get(`${API}/milestones`).catch(() => ({data: []})),
-        axios.get(`${API}/notes`).catch(() => ({data: []})),
-        axios.get(`${API}/grants/active`).catch(() => ({data: {active_grants: [], cumulative_balance: 0}}))
+        axios.get(`${API}/notes`).catch(() => ({data: []}))
       ];
 
-      // Add student-specific API call for research log status tracking
-      if (user.role === 'student') {
-        apiCalls.push(axios.get(`${API}/research-logs/student/status`).catch(() => ({data: {logs: []}})));
-      }
-
-      const [
-        tasksRes, logsRes, statsRes, bulletinsRes, grantsRes, 
-        pubsRes, labRes, meetingsRes, remindersRes, milestonesRes, notesRes, activeGrantsRes, studentLogStatusRes
-      ] = await Promise.all(apiCalls);
+      const [tasksRes, statsRes, labRes, remindersRes, notesRes] = await Promise.all(apiCalls);
 
       setTasks(tasksRes.data || []);
-      setResearchLogs(logsRes.data || []);
       setStats(statsRes.data || {});
-      setBulletins(bulletinsRes.data || []);
-      setGrants(grantsRes.data || []);
-      setPublications(pubsRes.data || []);
       setLabSettings(labRes.data || {});
-      setMilestones(milestonesRes.data || []);
-      setActiveGrants(activeGrantsRes.data?.active_grants || []);
+      setNotes(notesRes.data || []);
       
-      // Set student log status if user is a student
-      if (user.role === 'student' && studentLogStatusRes) {
-        setStudentLogStatus(studentLogStatusRes.data?.logs || []);
-      }
-      
-      // Auto-cleanup completed/past items
-      const now = new Date();
-      
-      const filteredMeetings = (meetingsRes.data || []).filter(meeting => {
-        const meetingDate = new Date(meeting.meeting_date);
-        // Show upcoming meetings and meetings from the last 7 days
-        const diffDays = (now - meetingDate) / (1000 * 60 * 60 * 24);
-        return diffDays < 7; // Show meetings from last 7 days and future meetings
-      });
-      
+      // Filter reminders
       const filteredReminders = (remindersRes.data || []).filter(reminder => {
         if (reminder.is_completed) return false;
         const reminderDate = new Date(reminder.reminder_date);
-        return reminderDate >= now;
+        return reminderDate >= new Date();
       });
-      
-      const filteredTasks = (tasksRes.data || []).filter(task => {
-        return task.status !== 'completed';
-      });
-
-      setMeetings(filteredMeetings);
       setReminders(filteredReminders);
-      setTasks(filteredTasks);
-      setNotes(notesRes.data || []);
+
+      // Use individual fetch functions for real-time data
+      await Promise.all([
+        fetchResearchLogs(),
+        fetchGrants(),
+        fetchActiveGrants(),
+        fetchPublications(),
+        fetchBulletins(),
+        fetchMeetings(),
+        fetchMilestones()
+      ]);
+
+      // Fetch student-specific data
+      if (user.role === 'student') {
+        await fetchStudentLogStatus();
+      }
 
       if (user.role === 'supervisor' || user.role === 'lab_manager') {
         const studentsRes = await axios.get(`${API}/students`);
