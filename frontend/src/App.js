@@ -494,6 +494,7 @@ const Dashboard = ({ user, logout, setUser }) => {
   const [stats, setStats] = useState({});
   const [bulletins, setBulletins] = useState([]);
   const [grants, setGrants] = useState([]);
+  const [citations, setCitations] = useState(null);
   const [publications, setPublications] = useState([]);
   const [labSettings, setLabSettings] = useState({});
   const [meetings, setMeetings] = useState([]);
