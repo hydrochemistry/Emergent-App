@@ -1801,6 +1801,82 @@ async def endorse_research_log(log_id: str, endorsement: ResearchLogEndorsement,
     
     return {"message": "Research log endorsed successfully"}
 
+@api_router.patch("/research-logs/{log_id}")
+async def update_research_log(
+    log_id: str, 
+    log_update: ResearchLogCreate, 
+    current_user: User = Depends(get_current_user)
+):
+    """Update research log (only if owner and status ∈ {DRAFT, RETURNED})"""
+    log = await db.research_logs.find_one({"id": log_id})
+    if not log:
+        raise HTTPException(status_code=404, detail="Research log not found")
+    
+    # Check if user owns the log
+    if log["user_id"] != current_user.id:
+        raise HTTPException(status_code=403, detail="Not authorized to update this research log")
+    
+    current_status = ResearchLogStatus(log.get("status", ResearchLogStatus.DRAFT))
+    
+    # Validate that log can be edited (only DRAFT or RETURNED status)
+    if current_status not in [ResearchLogStatus.DRAFT, ResearchLogStatus.RETURNED]:
+        raise HTTPException(
+            status_code=400, 
+            detail=f"Cannot edit research log with status {current_status}. Only DRAFT or RETURNED logs can be edited."
+        )
+    
+    # Prepare update data
+    update_data = log_update.dict()
+    update_data["updated_at"] = datetime.utcnow()
+    
+    # If updating a RETURNED log, reset back to DRAFT for editing
+    if current_status == ResearchLogStatus.RETURNED:
+        update_data["status"] = ResearchLogStatus.DRAFT.value
+        update_data["submitted_at"] = None  # Clear submission timestamp
+    
+    # Handle log_date and log_time from frontend
+    if "log_date" in update_data and update_data["log_date"]:
+        try:
+            if "log_time" in update_data and update_data["log_time"]:
+                combined_datetime = f"{update_data['log_date']} {update_data['log_time']}"
+                update_data["date"] = datetime.fromisoformat(combined_datetime.replace('Z', '+00:00'))
+            else:
+                update_data["date"] = datetime.fromisoformat(update_data["log_date"].replace('Z', '+00:00'))
+        except:
+            update_data["date"] = datetime.utcnow()
+    
+    # Remove frontend-specific fields
+    update_data.pop("log_date", None)
+    update_data.pop("log_time", None)
+    update_data.pop("submit", None)
+    
+    # Update the research log
+    await db.research_logs.update_one({"id": log_id}, {"$set": update_data})
+    
+    # Get updated log
+    updated_log = await db.research_logs.find_one({"id": log_id})
+    research_log = ResearchLog(**updated_log)
+    
+    # Emit real-time event for research log update
+    student_id = updated_log.get("student_id", current_user.id)
+    supervisor_id = updated_log.get("supervisor_id")
+    
+    event_data = {
+        "action": "updated",
+        "research_log": research_log.dict(),
+        "user_name": current_user.full_name,
+        "student_id": student_id,
+        "supervisor_id": supervisor_id
+    }
+    
+    # Emit to both student and supervisor
+    if student_id:
+        await emit_event(EventType.RESEARCH_LOG_UPDATED, event_data, user_id=student_id)
+    if supervisor_id and supervisor_id != student_id:
+        await emit_event(EventType.RESEARCH_LOG_UPDATED, event_data, user_id=supervisor_id)
+    
+    return research_log
+
 @api_router.post("/research-logs/{log_id}/submit")
 async def submit_research_log(log_id: str, current_user: User = Depends(get_current_user)):
     """Submit research log (DRAFT → SUBMITTED) with idempotency and proper relational keys"""
