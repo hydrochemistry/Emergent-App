@@ -738,7 +738,7 @@ const Dashboard = ({ user, logout, setUser }) => {
         fetchResearchLogs(),
         fetchGrants(),
         fetchActiveGrants(),
-        fetchPublications(),
+        fetchCitations(),
         fetchBulletins(),
         fetchMeetings(),
         fetchMilestones()
