@@ -19,6 +19,9 @@ import json
 import httpx
 import asyncio
 from collections import defaultdict
+from bs4 import BeautifulSoup
+import re
+import time
 
 ROOT_DIR = Path(__file__).parent
 load_dotenv(ROOT_DIR / '.env')
