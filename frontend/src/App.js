@@ -744,6 +744,7 @@ const Dashboard = ({ user, logout, setUser }) => {
         fetchGrants(),
         fetchActiveGrants(),
         fetchCitations(),
+        fetchPublications(), // Keep for Scopus Recent Paper
         fetchBulletins(),
         fetchMeetings(),
         fetchMilestones()
