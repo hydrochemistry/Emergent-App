@@ -688,6 +688,7 @@ class ComprehensiveSystemTest:
         print("📋 Testing lab settings updates emit events...")
         try:
             headers = self.get_auth_headers(self.supervisor_token)
+            # Use only fields from the correct LabSettingsUpdate model
             update_data = {
                 "lab_name": "Real-time Event Test Lab",
                 "description": "Testing real-time event emission for lab settings"
