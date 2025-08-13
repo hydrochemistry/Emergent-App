@@ -1240,31 +1240,51 @@ const Dashboard = ({ user, logout, setUser }) => {
               <Card>
                 <CardHeader>
                   <CardTitle className="flex items-center gap-2">
-                    <BookOpen className="h-5 w-5" />
-                    Recent News
+                    <Check className="h-5 w-5" />
+                    To-Do List
                   </CardTitle>
                 </CardHeader>
                 <CardContent>
-                  {bulletins.filter(b => b.is_highlight).slice(0, 3).map((bulletin) => (
-                    <div key={bulletin.id} className="flex items-center justify-between py-2 border-b last:border-b-0">
-                      <div>
-                        <p className="font-medium text-sm">{bulletin.title}</p>
-                        <p className="text-xs text-gray-600">{new Date(bulletin.created_at).toLocaleDateString()}</p>
+                  {todos.filter(t => !t.is_completed).slice(0, 3).map((todo) => (
+                    <div key={todo.id} className="flex items-center justify-between py-2 border-b last:border-b-0">
+                      <div className="flex items-center space-x-2 flex-1">
+                        <button
+                          onClick={async () => {
+                            try {
+                              await axios.put(`${API}/todos/${todo.id}/complete`);
+                              fetchTodos();
+                              showNotification('Task Completed', 'To-do item marked as complete');
+                            } catch (error) {
+                              console.error('Error completing todo:', error);
+                              alert('Error completing todo');
+                            }
+                          }}
+                          className="w-4 h-4 border border-gray-300 rounded hover:bg-gray-100 transition-colors"
+                        >
+                          {todo.is_completed && <Check className="h-3 w-3 text-green-600" />}
+                        </button>
+                        <div className="flex-1">
+                          <p className="font-medium text-sm">{todo.title}</p>
+                          {todo.due_at && (
+                            <p className="text-xs text-gray-600">
+                              Due: {new Date(todo.due_at).toLocaleDateString()}
+                            </p>
+                          )}
+                        </div>
                       </div>
                       <Badge className={
-                        bulletin.category === 'announcement' ? 'bg-blue-100 text-blue-800' :
-                        bulletin.category === 'achievement' ? 'bg-green-100 text-green-800' :
-                        bulletin.category === 'event' ? 'bg-purple-100 text-purple-800' :
+                        todo.priority === 'high' ? 'bg-red-100 text-red-800' :
+                        todo.priority === 'normal' ? 'bg-blue-100 text-blue-800' :
                         'bg-gray-100 text-gray-800'
                       } size="sm">
-                        {bulletin.status}
+                        {todo.priority}
                       </Badge>
                     </div>
                   ))}
-                  {bulletins.filter(b => b.is_highlight).length === 0 && (
+                  {todos.filter(t => !t.is_completed).length === 0 && (
                     <div className="text-center py-4">
-                      <Star className="h-8 w-8 text-gray-300 mx-auto mb-2" />
-                      <p className="text-gray-500 text-sm">No recent news</p>
+                      <Check className="h-8 w-8 text-gray-300 mx-auto mb-2" />
+                      <p className="text-gray-500 text-sm">No pending tasks</p>
                     </div>
                   )}
                 </CardContent>
