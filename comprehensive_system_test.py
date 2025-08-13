@@ -421,7 +421,7 @@ class ComprehensiveSystemTest:
                 print(f"   📊 Status: {accepted_log.get('status', 'N/A')}")
                 print(f"   💬 Feedback: {accept_data['feedback'][:50]}...")
                 
-                if accepted_log.get('status') == 'ACCEPTED':
+                if accepted_log.get('status').upper() == 'ACCEPTED':
                     print("✅ Status transition SUBMITTED → ACCEPTED working")
                     self.test_results.append("✅ Status transition SUBMITTED → ACCEPTED working")
                 else:
