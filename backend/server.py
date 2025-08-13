@@ -209,6 +209,7 @@ class UserUpdate(BaseModel):
     scopus_id: Optional[str] = None
     orcid_id: Optional[str] = None
     salutation: Optional[str] = None  # Added salutation field
+    avatar_emoji: Optional[str] = None  # Added avatar emoji field
 
 class PasswordChange(BaseModel):
     current_password: str
