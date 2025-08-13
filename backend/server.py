@@ -802,6 +802,21 @@ async def sync_lab_publications_from_scopus(lab_scopus_id: str, supervisor_id: s
         print(f"Error syncing lab publications: {str(e)}")
         raise e
 
+# WebSocket Endpoint for Real-time Updates
+@app.websocket("/ws/{user_id}")
+async def websocket_endpoint(websocket: WebSocket, user_id: str):
+    await manager.connect(websocket, user_id)
+    try:
+        while True:
+            # Keep connection alive and handle incoming messages
+            data = await websocket.receive_text()
+            # You can add message handling here if needed
+            message = json.loads(data)
+            if message.get("type") == "ping":
+                await websocket.send_text(json.dumps({"type": "pong"}))
+    except WebSocketDisconnect:
+        manager.disconnect(websocket, user_id)
+
 # Auth Routes
 @api_router.post("/auth/register", response_model=Token)
 async def register(user_data: UserCreate):
