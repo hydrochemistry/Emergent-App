@@ -2477,7 +2477,7 @@ async def get_publications(current_user: User = Depends(get_current_user)):
             {"supervisor_id": supervisor_id},
             {"author_ids": {"$in": [current_user.id]}}  # Include publications where user is an author
         ]
-    }).sort("year", -1).to_list(1000)
+    }).sort("publication_year", -1).to_list(1000)
     
     publications = []
     for pub in lab_publications:
