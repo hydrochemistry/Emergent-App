@@ -356,9 +356,16 @@ class ComprehensiveSystemTest:
         print("📋 Testing editing is allowed for RETURNED status logs...")
         try:
             headers = self.get_auth_headers(self.student_token)
+            # PATCH endpoint expects full ResearchLogCreate object
             edit_data = {
+                "activity_type": "experiment",
+                "title": "Revised Comprehensive System Test Research Log",
                 "description": "Revised description after supervisor feedback",
-                "findings": "Enhanced findings with more detailed methodology"
+                "duration_hours": 4.5,
+                "findings": "Enhanced findings with more detailed methodology",
+                "challenges": "Revised challenges after feedback",
+                "next_steps": "Revised next steps after feedback",
+                "tags": ["testing", "comprehensive", "workflow", "revised"]
             }
             
             response = await self.client.patch(f"{API_BASE}/research-logs/{self.research_log_id}", json=edit_data, headers=headers)
